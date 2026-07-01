@@ -23,11 +23,11 @@ export function EmptyState({
 
   return (
     <View style={styles.container}>
-      <MaterialCommunityIcons 
-        name={icon as any} 
-        size={64} 
-        color={theme.colors.outline} 
-        style={styles.icon} 
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={64}
+        color={theme.colors.outline}
+        style={styles.icon}
       />
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>{title}</Text>
       <Text style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>{description}</Text>
