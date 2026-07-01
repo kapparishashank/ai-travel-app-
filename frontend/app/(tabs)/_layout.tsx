@@ -77,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="destination/[id]" options={{ href: null }} />
       <Tabs.Screen name="search/[id]" options={{ href: null }} />
       <Tabs.Screen name="trip/[id]" options={{ href: null }} />
+      <Tabs.Screen name="trip-generation/[id]" options={{ href: null }} />
     </Tabs>
   );
 }
