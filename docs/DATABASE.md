@@ -1,416 +1,213 @@
-# TravelAI — Database Schema
+# TravelAI Database
 
-All dates are stored in **ISO 8601** format. Default currency is **INR (₹)**.  
-All monetary values are stored as `INTEGER` (paise / paisa — multiply by 100 before storing, divide by 100 for display).  
-Row Level Security (RLS) is enabled on all tables.
+TravelAI uses Supabase Postgres with Supabase Auth as the source of identity. Public user records live in `profiles`, keyed by the same UUID as `auth.users.id`.
 
----
+Money is stored consistently as integer minor units. For INR, `4000000` means Rs 40,000.00. Absolute date-times use `timestamptz`; trip calendar days use `date` plus the trip's IANA `timezone`.
+
+## Migrations
+
+Schema:
+
+```bash
+cd backend/supabase
+supabase db reset
+```
+
+Apply to a linked project:
+
+```bash
+cd backend/supabase
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+The seed file is `backend/supabase/seed.sql`. `supabase db reset` loads it automatically after migrations.
+
+Run only the seed against a local database:
+
+```bash
+cd backend/supabase
+supabase db seed
+```
+
+## TypeScript Types
+
+Generate database types from the local Supabase stack:
+
+```bash
+cd backend/supabase
+supabase gen types typescript --local > ../../frontend/src/types/supabase.ts
+```
+
+Generate types from a hosted project:
+
+```bash
+cd backend/supabase
+supabase gen types typescript --project-id <project-ref> > ../../frontend/src/types/supabase.ts
+```
+
+Do not put service-role keys in frontend code. Frontend code should use the anon key and rely on Row Level Security. Service-role keys belong only in trusted server environments such as Supabase Edge Functions or private backend jobs.
 
 ## Tables
 
-### `profiles`
-Extends Supabase `auth.users`. Created by trigger on user signup.
+### Identity
 
-```sql
-CREATE TABLE profiles (
-  id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name       TEXT,
-  avatar_url      TEXT,
-  phone           TEXT,
-  home_city       TEXT,
-  preferred_lang  TEXT DEFAULT 'en',
-  comfort_level   TEXT DEFAULT 'standard' CHECK (comfort_level IN ('budget','standard','premium')),
-  interests       TEXT[] DEFAULT '{}',
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+`profiles`
+: Public profile for each Supabase Auth user. Created automatically by `public.handle_new_user()` after insert on `auth.users`.
+
+`travel_preferences`
+: One row per user for default comfort level, traveler type, interests, accessibility needs, transport modes, and optional daily budget.
+
+`traveler_profiles`
+: Reusable traveler records owned by a user. These can link to another authenticated profile or represent a companion without an account.
+
+### Trips
+
+`trips`
+: Core trip record with creator, origin, destination, local date range, timezone, status, currency, and total budget.
+
+`trip_members`
+: Membership table used for trip-level access. Members can be authenticated users, traveler profiles, or invited emails. Roles are `owner`, `organizer`, `traveler`, and `viewer`; statuses are `invited`, `accepted`, `declined`, and `removed`.
+
+`trip_days`
+: One local calendar day per trip day.
+
+`itinerary_items`
+: Scheduled or unscheduled trip items such as transport, stays, food, and activities. Uses `timestamptz` for exact scheduled times and `time` for floating local times.
+
+### Journey Search
+
+`journey_searches`
+: A user's route search for flights, trains, buses, cabs, ferries, or mixed transport.
+
+`journey_options`
+: Returned journey choices with provider data, total price in minor units, status, booking URL, and recommendation metadata.
+
+`journey_segments`
+: Segment-level legs for a journey option.
+
+### Budget And Costs
+
+`trip_budgets`
+: Planned and actual budget buckets per trip category.
+
+`cost_items`
+: Estimated, manual, booking, or expense-linked costs.
+
+### Packing
+
+`packing_lists`
+: Trip packing lists, optionally scoped to one user.
+
+`packing_items`
+: Packing checklist items with category, quantity, assignment, packed status, and source.
+
+### Expenses
+
+`expenses`
+: Shared trip expenses with payer, amount, category, timestamp, receipt URL, and creator.
+
+`expense_participants`
+: Members included in an expense.
+
+`expense_splits`
+: Amount owed by each member for an expense.
+
+`settlements`
+: Payments between members to settle balances.
+
+### Safety
+
+`trusted_contacts`
+: User-owned emergency contacts.
+
+`safety_sessions`
+: User-owned check-in sessions, optionally linked to a trip.
+
+`safety_checkins`
+: Scheduled, completed, missed, or escalated check-ins for a safety session.
+
+### Prices And Notifications
+
+`price_alerts`
+: User-owned price watches. `status` and `next_check_at` are indexed for alert-processing jobs.
+
+`price_history`
+: Observed prices for alerts or journey options.
+
+`notifications`
+: User-owned notification log with read/archive state.
+
+### AI And Feedback
+
+`ai_generations`
+: Audit trail for AI features such as itinerary, journey, packing, budget, and safety generation.
+
+`user_feedback`
+: Ratings and feedback tied to users, trips, and optional AI generation rows.
+
+## Relationships
+
+```mermaid
+erDiagram
+  AUTH_USERS ||--|| profiles : "auth id"
+  profiles ||--o| travel_preferences : owns
+  profiles ||--o{ traveler_profiles : owns
+  profiles ||--o{ trips : creates
+  trips ||--o{ trip_members : has
+  trips ||--o{ trip_days : has
+  trip_days ||--o{ itinerary_items : contains
+  trips ||--o{ journey_searches : scopes
+  journey_searches ||--o{ journey_options : returns
+  journey_options ||--o{ journey_segments : has
+  trips ||--o{ trip_budgets : budgets
+  trips ||--o{ cost_items : costs
+  trips ||--o{ packing_lists : has
+  packing_lists ||--o{ packing_items : contains
+  trips ||--o{ expenses : has
+  expenses ||--o{ expense_participants : includes
+  expenses ||--o{ expense_splits : splits
+  trips ||--o{ settlements : settles
+  profiles ||--o{ trusted_contacts : owns
+  profiles ||--o{ safety_sessions : owns
+  safety_sessions ||--o{ safety_checkins : has
+  profiles ||--o{ price_alerts : owns
+  price_alerts ||--o{ price_history : records
+  profiles ||--o{ notifications : receives
+  profiles ||--o{ ai_generations : requests
+  ai_generations ||--o{ user_feedback : receives
 ```
 
-RLS: `SELECT / UPDATE` only for `auth.uid() = id`.
+## Important Policies
 
----
+RLS is enabled on every public table.
 
-### `trips`
-A trip record created by the user.
+Helper functions:
 
-```sql
-CREATE TABLE trips (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  title           TEXT NOT NULL,
-  origin          TEXT NOT NULL,
-  destination     TEXT NOT NULL,
-  start_date      DATE NOT NULL,                       -- ISO format
-  end_date        DATE NOT NULL,
-  num_travelers   INTEGER NOT NULL DEFAULT 1,
-  traveler_type   TEXT DEFAULT 'solo'
-                  CHECK (traveler_type IN ('solo','couple','family','friends','work')),
-  budget_inr      INTEGER NOT NULL,                    -- stored in paise
-  interests       TEXT[] DEFAULT '{}',
-  comfort_level   TEXT DEFAULT 'standard',
-  status          TEXT DEFAULT 'planning'
-                  CHECK (status IN ('planning','active','completed','cancelled')),
-  is_saved        BOOLEAN DEFAULT FALSE,
-  notes           TEXT,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
+`public.is_trip_member(trip_id, user_id default auth.uid())`
+: Returns true when the user created the trip or has an accepted `trip_members` row.
 
-RLS: All operations for `auth.uid() = user_id`.
+`public.is_trip_organizer(trip_id, user_id default auth.uid())`
+: Returns true when the user created the trip or has accepted `owner` or `organizer` membership.
 
----
+Policy summary:
 
-### `itinerary_days`
-One row per day of a trip's AI-generated plan.
+- Profiles, preferences, traveler profiles, trusted contacts, safety sessions, price alerts, notifications, AI generations, and feedback are scoped to the owning `user_id`.
+- Trips can be selected by creators and accepted members. Trip updates are limited to creators and organizers. Trip deletes are limited to creators.
+- Trip child tables such as `trip_days`, `itinerary_items`, budgets, costs, packing, expenses, and settlements are scoped through `is_trip_member(trip_id)`.
+- Journey options and segments are visible through either their trip membership or the user who created the search.
+- Price history is readable through the owning price alert or a visible journey option. Inserts are intentionally left to trusted backend jobs.
+- Safety check-ins are scoped to the owning user through `user_id`.
 
-```sql
-CREATE TABLE itinerary_days (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id         UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  day_number      INTEGER NOT NULL,
-  date            DATE NOT NULL,
-  theme           TEXT,
-  estimated_cost_inr INTEGER DEFAULT 0,
-  notes           TEXT,
-  is_locked       BOOLEAN DEFAULT FALSE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (trip_id, day_number)
-);
-```
+## Seed Data
 
-RLS: Via `trips` relationship — user must own the trip.
+The demo seed creates four local auth users:
 
----
+- `ananya.demo@travelai.local`
+- `rohan.demo@travelai.local`
+- `meera.demo@travelai.local`
+- `kabir.demo@travelai.local`
 
-### `itinerary_activities`
-Individual activities within a day.
+All demo users use the local development password `TravelAI123!`.
 
-```sql
-CREATE TABLE itinerary_activities (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  day_id          UUID NOT NULL REFERENCES itinerary_days(id) ON DELETE CASCADE,
-  trip_id         UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  sort_order      INTEGER NOT NULL DEFAULT 0,
-  title           TEXT NOT NULL,
-  description     TEXT,
-  location_name   TEXT,
-  location_lat    DECIMAL(9,6),
-  location_lng    DECIMAL(9,6),
-  start_time      TIME,
-  end_time        TIME,
-  duration_mins   INTEGER,
-  category        TEXT CHECK (category IN (
-                    'sightseeing','food','transport','accommodation',
-                    'activity','rest','shopping','emergency','other'
-                  )),
-  estimated_cost_inr INTEGER DEFAULT 0,
-  is_ai_generated BOOLEAN DEFAULT TRUE,
-  is_confirmed    BOOLEAN DEFAULT FALSE,              -- FALSE = AI estimate only
-  source_label    TEXT DEFAULT '[AI ESTIMATE]',       -- displayed on UI
-  booking_url     TEXT,
-  notes           TEXT,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `transport_options`
-Saved journey comparison results for a trip.
-
-```sql
-CREATE TABLE transport_options (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id         UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  mode            TEXT NOT NULL CHECK (mode IN ('flight','train','bus','cab','ferry','mixed')),
-  operator        TEXT,
-  departure_time  TIMESTAMPTZ,
-  arrival_time    TIMESTAMPTZ,
-  duration_mins   INTEGER,
-  base_fare_inr   INTEGER,
-  taxes_inr       INTEGER DEFAULT 0,
-  baggage_cost_inr INTEGER DEFAULT 0,
-  last_mile_inr   INTEGER DEFAULT 0,
-  total_cost_inr  INTEGER,
-  comfort_rating  SMALLINT CHECK (comfort_rating BETWEEN 1 AND 5),
-  num_stops       INTEGER DEFAULT 0,
-  is_refundable   BOOLEAN DEFAULT FALSE,
-  is_recommended  BOOLEAN DEFAULT FALSE,
-  data_label      TEXT DEFAULT '[MOCK DATA]',         -- label as mock or live
-  raw_response    JSONB,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `tickets`
-Ticket search results saved by the user.
-
-```sql
-CREATE TABLE tickets (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  trip_id         UUID REFERENCES trips(id) ON DELETE SET NULL,
-  type            TEXT NOT NULL CHECK (type IN ('flight','train','bus')),
-  operator        TEXT,
-  origin          TEXT NOT NULL,
-  destination     TEXT NOT NULL,
-  departure_at    TIMESTAMPTZ,
-  arrival_at      TIMESTAMPTZ,
-  seat_class      TEXT,
-  base_fare_inr   INTEGER,
-  total_fare_inr  INTEGER,
-  booking_ref     TEXT,
-  status          TEXT DEFAULT 'saved'
-                  CHECK (status IN ('saved','booked','cancelled','refunded')),
-  booking_url     TEXT,
-  data_label      TEXT DEFAULT '[MOCK DATA]',
-  raw_response    JSONB,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `expense_groups`
-A shared expense group (usually one per trip).
-
-```sql
-CREATE TABLE expense_groups (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id         UUID REFERENCES trips(id) ON DELETE CASCADE,
-  name            TEXT NOT NULL,
-  created_by      UUID NOT NULL REFERENCES profiles(id),
-  invite_code     TEXT UNIQUE DEFAULT LEFT(gen_random_uuid()::TEXT, 8),
-  currency        TEXT DEFAULT 'INR',
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
-### `expense_group_members`
-```sql
-CREATE TABLE expense_group_members (
-  group_id        UUID NOT NULL REFERENCES expense_groups(id) ON DELETE CASCADE,
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  display_name    TEXT,
-  joined_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (group_id, user_id)
-);
-```
-
----
-
-### `expenses`
-Individual expense entries.
-
-```sql
-CREATE TABLE expenses (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  group_id        UUID NOT NULL REFERENCES expense_groups(id) ON DELETE CASCADE,
-  trip_id         UUID REFERENCES trips(id),
-  paid_by         UUID NOT NULL REFERENCES profiles(id),
-  title           TEXT NOT NULL,
-  amount_inr      INTEGER NOT NULL,                  -- in paise
-  category        TEXT DEFAULT 'miscellaneous'
-                  CHECK (category IN (
-                    'transport','accommodation','food','activities',
-                    'shopping','fuel','emergency','miscellaneous'
-                  )),
-  receipt_url     TEXT,
-  notes           TEXT,
-  expense_date    DATE NOT NULL DEFAULT CURRENT_DATE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
-### `expense_splits`
-How each expense is split among members.
-
-```sql
-CREATE TABLE expense_splits (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  expense_id      UUID NOT NULL REFERENCES expenses(id) ON DELETE CASCADE,
-  user_id         UUID NOT NULL REFERENCES profiles(id),
-  share_amount_inr INTEGER NOT NULL,                 -- in paise
-  is_settled      BOOLEAN DEFAULT FALSE,
-  settled_at      TIMESTAMPTZ
-);
-```
-
----
-
-### `packing_items`
-AI-generated and user-added packing list items.
-
-```sql
-CREATE TABLE packing_items (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id         UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  category        TEXT NOT NULL,
-  item_name       TEXT NOT NULL,
-  quantity        INTEGER DEFAULT 1,
-  is_packed       BOOLEAN DEFAULT FALSE,
-  is_ai_generated BOOLEAN DEFAULT TRUE,
-  notes           TEXT,
-  sort_order      INTEGER DEFAULT 0,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `price_alerts`
-Price tracking records for flights/trains.
-
-```sql
-CREATE TABLE price_alerts (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  trip_id         UUID REFERENCES trips(id),
-  type            TEXT NOT NULL CHECK (type IN ('flight','train','bus')),
-  origin          TEXT NOT NULL,
-  destination     TEXT NOT NULL,
-  travel_date     DATE,
-  target_price_inr INTEGER,                          -- alert when below this
-  last_price_inr  INTEGER,
-  is_active       BOOLEAN DEFAULT TRUE,
-  last_checked_at TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `safety_contacts`
-Trusted emergency contacts for Safety Mode.
-
-```sql
-CREATE TABLE safety_contacts (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  name            TEXT NOT NULL,
-  phone           TEXT NOT NULL,
-  relationship    TEXT,
-  sort_order      INTEGER DEFAULT 0,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `checkin_sessions`
-Safety Mode check-in timer sessions.
-
-```sql
-CREATE TABLE checkin_sessions (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  trip_id         UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  user_id         UUID NOT NULL REFERENCES profiles(id),
-  interval_mins   INTEGER NOT NULL DEFAULT 60,
-  last_checkin_at TIMESTAMPTZ,
-  next_due_at     TIMESTAMPTZ,
-  is_active       BOOLEAN DEFAULT TRUE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-### `notifications`
-Notification log.
-
-```sql
-CREATE TABLE notifications (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  type            TEXT NOT NULL CHECK (type IN (
-                    'price_drop','checkin_reminder','trip_reminder',
-                    'expense_settled','budget_warning','safety_alert','system'
-                  )),
-  title           TEXT NOT NULL,
-  body            TEXT,
-  is_read         BOOLEAN DEFAULT FALSE,
-  trip_id         UUID REFERENCES trips(id),
-  metadata        JSONB,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-## Key Relationships Diagram
-
-```
-auth.users
-    └── profiles (1:1)
-            └── trips (1:N)
-                    ├── itinerary_days (1:N)
-                    │       └── itinerary_activities (1:N)
-                    ├── transport_options (1:N)
-                    ├── tickets (1:N)
-                    ├── expense_groups (1:N)
-                    │       ├── expense_group_members (N:N via profiles)
-                    │       └── expenses (1:N)
-                    │               └── expense_splits (1:N)
-                    ├── packing_items (1:N)
-                    ├── checkin_sessions (1:N)
-                    └── notifications (1:N via user_id)
-            ├── tickets (1:N via user_id)
-            ├── price_alerts (1:N)
-            └── safety_contacts (1:N)
-```
-
----
-
-## Row Level Security Policies
-
-All tables have RLS enabled. General policy pattern:
-
-```sql
--- Example for trips table
-ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage own trips"
-  ON trips FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-```
-
-Expense group members can read group expenses but cannot modify records they didn't create.
-
----
-
-## Triggers
-
-```sql
--- Auto-create profile on signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO profiles (id, full_name, avatar_url)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'avatar_url');
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-
--- Auto-update updated_at
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON trips
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-```
+The seed trip is `Hyderabad to Goa friends trip`, scheduled for `2026-08-14` through `2026-08-17`, with four travelers and a total budget of `4000000` minor units, equal to Rs 40,000.00.
