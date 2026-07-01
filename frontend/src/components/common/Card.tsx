@@ -8,6 +8,7 @@ interface CardProps {
   style?: StyleProp<ViewStyle>;
   elevation?: 0 | 1 | 2 | 3 | 4 | 5;
   mode?: 'elevated' | 'outlined' | 'contained';
+  accessibilityLabel?: string;
 }
 
 export function Card({
@@ -16,6 +17,7 @@ export function Card({
   style,
   elevation = 1,
   mode = 'elevated',
+  accessibilityLabel,
 }: CardProps) {
   return (
     <PaperCard
@@ -23,6 +25,8 @@ export function Card({
       style={[styles.card, style]}
       elevation={elevation}
       mode={mode as 'elevated'}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={onPress ? 'button' : undefined}
     >
       {children}
     </PaperCard>

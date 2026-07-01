@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, View } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Snackbar, useTheme } from 'react-native-paper';
 import { AuthScreenHeader } from '../../src/features/auth/AuthScreenHeader';
 import { Button } from '../../src/components/common/Button';
@@ -120,9 +120,13 @@ export default function RegisterScreen() {
 
       <View style={styles.footer}>
         <Text style={{ color: theme.colors.onSurfaceVariant }}>Already registered? </Text>
-        <Link href="/(auth)/login" asChild>
-          <Text style={[styles.link, { color: theme.colors.primary }]}>Log in</Text>
-        </Link>
+        <Text
+          accessibilityRole="button"
+          onPress={() => router.push('/(auth)/login')}
+          style={[styles.link, { color: theme.colors.primary }]}
+        >
+          Log in
+        </Text>
       </View>
 
       <Snackbar visible={!!message} onDismiss={() => setMessage('')} duration={4000}>
