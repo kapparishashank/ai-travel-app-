@@ -22,7 +22,7 @@ export function Card({
       onPress={onPress}
       style={[styles.card, style]}
       elevation={elevation}
-      mode={mode}
+      mode={mode as 'elevated'}
     >
       {children}
     </PaperCard>

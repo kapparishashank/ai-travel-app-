@@ -10,10 +10,14 @@ export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   phone: string | null;
+  date_of_birth?: string | null;
   home_city: string | null;
-  preferred_lang: string;
-  comfort_level: 'budget' | 'standard' | 'premium';
-  interests: string[];
+  preferred_language?: string;
+  preferred_lang?: string;
+  currency_code?: string;
+  timezone?: string;
+  comfort_level?: 'budget' | 'standard' | 'premium';
+  interests?: string[];
   created_at: string;
   updated_at: string;
 }

@@ -26,7 +26,7 @@ export function Loading({ fullScreen = false, message }: LoadingProps) {
 
 const styles = StyleSheet.create({
   fullScreen: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,

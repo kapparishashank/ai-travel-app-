@@ -53,10 +53,10 @@ Do not put service-role keys in frontend code. Frontend code should use the anon
 ### Identity
 
 `profiles`
-: Public profile for each Supabase Auth user. Created automatically by `public.handle_new_user()` after insert on `auth.users`.
+: Public profile for each Supabase Auth user. Created automatically by `public.handle_new_user()` after insert on `auth.users`. Stores onboarding fields such as full name, phone, optional date of birth, home city, avatar URL, currency, and language.
 
 `travel_preferences`
-: One row per user for default comfort level, traveler type, interests, accessibility needs, transport modes, and optional daily budget.
+: One row per user for budget style, transport modes, comfort level, travel pace, interests, food preferences, accessibility needs, safety preference, and optional daily budget.
 
 `traveler_profiles`
 : Reusable traveler records owned by a user. These can link to another authenticated profile or represent a companion without an account.

@@ -1,71 +1,46 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { StyleSheet, Text, View } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useTheme, Snackbar } from 'react-native-paper';
 import { Link, useRouter } from 'expo-router';
+import { Snackbar, useTheme } from 'react-native-paper';
+import { AuthScreenHeader } from '../../src/features/auth/AuthScreenHeader';
+import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
-import { Button } from '../../src/components/common/Button';
 import { supabase } from '../../src/lib/supabase';
-import { useAuthStore } from '../../src/store/authStore';
-
-const registerSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { signUpSchema, type SignUpFormData } from '../../src/features/auth/validation';
 
 export default function RegisterScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
   const [submitting, setSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [message, setMessage] = useState('');
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: '', email: '', password: '' },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (values: SignUpFormData) => {
     setSubmitting(true);
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+      const { error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
         options: {
-          data: {
-            full_name: data.fullName,
-          },
+          data: { full_name: values.fullName },
         },
       });
 
       if (error) throw error;
-
-      if (authData.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-
-        if (profile) {
-          setUser(profile);
-          setToastMessage('Account created successfully!');
-        } else {
-          setToastMessage('Account created! Please log in.');
-        }
-      }
-    } catch (err: any) {
-      setToastMessage(err.message ?? 'Registration failed. Please try again.');
+      router.replace('/(auth)/verify-email');
+    } catch (error: any) {
+      setMessage(error.message ?? 'Could not create your account.');
     } finally {
       setSubmitting(false);
     }
@@ -73,88 +48,85 @@ export default function RegisterScreen() {
 
   return (
     <ScreenContainer scrollable safeArea contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.primary }]}>Create Account</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Join TravelAI to start planning
-        </Text>
+      <AuthScreenHeader
+        title="Create account"
+        subtitle="Use email and password. Supabase stores credentials securely; TravelAI never stores passwords manually."
+      />
+
+      <Controller
+        control={control}
+        name="fullName"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            label="Full name"
+            value={value}
+            onChangeText={onChange}
+            error={errors.fullName?.message}
+            autoCapitalize="words"
+            leftIcon="account-outline"
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="email"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            label="Email"
+            value={value}
+            onChangeText={onChange}
+            error={errors.email?.message}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            leftIcon="email-outline"
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="password"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            label="Password"
+            value={value}
+            onChangeText={onChange}
+            error={errors.password?.message}
+            secureTextEntry
+            leftIcon="lock-outline"
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="confirmPassword"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            label="Confirm password"
+            value={value}
+            onChangeText={onChange}
+            error={errors.confirmPassword?.message}
+            secureTextEntry
+            leftIcon="lock-check-outline"
+          />
+        )}
+      />
+
+      <Button onPress={handleSubmit(onSubmit)} loading={submitting} style={styles.submit}>
+        Sign up
+      </Button>
+
+      <View style={styles.footer}>
+        <Text style={{ color: theme.colors.onSurfaceVariant }}>Already registered? </Text>
+        <Link href="/(auth)/login" asChild>
+          <Text style={[styles.link, { color: theme.colors.primary }]}>Log in</Text>
+        </Link>
       </View>
 
-      <View style={styles.form}>
-        <Controller
-          control={control}
-          name="fullName"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Full Name"
-              value={value}
-              onChangeText={onChange}
-              error={errors.fullName?.message}
-              autoCapitalize="words"
-              leftIcon="account-outline"
-              accessibilityLabel="Full Name input"
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Email"
-              value={value}
-              onChangeText={onChange}
-              error={errors.email?.message}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              leftIcon="email-outline"
-              accessibilityLabel="Email input"
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Password"
-              value={value}
-              onChangeText={onChange}
-              error={errors.password?.message}
-              secureTextEntry
-              leftIcon="lock-outline"
-              accessibilityLabel="Password input"
-            />
-          )}
-        />
-
-        <Button
-          mode="contained"
-          onPress={handleSubmit(onSubmit)}
-          loading={submitting}
-          style={styles.submitBtn}
-          accessibilityLabel="Register button"
-        >
-          Register
-        </Button>
-
-        <View style={styles.footer}>
-          <Text style={{ color: theme.colors.onSurfaceVariant }}>Already have an account? </Text>
-          <Link href="/(auth)/login" asChild>
-            <Text style={[styles.link, { color: theme.colors.primary }]}>Log In</Text>
-          </Link>
-        </View>
-      </View>
-
-      <Snackbar
-        visible={!!toastMessage}
-        onDismiss={() => setToastMessage('')}
-        duration={3000}
-        style={{ backgroundColor: theme.colors.inverseSurface }}
-      >
-        {toastMessage}
+      <Snackbar visible={!!message} onDismiss={() => setMessage('')} duration={4000}>
+        {message}
       </Snackbar>
     </ScreenContainer>
   );
@@ -162,36 +134,18 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
     justifyContent: 'center',
-    paddingVertical: 48,
+    padding: 24,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 36,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginTop: 8,
-  },
-  form: {
-    width: '100%',
-  },
-  submitBtn: {
-    marginTop: 16,
-    paddingVertical: 4,
+  submit: {
+    marginTop: 14,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 28,
   },
   link: {
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

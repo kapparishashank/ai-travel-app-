@@ -9,6 +9,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { TravelAILightTheme, TravelAIDarkTheme } from '../src/theme';
 import { Loading } from '../src/components/common/Loading';
 import { Button } from '../src/components/common/Button';
+import { getAuthRedirectTarget, isProfileComplete } from '../src/features/auth/guards';
 
 // Global Error Boundary
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
@@ -26,7 +27,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 }
 
 function RootLayoutNav() {
-  const { user, loading, initialized, initialize } = useAuthStore();
+  const { authUser, user, loading, initialized, emailVerified, initialize } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -42,16 +43,19 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!initialized) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const redirectTarget = getAuthRedirectTarget({
+      initialized,
+      sessionUserId: authUser?.id,
+      emailVerified,
+      profileComplete: isProfileComplete(user),
+      inAuthGroup: segments[0] === '(auth)',
+      inOnboardingGroup: segments[0] === '(onboarding)',
+    });
 
-    if (!user && !inAuthGroup) {
-      // Redirect to login if not logged in
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      // Redirect to tabs if logged in
-      router.replace('/(tabs)');
+    if (redirectTarget) {
+      router.replace(redirectTarget);
     }
-  }, [user, initialized, segments]);
+  }, [authUser?.id, emailVerified, initialized, router, segments, user]);
 
   if (loading || !initialized) {
     return <Loading fullScreen message="Loading TravelAI..." />;
@@ -61,6 +65,7 @@ function RootLayoutNav() {
     <PaperProvider theme={theme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </PaperProvider>
