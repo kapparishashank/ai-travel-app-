@@ -9,7 +9,7 @@ create extension if not exists pgcrypto;
 -- Controlled values
 -- ---------------------------------------------------------------------------
 do $$ begin
-  create type trip_status as enum ('draft', 'planning', 'active', 'completed', 'cancelled');
+  create type trip_status as enum ('draft', 'planning', 'active', 'completed', 'cancelled', 'archived');
 exception when duplicate_object then null;
 end $$;
 
