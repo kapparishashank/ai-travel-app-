@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import type { TripBasicsInput, TripDetails, TripRecord, TripStatus, TripSummary } from './types';
+import type { ActivityInput, ItineraryActivity, TripBasicsInput, TripDetails, TripRecord, TripStatus, TripSummary } from './types';
 import { cacheTripDetails, getCachedTripDetails } from './cache';
 
 function summarizeTrip(row: TripRecord, userId?: string | null): TripSummary {
@@ -130,4 +130,94 @@ export async function duplicateTrip(trip: TripSummary, userId: string) {
 
   if (error) throw error;
   return data?.id as string;
+}
+
+export async function generateItinerary(tripId: string, options?: { regenerateDay?: number }) {
+  const { data, error } = await supabase.functions.invoke('ai-planner', {
+    method: 'POST',
+    body: {
+      tripId,
+      regenerateDay: options?.regenerateDay,
+      preserveLockedActivities: true,
+    },
+  });
+
+  if (error) throw error;
+  if ((data as any)?.error) throw new Error((data as any).message ?? 'Itinerary generation failed.');
+  return data;
+}
+
+export async function updateActivity(activityId: string, input: ActivityInput) {
+  const { error } = await supabase
+    .from('itinerary_items')
+    .update({
+      title: input.title,
+      description: input.description ?? null,
+      category: input.category,
+      location_name: input.location_name ?? null,
+      local_start_time: input.local_start_time,
+      local_end_time: input.local_end_time,
+      estimated_cost_minor: input.estimated_cost_minor,
+      metadata: input.metadata ?? {},
+    })
+    .eq('id', activityId);
+
+  if (error) throw error;
+}
+
+export async function addActivity(tripId: string, tripDayId: string, input: ActivityInput, sortOrder: number) {
+  const { error } = await supabase.from('itinerary_items').insert({
+    trip_id: tripId,
+    trip_day_id: tripDayId,
+    title: input.title,
+    description: input.description ?? null,
+    category: input.category,
+    location_name: input.location_name ?? null,
+    local_start_time: input.local_start_time,
+    local_end_time: input.local_end_time,
+    estimated_cost_minor: input.estimated_cost_minor,
+    source: 'manual',
+    status: 'planned',
+    sort_order: sortOrder,
+    metadata: input.metadata ?? { data_label: 'CONFIRMED_BY_USER' },
+  });
+
+  if (error) throw error;
+}
+
+export async function removeActivity(activityId: string) {
+  const { error } = await supabase.from('itinerary_items').delete().eq('id', activityId);
+  if (error) throw error;
+}
+
+export async function setActivityLocked(activity: ItineraryActivity, locked: boolean) {
+  const { error } = await supabase
+    .from('itinerary_items')
+    .update({ metadata: { ...(activity.metadata ?? {}), locked } })
+    .eq('id', activity.id);
+  if (error) throw error;
+}
+
+export async function reorderActivities(activities: ItineraryActivity[]) {
+  const updates = activities.map((activity, index) =>
+    supabase.from('itinerary_items').update({ sort_order: index }).eq('id', activity.id)
+  );
+  const results = await Promise.all(updates);
+  const failed = results.find((result) => result.error);
+  if (failed?.error) throw failed.error;
+}
+
+export async function reportActivityRecommendation(tripId: string, activity: ItineraryActivity, message: string, userId: string) {
+  const { error } = await supabase.from('user_feedback').insert({
+    user_id: userId,
+    trip_id: tripId,
+    feedback_type: 'content_quality',
+    message,
+    metadata: {
+      activity_id: activity.id,
+      activity_title: activity.title,
+      reason: activity.metadata?.recommendation_reason,
+    },
+  });
+  if (error) throw error;
 }

@@ -38,6 +38,45 @@ export type TripDetails = {
   expenses: any[];
 };
 
+export type ItineraryActivity = {
+  id: string;
+  trip_id: string;
+  trip_day_id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  location_name: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  local_start_time: string | null;
+  local_end_time: string | null;
+  estimated_cost_minor: number;
+  source: 'manual' | 'ai' | 'imported';
+  status: string;
+  sort_order: number;
+  metadata: Record<string, any>;
+};
+
+export type TripDay = {
+  id: string;
+  trip_id: string;
+  day_number: number;
+  local_date: string;
+  title: string | null;
+  notes: string | null;
+};
+
+export type ActivityInput = {
+  title: string;
+  description?: string | null;
+  category: string;
+  location_name?: string | null;
+  local_start_time: string;
+  local_end_time: string;
+  estimated_cost_minor: number;
+  metadata?: Record<string, any>;
+};
+
 export type TripBasicsInput = {
   title: string;
   origin_name: string;

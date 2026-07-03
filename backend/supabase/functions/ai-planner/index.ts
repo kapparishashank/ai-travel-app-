@@ -13,6 +13,8 @@ const PROVIDER_RETRIES = 1;
 
 const requestSchema = z.object({
   tripId: z.string().uuid(),
+  regenerateDay: z.number().int().min(1).max(60).optional(),
+  preserveLockedActivities: z.boolean().default(true),
   source: z.string().trim().min(2).max(120).optional(),
   destination: z.string().trim().min(2).max(120).optional(),
   dates: z
@@ -434,7 +436,7 @@ Rules:
 - Avoid impossible travel times.
 - Warn when the requested budget is unrealistic.
 - Use minor currency units for all costs.
-- Return exactly ${tripDays} days unless the date input is impossible.`;
+- ${requestData.regenerateDay ? `Return only day ${requestData.regenerateDay}.` : `Return exactly ${tripDays} days unless the date input is impossible.`}`;
 }
 
 function parseProviderJson(raw: string) {
@@ -444,21 +446,49 @@ function parseProviderJson(raw: string) {
 }
 
 async function saveItinerary(adminClient: any, trip: TripRow, itinerary: ItineraryResponse) {
-  await adminClient.from('itinerary_items').delete().eq('trip_id', trip.id);
-  await adminClient.from('trip_days').delete().eq('trip_id', trip.id);
+  const dayNumbers = itinerary.dayWiseItinerary.map((day) => day.dayNumber);
+  const { data: existingDays } = await adminClient
+    .from('trip_days')
+    .select('id,day_number')
+    .eq('trip_id', trip.id);
+
+  const existingDayMap = new Map((existingDays ?? []).map((day: { id: string; day_number: number }) => [day.day_number, day.id]));
+  const dayIdsInScope = (existingDays ?? [])
+    .filter((day: { id: string; day_number: number }) => dayNumbers.includes(day.day_number))
+    .map((day: { id: string }) => day.id);
+
+  if (dayIdsInScope.length > 0) {
+    const { data: scopedItems, error: scopedItemsError } = await adminClient
+      .from('itinerary_items')
+      .select('id,metadata')
+      .eq('trip_id', trip.id)
+      .in('trip_day_id', dayIdsInScope);
+
+    if (scopedItemsError) throw scopedItemsError;
+
+    const deletableItemIds = (scopedItems ?? [])
+      .filter((item: { metadata?: { locked?: boolean } | null }) => item.metadata?.locked !== true)
+      .map((item: { id: string }) => item.id);
+
+    if (deletableItemIds.length > 0) {
+      const { error: deleteItemsError } = await adminClient.from('itinerary_items').delete().in('id', deletableItemIds);
+      if (deleteItemsError) throw deleteItemsError;
+    }
+  }
 
   for (const day of itinerary.dayWiseItinerary) {
-    const { data: insertedDay, error: dayError } = await adminClient
-      .from('trip_days')
-      .insert({
+    const existingDayId = existingDayMap.get(day.dayNumber);
+    const dayPayload = {
         trip_id: trip.id,
         day_number: day.dayNumber,
         local_date: day.date,
         title: day.theme,
         notes: [day.safetyNote, day.weatherNote].filter(Boolean).join('\n'),
-      })
-      .select('id')
-      .single();
+      };
+
+    const { data: insertedDay, error: dayError } = existingDayId
+      ? await adminClient.from('trip_days').update(dayPayload).eq('id', existingDayId).select('id').single()
+      : await adminClient.from('trip_days').insert(dayPayload).select('id').single();
 
     if (dayError || !insertedDay) throw dayError ?? new Error('Failed to save itinerary day.');
 
