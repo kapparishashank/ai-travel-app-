@@ -1,22 +1,494 @@
-import React from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import React, { useEffect, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Checkbox, Dialog, Portal, ProgressBar, Snackbar, useTheme } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button } from '../../src/components/common/Button';
+import { Card } from '../../src/components/common/Card';
+import { ConfirmationDialog } from '../../src/components/common/ConfirmationDialog';
+import { EmptyState } from '../../src/components/common/EmptyState';
+import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { TextInput } from '../../src/components/common/TextInput';
+import { addPackingItem, createPackingList, fetchPackingForTrip, generatePackingChecklist, resetPackedStatus, syncPackingQueue, updatePackingItem } from '../../src/features/packing/api';
+import { applyQueuedPackingOperation, cachePackingList, enqueuePackingOperation, getCachedPackingList } from '../../src/features/packing/cache';
+import { buildFallbackPackingItems } from '../../src/features/packing/fallback';
+import { packingCategories, type PackingCategory, type PackingItemView, type PackingPriority } from '../../src/features/packing/types';
+import { calculatePackingProgress, packingCategoryLabels, serializePackingNotes } from '../../src/features/packing/utils';
+import { fetchTrips } from '../../src/features/trips/api';
+import type { TripSummary } from '../../src/features/trips/types';
+import { useAuthStore } from '../../src/store/authStore';
 
 export default function PackingScreen() {
   const theme = useTheme();
+  const queryClient = useQueryClient();
+  const authUser = useAuthStore((state) => state.authUser);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<PackingCategory | 'all'>('all');
+  const [items, setItems] = useState<PackingItemView[]>([]);
+  const [listId, setListId] = useState<string | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [message, setMessage] = useState('');
+  const [generationInputs, setGenerationInputs] = useState({
+    baggageLimit: 'Carry-on plus one personal item',
+    weatherContext: 'Warm coastal weather with sun and possible humidity',
+    accommodationType: 'Shared apartment or hotel',
+    accessibilityOrMedicalNotes: '',
+  });
+
+  const tripsQuery = useQuery({
+    queryKey: ['trips', authUser?.id],
+    queryFn: () => fetchTrips(authUser?.id),
+    enabled: Boolean(authUser?.id),
+  });
+
+  const selectedTrip = useMemo(() => {
+    const trips = tripsQuery.data ?? [];
+    return trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
+  }, [selectedTripId, tripsQuery.data]);
+
+  useEffect(() => {
+    if (!selectedTripId && selectedTrip) setSelectedTripId(selectedTrip.id);
+  }, [selectedTrip, selectedTripId]);
+
+  const packingQuery = useQuery({
+    queryKey: ['packing', selectedTrip?.id],
+    queryFn: async () => {
+      if (!selectedTrip) throw new Error('Select a trip first.');
+      try {
+        await syncPackingQueue();
+        const remote = await fetchPackingForTrip(selectedTrip.id);
+        await cachePackingList(selectedTrip.id, remote);
+        return remote;
+      } catch (error) {
+        const cached = await getCachedPackingList(selectedTrip.id);
+        if (cached) return cached;
+        throw error;
+      }
+    },
+    enabled: Boolean(selectedTrip?.id),
+  });
+
+  useEffect(() => {
+    if (packingQuery.data) {
+      setItems(packingQuery.data.items);
+      setListId(packingQuery.data.list?.id ?? null);
+    }
+  }, [packingQuery.data]);
+
+  const members = selectedTrip?.trip_members ?? [];
+  const progress = useMemo(() => calculatePackingProgress(items), [items]);
+  const filteredItems = useMemo(
+    () => items.filter((item) => categoryFilter === 'all' || item.packingCategory === categoryFilter),
+    [categoryFilter, items],
+  );
+
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedTrip) throw new Error('Select a trip first.');
+      try {
+        await generatePackingChecklist(selectedTrip.id, generationInputs);
+        const remote = await fetchPackingForTrip(selectedTrip.id);
+        await cachePackingList(selectedTrip.id, remote);
+        return remote;
+      } catch {
+        const fallbackListId = listId ?? `offline-list-${selectedTrip.id}`;
+        const fallbackItems = buildFallbackPackingItems(selectedTrip, fallbackListId);
+        const fallbackList = {
+          id: fallbackListId,
+          trip_id: selectedTrip.id,
+          user_id: authUser?.id ?? null,
+          title: `${selectedTrip.destination_name} fallback packing list`,
+          status: 'active',
+        };
+        await cachePackingList(selectedTrip.id, { list: fallbackList, items: fallbackItems });
+        return { list: fallbackList, items: fallbackItems, fallback: true };
+      }
+    },
+    onSuccess: async (result: any) => {
+      setItems(result.items);
+      setListId(result.list?.id ?? null);
+      setMessage(result.fallback ? 'Generated a fallback packing list for offline use.' : 'Packing list generated and saved.');
+      queryClient.invalidateQueries({ queryKey: ['packing', selectedTrip?.id] });
+    },
+    onError: (error: any) => setMessage(error.message ?? 'Could not generate packing list.'),
+  });
+
+  const saveLocal = async (nextItems: PackingItemView[]) => {
+    setItems(nextItems);
+    if (selectedTrip) {
+      await cachePackingList(selectedTrip.id, {
+        list: packingQuery.data?.list ?? (listId ? { id: listId, trip_id: selectedTrip.id, user_id: authUser?.id ?? null, title: 'Packing list', status: 'active' } : null),
+        items: nextItems,
+      });
+    }
+  };
+
+  const addCustomItem = async (input: CustomPackingForm) => {
+    if (!selectedTrip) return;
+    let activeListId = listId;
+    try {
+      if (!activeListId) {
+        const created = await createPackingList(selectedTrip.id, authUser?.id ?? null, `${selectedTrip.destination_name} packing list`);
+        activeListId = created.id;
+        setListId(created.id);
+      }
+    } catch {
+      activeListId = `offline-list-${selectedTrip.id}`;
+      setListId(activeListId);
+    }
+
+    const now = new Date().toISOString();
+    const localItem: PackingItemView = {
+      id: `local-${Date.now()}`,
+      packing_list_id: activeListId,
+      trip_id: selectedTrip.id,
+      assigned_to: input.assignedTo || null,
+      category: 'other',
+      item_name: input.name.trim(),
+      quantity: Math.max(1, Number(input.quantity || 1)),
+      is_packed: false,
+      packed_at: null,
+      source: 'manual',
+      notes: serializePackingNotes({
+        packingCategory: input.category,
+        reason: input.reason.trim() || 'Custom item added by user.',
+        priority: input.priority,
+        aiGenerated: false,
+      }),
+      sort_order: items.length,
+      created_at: now,
+      updated_at: now,
+      packingCategory: input.category,
+      reason: input.reason.trim() || 'Custom item added by user.',
+      priority: input.priority,
+      aiGenerated: false,
+      assignedUserLabel: members.find((member) => member.id === input.assignedTo)?.display_name ?? null,
+    };
+
+    const nextItems = [localItem, ...items];
+    await saveLocal(nextItems);
+    setAddDialogOpen(false);
+
+    try {
+      const saved = await addPackingItem(activeListId, selectedTrip.id, localItem);
+      await saveLocal([saved, ...items]);
+      setMessage('Packing item added.');
+    } catch {
+      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'add', tripId: selectedTrip.id, listId: activeListId, item: localItem, createdAt: now });
+      setMessage('Saved offline. This item will sync when connectivity returns.');
+    }
+  };
+
+  const updateItem = async (item: PackingItemView, patch: Partial<PackingItemView>) => {
+    const nextItem = { ...item, ...patch };
+    const nextItems = items.map((current) => (current.id === item.id ? nextItem : current));
+    await saveLocal(nextItems);
+    const dbPatch = {
+      quantity: nextItem.quantity,
+      is_packed: nextItem.is_packed,
+      packed_at: nextItem.packed_at,
+      assigned_to: nextItem.assigned_to,
+      notes: serializePackingNotes(nextItem),
+    };
+    try {
+      await updatePackingItem(item.id, dbPatch);
+    } catch {
+      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'update', itemId: item.id, patch: dbPatch, createdAt: new Date().toISOString() });
+    }
+  };
+
+  const deleteSuggestion = async (item: PackingItemView) => {
+    if (!item.aiGenerated) {
+      setMessage('Only AI suggestions can be deleted here.');
+      return;
+    }
+    const nextItems = items.filter((current) => current.id !== item.id);
+    await saveLocal(nextItems);
+    try {
+      const { deletePackingSuggestion } = await import('../../src/features/packing/api');
+      await deletePackingSuggestion(item);
+    } catch {
+      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'delete', itemId: item.id, createdAt: new Date().toISOString() });
+    }
+  };
+
+  const resetPacked = async () => {
+    if (!selectedTrip) return;
+    const nextItems = items.map((item) => ({ ...item, is_packed: false, packed_at: null }));
+    await saveLocal(nextItems);
+    setConfirmReset(false);
+    try {
+      await resetPackedStatus(selectedTrip.id);
+      setMessage('Packed status reset.');
+    } catch {
+      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'reset', tripId: selectedTrip.id, createdAt: new Date().toISOString() });
+      setMessage('Reset saved offline and will sync later.');
+    }
+  };
+
+  if (tripsQuery.isLoading) {
+    return <ScreenContainer safeArea={false} contentContainerStyle={styles.center}><Text>Loading trips...</Text></ScreenContainer>;
+  }
+
+  if (tripsQuery.isError) {
+    return <ScreenContainer safeArea={false} contentContainerStyle={styles.center}><ErrorState message="Could not load trips." onRetry={() => tripsQuery.refetch()} /></ScreenContainer>;
+  }
+
+  if (!selectedTrip) {
+    return (
+      <ScreenContainer safeArea={false} contentContainerStyle={styles.center}>
+        <EmptyState title="No trips yet" description="Create a trip before generating a packing checklist." icon="bag-suitcase-outline" />
+      </ScreenContainer>
+    );
+  }
+
   return (
-    <ScreenContainer safeArea={false} contentContainerStyle={styles.container}>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Packing</Text>
-      <Text style={[styles.body, { color: theme.colors.onSurfaceVariant }]}>
-        Weather-aware and trip-specific packing reminders will appear here.
-      </Text>
+    <ScreenContainer safeArea={false} keyboardAvoiding={false}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={<RefreshControl refreshing={packingQuery.isRefetching} onRefresh={() => packingQuery.refetch()} />}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.title, { color: theme.colors.onBackground }]}>Packing</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+              {selectedTrip.destination_name} - {selectedTrip.start_date} to {selectedTrip.end_date}
+            </Text>
+          </View>
+          <Button icon="auto-fix" onPress={() => generateMutation.mutate()} loading={generateMutation.isPending}>
+            Generate list
+          </Button>
+        </View>
+
+        <Card style={styles.panel}>
+          <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Checklist context</Text>
+          <TextInput label="Weather context" value={generationInputs.weatherContext} onChangeText={(weatherContext) => setGenerationInputs((current) => ({ ...current, weatherContext }))} />
+          <TextInput label="Baggage limit" value={generationInputs.baggageLimit} onChangeText={(baggageLimit) => setGenerationInputs((current) => ({ ...current, baggageLimit }))} />
+          <TextInput label="Accommodation type" value={generationInputs.accommodationType} onChangeText={(accommodationType) => setGenerationInputs((current) => ({ ...current, accommodationType }))} />
+          <TextInput label="Accessibility or medical notes" value={generationInputs.accessibilityOrMedicalNotes} onChangeText={(accessibilityOrMedicalNotes) => setGenerationInputs((current) => ({ ...current, accessibilityOrMedicalNotes }))} />
+          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
+            Medicine suggestions are general packing reminders only, not medical advice.
+          </Text>
+        </Card>
+
+        <Card style={styles.panel}>
+          <View style={styles.progressHeader}>
+            <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Packing progress</Text>
+            <Text style={[styles.progressValue, { color: theme.colors.primary }]}>{progress.percent}%</Text>
+          </View>
+          <ProgressBar progress={progress.percent / 100} color={theme.colors.primary} style={styles.progress} />
+          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
+            {progress.packed} of {progress.total} packable items packed. {progress.highPriorityRemaining} high-priority items remain.
+          </Text>
+          <View style={styles.actionRow}>
+            <Button icon="plus" onPress={() => setAddDialogOpen(true)}>Add custom item</Button>
+            <Button mode="outlined" icon="backup-restore" onPress={() => setConfirmReset(true)} disabled={!items.some((item) => item.is_packed)}>
+              Reset packed
+            </Button>
+          </View>
+        </Card>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+          <Button mode={categoryFilter === 'all' ? 'contained' : 'outlined'} onPress={() => setCategoryFilter('all')}>All</Button>
+          {packingCategories.map((category) => (
+            <Button key={category} mode={categoryFilter === category ? 'contained' : 'outlined'} onPress={() => setCategoryFilter(category)}>
+              {packingCategoryLabels[category]}
+            </Button>
+          ))}
+        </ScrollView>
+
+        {packingQuery.isError && items.length === 0 ? (
+          <ErrorState message="Could not load packing list." onRetry={() => packingQuery.refetch()} />
+        ) : filteredItems.length === 0 ? (
+          <EmptyState title="No packing items" description="Generate a list or add custom items." icon="bag-personal-outline" actionLabel="Generate list" onAction={() => generateMutation.mutate()} />
+        ) : (
+          <View style={styles.itemList}>
+            {filteredItems.map((item) => (
+              <PackingItemCard
+                key={item.id}
+                item={item}
+                members={members}
+                onTogglePacked={() => updateItem(item, { is_packed: !item.is_packed, packed_at: !item.is_packed ? new Date().toISOString() : null })}
+                onQuantity={(quantity) => updateItem(item, { quantity })}
+                onAssign={(memberId) => updateItem(item, { assigned_to: memberId || null, assignedUserLabel: members.find((member) => member.id === memberId)?.display_name ?? null })}
+                onDelete={() => deleteSuggestion(item)}
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      <CustomItemDialog visible={addDialogOpen} members={members} onDismiss={() => setAddDialogOpen(false)} onSave={addCustomItem} />
+      <ConfirmationDialog
+        visible={confirmReset}
+        title="Reset packed status?"
+        message="This will mark every item as unpacked. The change will sync when connectivity is available."
+        confirmLabel="Reset"
+        onDismiss={() => setConfirmReset(false)}
+        onConfirm={resetPacked}
+      />
+      <Snackbar visible={!!message} onDismiss={() => setMessage('')} duration={4000}>{message}</Snackbar>
     </ScreenContainer>
   );
 }
 
+function PackingItemCard({
+  item,
+  members,
+  onTogglePacked,
+  onQuantity,
+  onAssign,
+  onDelete,
+}: {
+  item: PackingItemView;
+  members: NonNullable<TripSummary['trip_members']>;
+  onTogglePacked: () => void;
+  onQuantity: (quantity: number) => void;
+  onAssign: (memberId: string | null) => void;
+  onDelete: () => void;
+}) {
+  const theme = useTheme();
+  const [quantity, setQuantity] = useState(String(item.quantity));
+  return (
+    <Card style={styles.itemCard}>
+      <View style={styles.itemHeader}>
+        <Checkbox status={item.is_packed ? 'checked' : 'unchecked'} onPress={onTogglePacked} />
+        <View style={styles.itemBody}>
+          <Text style={[styles.itemName, { color: theme.colors.onSurface }]}>{item.item_name}</Text>
+          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
+            {packingCategoryLabels[item.packingCategory]} - {item.priority} priority - {item.aiGenerated ? 'AI-generated' : 'Custom'}
+          </Text>
+        </View>
+        <MaterialCommunityIcons name={item.is_packed ? 'check-circle' : 'circle-outline'} size={22} color={item.is_packed ? theme.colors.primary : theme.colors.outline} />
+      </View>
+      <Text style={[styles.reason, { color: theme.colors.onSurfaceVariant }]}>{item.reason}</Text>
+      <View style={styles.inlineControls}>
+        <TextInput
+          label="Qty"
+          value={quantity}
+          onChangeText={(text) => {
+            const cleaned = text.replace(/[^\d]/g, '');
+            setQuantity(cleaned);
+            const parsed = Number(cleaned);
+            if (parsed > 0) onQuantity(parsed);
+          }}
+          keyboardType="number-pad"
+          style={styles.quantityInput}
+        />
+        <View style={styles.assignWrap}>
+          <Button mode={!item.assigned_to ? 'contained-tonal' : 'outlined'} onPress={() => onAssign(null)}>Unassigned</Button>
+          {members.map((member) => (
+            <Button key={member.id} mode={item.assigned_to === member.id ? 'contained' : 'outlined'} onPress={() => onAssign(member.id)}>
+              {member.display_name}
+            </Button>
+          ))}
+        </View>
+      </View>
+      <View style={styles.actionRow}>
+        <Button mode="text" icon="delete-outline" disabled={!item.aiGenerated} onPress={onDelete}>Delete suggestion</Button>
+      </View>
+    </Card>
+  );
+}
+
+type CustomPackingForm = {
+  name: string;
+  quantity: string;
+  category: PackingCategory;
+  priority: PackingPriority;
+  reason: string;
+  assignedTo: string | null;
+};
+
+function CustomItemDialog({
+  visible,
+  members,
+  onDismiss,
+  onSave,
+}: {
+  visible: boolean;
+  members: NonNullable<TripSummary['trip_members']>;
+  onDismiss: () => void;
+  onSave: (form: CustomPackingForm) => void;
+}) {
+  const [form, setForm] = useState<CustomPackingForm>({
+    name: '',
+    quantity: '1',
+    category: 'optional',
+    priority: 'medium',
+    reason: '',
+    assignedTo: null,
+  });
+  const patch = (input: Partial<CustomPackingForm>) => setForm((current) => ({ ...current, ...input }));
+  const priorities: PackingPriority[] = ['high', 'medium', 'low'];
+  return (
+    <Portal>
+      <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
+        <Dialog.Title>Add custom item</Dialog.Title>
+        <Dialog.ScrollArea>
+          <ScrollView contentContainerStyle={styles.dialogContent}>
+            <TextInput label="Name" value={form.name} onChangeText={(name) => patch({ name })} />
+            <TextInput label="Quantity" value={form.quantity} onChangeText={(quantity) => patch({ quantity: quantity.replace(/[^\d]/g, '') })} keyboardType="number-pad" />
+            <TextInput label="Reason" value={form.reason} onChangeText={(reason) => patch({ reason })} />
+            <View style={styles.optionWrap}>
+              {packingCategories.map((category) => (
+                <Button key={category} mode={form.category === category ? 'contained' : 'outlined'} onPress={() => patch({ category })}>
+                  {packingCategoryLabels[category]}
+                </Button>
+              ))}
+            </View>
+            <View style={styles.optionWrap}>
+              {priorities.map((priority) => (
+                <Button key={priority} mode={form.priority === priority ? 'contained' : 'outlined'} onPress={() => patch({ priority })}>
+                  {priority}
+                </Button>
+              ))}
+            </View>
+            <View style={styles.optionWrap}>
+              <Button mode={!form.assignedTo ? 'contained-tonal' : 'outlined'} onPress={() => patch({ assignedTo: null })}>Unassigned</Button>
+              {members.map((member) => (
+                <Button key={member.id} mode={form.assignedTo === member.id ? 'contained' : 'outlined'} onPress={() => patch({ assignedTo: member.id })}>
+                  {member.display_name}
+                </Button>
+              ))}
+            </View>
+          </ScrollView>
+        </Dialog.ScrollArea>
+        <Dialog.Actions>
+          <Button mode="text" onPress={onDismiss}>Cancel</Button>
+          <Button disabled={form.name.trim().length < 2 || Number(form.quantity) < 1} onPress={() => onSave(form)}>Save</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  title: { fontSize: 26, fontWeight: '900', marginBottom: 8 },
-  body: { fontSize: 15, lineHeight: 22 },
+  center: { justifyContent: 'center', padding: 24 },
+  container: { padding: 16, paddingBottom: 32, maxWidth: 1180, width: '100%', alignSelf: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginTop: 8, marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: '900' },
+  subtitle: { fontSize: 14, marginTop: 4 },
+  panel: { padding: 16 },
+  panelTitle: { fontSize: 17, fontWeight: '900' },
+  notice: { fontSize: 13, lineHeight: 19, marginTop: 4 },
+  progressHeader: { flexDirection: 'row', justifyContent: 'space-between' },
+  progressValue: { fontSize: 16, fontWeight: '900' },
+  progress: { height: 8, borderRadius: 8, marginTop: 8 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 8 },
+  filters: { gap: 8, paddingVertical: 8 },
+  itemList: { gap: 8 },
+  itemCard: { padding: 14 },
+  itemHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  itemBody: { flex: 1 },
+  itemName: { fontSize: 17, fontWeight: '900' },
+  reason: { fontSize: 14, lineHeight: 20, marginTop: 8 },
+  inlineControls: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 8 },
+  quantityInput: { width: 110 },
+  assignWrap: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  optionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  dialog: { borderRadius: 8 },
+  dialogContent: { paddingHorizontal: 16, paddingBottom: 8 },
 });
