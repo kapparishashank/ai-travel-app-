@@ -9,6 +9,7 @@ import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { saveJourneyOptionToTrip } from '../../src/features/smartJourney/api';
 import { getMockJourneyOptions } from '../../src/features/smartJourney/mockProviders';
 import { rankJourneyOptions } from '../../src/features/smartJourney/ranking';
@@ -34,6 +35,20 @@ export default function SmartJourneyScreen() {
   const [sort, setSort] = useState<JourneySort>('recommended');
   const [modeFilter, setModeFilter] = useState<JourneyMode | 'all'>('all');
   const [message, setMessage] = useState('');
+
+  React.useEffect(() => {
+    if (!authUser?.id) return;
+    trackAnalyticsEvent({
+      userId: authUser.id,
+      name: 'journey_search_started',
+      properties: {
+        source: 'smart_journey',
+        mode: 'mixed',
+        travelerCount: search.travelers,
+        dataLabel: '[MOCK DATA]',
+      },
+    }).catch(() => undefined);
+  }, [authUser?.id, search.destination, search.origin, search.travelDate, search.travelers]);
 
   const tripsQuery = useQuery({
     queryKey: ['trips', authUser?.id],

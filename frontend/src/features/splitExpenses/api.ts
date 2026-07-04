@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackAnalyticsEvent } from '../analytics/analytics';
 import { canApplyOfflineEdit, calculateExpenseSplits, createAuditEntry } from './calculations';
 import { cacheSplitExpenses, getQueuedExpenseOperations, replaceQueuedExpenseOperations } from './storage';
 import type {
@@ -194,6 +195,17 @@ export async function saveSplitExpense(tripId: string, input: ExpenseSplitInput,
   ]);
   if (participantsResult.error) throw participantsResult.error;
   if (splitsResult.error) throw splitsResult.error;
+  if (!existing) {
+    await trackAnalyticsEvent({
+      userId,
+      name: 'expense_added',
+      properties: {
+        tripId,
+        itemCategory: input.category,
+        currency: input.currency,
+      },
+    });
+  }
 
   return expenseId as string;
 }
@@ -217,6 +229,14 @@ export async function markSettlementComplete(tripId: string, settlement: Settlem
     created_by: userId,
   });
   if (error) throw error;
+  await trackAnalyticsEvent({
+    userId,
+    name: 'settlement_completed',
+    properties: {
+      tripId,
+      currency: settlement.currency,
+    },
+  });
 }
 
 export async function syncQueuedExpenseOperations(tripId: string, userId: string) {

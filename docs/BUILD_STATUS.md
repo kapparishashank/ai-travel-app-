@@ -1,45 +1,62 @@
 # Build Status - TravelAI
 
-This document tracks the compilation, linting, testing, and deployment status of the TravelAI application.
+Last updated: 2026-07-04
 
-## Current Build Status
+## Current Status
 
-| Platform | Build Status | Version | Last Checked | Notes |
-|---|---|---|---|---|
-| **Android** | 🛠️ Not Started | `0.1.0-alpha` | 2026-06-30 | Initial codebase scaffold stage. |
-| **iOS** | 🛠️ Not Started | `0.1.0-alpha` | 2026-06-30 | Initial codebase scaffold stage. |
-| **Web** | 🛠️ Not Started | `0.1.0-alpha` | 2026-06-30 | Initial codebase scaffold stage. |
-| **Supabase DB**| 🛠️ Not Started | `1.0` | 2026-06-30 | Tables & schemas planned but not deployed. |
+| Area | Status | Notes |
+|---|---|---|
+| Expo React Native app | Implemented | Android, iOS, and responsive web use the same Expo Router app. |
+| Supabase database | Implemented | Core schema plus migrations through analytics/admin support. Apply migrations before using new tables. |
+| Supabase Edge Functions | Implemented | AI planner, packing, safety info, ticket search, price alerts, delete account, admin dashboard. |
+| Mock providers | Implemented | Journey, ticket, price, and safety data are clearly labelled as mock or estimated. |
+| Admin dashboard | Implemented | `/admin` uses server-side admin role verification through `admin-dashboard`. |
+| Analytics | Implemented | Typed, consent-aware analytics wrapper with sanitization and opt-out. |
+| Push notifications | Prepared | Permission flow and preferences exist; native push provider is not connected yet. |
 
----
+## Feature Status
 
-## MVP Feature Status
+| Feature | Status |
+|---|---|
+| Auth and onboarding | Complete |
+| Home/app shell | Complete |
+| Trip creation wizard | Complete |
+| Saved trips and trip details | Complete |
+| AI itinerary backend and UI | Complete with secure Edge Function and mock fallback |
+| Hidden Cost Calculator | Complete |
+| AI Packing Checklist | Complete with fallback and offline sync |
+| Smart Journey | Complete with structured mock data |
+| Smart Ticket Finder | Complete with mock provider adapters |
+| Split Expenses | Complete with offline queue and settlement logic |
+| Safety Mode | Complete MVP, no automated dispatch |
+| Budget Discovery | Complete with curated India dataset |
+| Price Drop Alerts | Complete with mock scheduled worker |
+| Notification Center | Complete |
+| Offline Support | Basic coverage complete |
+| Analytics and Admin Dashboard | Complete MVP |
 
-| Feature | Mobile Status | Web Status | Backend / DB | Notes / Constraints |
-|---|---|---|---|---|
-| **Auth & Profile** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Supabase Auth + user profile DB table. |
-| **Trip Creation** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Dates, source, destination, budget, passengers. |
-| **AI Trip Planner** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Supabase Edge Function with OpenAI/Gemini mock/real. |
-| **Smart Journey** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Transport mode comparison (Bus/Train/Flight). |
-| **Smart Ticket Finder** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Mock flight/train search and mock checkout. |
-| **Hidden Cost Calc** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Math utility logic for tax, tips, transport. |
-| **AI Packing Checklist** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Generates checklists based on destination/weather. |
-| **Split Expenses** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Split calculation, minimal settlement payments. |
-| **Budget Discovery** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Search matching destination recommendations. |
-| **Basic Safety Mode** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Mock safety scores, trusted contacts, check-ins. |
-| **Price Drop Alerts** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Alerts configured for price change notifications. |
-| **Saved Trips** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Simple bookmarking database functionality. |
-| **Notifications** | 🟥 Pending | 🟥 Pending | 🟥 Pending | Local device notifications or mock push alerts. |
+## Verification
 
-*Legend: 🟥 Pending | 🟨 In Progress | 🟩 Completed | 🟦 Mocked / Simulated*
+Latest commands run:
 
----
+```bash
+cd frontend
+npm test -- --run
+npm run typecheck
+cd ..
+deno check --import-map backend/supabase/functions/deno.json backend/supabase/functions/admin-dashboard/index.ts backend/supabase/functions/price-alerts/index.ts
+```
 
-## Static Analysis & Quality Gate
+Latest results:
 
-- **TypeScript compilation**: Not executed yet (clean workspace).
-- **ESLint status**: Not executed yet (clean workspace).
-- **Unit Tests**: No tests defined yet.
+- Unit tests: 14 files passed, 75 tests passed.
+- TypeScript: passed.
+- Deno Edge Function check: passed for `admin-dashboard` and `price-alerts`.
+- Lint: no lint script is configured in `frontend/package.json`.
 
-## Last Action Completed
-Initial repository inspection and setup of documentation infrastructure. No feature code has been implemented yet.
+## Known Follow-ups
+
+- Configure Supabase scheduled invocation for `price-alerts`.
+- Add a native push notification provider before enabling real push delivery.
+- Replace mock travel/safety/price providers with authorized live providers when available.
+- Add production admin role grants in `public.admin_roles`.

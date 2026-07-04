@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackAnalyticsEvent } from '../analytics/analytics';
 import { cacheSafetyInfo, getCachedSafetyInfo } from './storage';
 import { nextCheckinDueAt } from './schedule';
 import type { SafetyInfo, SafetyInfoLabel, SafetySession, TrustedContact } from './types';
@@ -133,6 +134,14 @@ export async function startSafetySession(userId: string, intervalMinutes: number
     .select('*')
     .single();
   if (error) throw error;
+  await trackAnalyticsEvent({
+    userId,
+    name: 'safety_mode_activated',
+    properties: {
+      tripId: tripId ?? undefined,
+      feature: 'safety',
+    },
+  });
   return data as SafetySession;
 }
 

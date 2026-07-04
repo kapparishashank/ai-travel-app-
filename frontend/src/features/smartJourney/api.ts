@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackAnalyticsEvent } from '../analytics/analytics';
 import type { JourneySearchInput, RankedJourneyOption } from './types';
 
 export async function saveJourneyOptionToTrip({
@@ -59,6 +60,16 @@ export async function saveJourneyOptionToTrip({
     .select('id')
     .single();
   if (optionError || !savedOption) throw optionError ?? new Error('Could not save journey option.');
+  await trackAnalyticsEvent({
+    userId,
+    name: 'journey_option_selected',
+    properties: {
+      tripId,
+      mode: option.mode,
+      provider: option.provider,
+      dataLabel: option.dataStatus,
+    },
+  });
 
   if (option.segments.length) {
     const { error: segmentError } = await supabase.from('journey_segments').insert(

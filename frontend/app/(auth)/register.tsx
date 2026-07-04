@@ -8,6 +8,7 @@ import { AuthScreenHeader } from '../../src/features/auth/AuthScreenHeader';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { supabase } from '../../src/lib/supabase';
 import { signUpSchema, type SignUpFormData } from '../../src/features/auth/validation';
 
@@ -29,7 +30,7 @@ export default function RegisterScreen() {
   const onSubmit = async (values: SignUpFormData) => {
     setSubmitting(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -38,6 +39,11 @@ export default function RegisterScreen() {
       });
 
       if (error) throw error;
+      await trackAnalyticsEvent({
+        userId: data.user?.id,
+        name: 'signup_completed',
+        properties: { source: 'email_password' },
+      });
       router.replace('/(auth)/verify-email');
     } catch (error: any) {
       setMessage(error.message ?? 'Could not create your account.');

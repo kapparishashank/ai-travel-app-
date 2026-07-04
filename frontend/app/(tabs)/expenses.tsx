@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { HiddenCostCalculator } from '../../src/features/hiddenCosts/HiddenCostCalculator';
 import { hyderabadGoaHiddenCosts } from '../../src/features/hiddenCosts/demoData';
 import {
@@ -74,6 +75,16 @@ export default function ExpensesScreen() {
   const [dialogExpense, setDialogExpense] = useState<SplitExpenseRecord | null | undefined>(undefined);
   const [settlementDialog, setSettlementDialog] = useState<any>(null);
   const [upiLink, setUpiLink] = useState('');
+
+  React.useEffect(() => {
+    if (authUser?.id) {
+      trackAnalyticsEvent({
+        userId: authUser.id,
+        name: 'hidden_cost_viewed',
+        properties: { feature: 'hidden_costs' },
+      }).catch(() => undefined);
+    }
+  }, [authUser?.id]);
 
   const tripsQuery = useQuery({
     queryKey: ['trips', authUser?.id],

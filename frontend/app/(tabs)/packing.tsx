@@ -10,6 +10,7 @@ import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { addPackingItem, createPackingList, fetchPackingForTrip, generatePackingChecklist, resetPackedStatus, syncPackingQueue, updatePackingItem } from '../../src/features/packing/api';
 import { applyQueuedPackingOperation, cachePackingList, enqueuePackingOperation, getCachedPackingList } from '../../src/features/packing/cache';
 import { buildFallbackPackingItems } from '../../src/features/packing/fallback';
@@ -183,6 +184,16 @@ export default function PackingScreen() {
 
   const updateItem = async (item: PackingItemView, patch: Partial<PackingItemView>) => {
     const nextItem = { ...item, ...patch };
+    if (patch.is_packed === true && !item.is_packed) {
+      await trackAnalyticsEvent({
+        userId: authUser?.id,
+        name: 'packing_item_checked',
+        properties: {
+          tripId: item.trip_id,
+          itemCategory: item.packingCategory,
+        },
+      });
+    }
     const nextItems = items.map((current) => (current.id === item.id ? nextItem : current));
     await saveLocal(nextItems);
     const dbPatch = {

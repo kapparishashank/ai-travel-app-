@@ -150,6 +150,16 @@ async function processAlert(service: any, alert: AlertRow, forceDropPercent: num
       },
     });
     if (notificationError) throw notificationError;
+    await service.from('analytics_events').insert({
+      user_id: alert.user_id,
+      event_name: 'price_alert_triggered',
+      properties: {
+        mode: alert.mode,
+        provider,
+        dataLabel: '[MOCK DATA]',
+        latestPriceMinor: latestPrice,
+      },
+    });
     update.last_notified_at = now;
     update.last_notification_price_minor = latestPrice;
     update.triggered_at = now;

@@ -10,6 +10,7 @@ import { ChoiceChips } from '../../src/components/common/ChoiceChips';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
 import { supabase } from '../../src/lib/supabase';
+import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { useAuthStore } from '../../src/store/authStore';
 import {
   accessibilityOptions,
@@ -173,6 +174,16 @@ export default function PlanTripScreen() {
 
     setSubmitting(true);
     setErrorMessage('');
+    await trackAnalyticsEvent({
+      userId: authUser.id,
+      name: 'trip_creation_started',
+      properties: {
+        source: 'plan_trip_wizard',
+        travelerCount: formData.adults + formData.children,
+        budgetMinor: rupeesToPaise(formData.totalBudget),
+        currency: formData.currency,
+      },
+    });
 
     const tripId = createTripId();
     createdTripIdRef.current = tripId;
@@ -208,6 +219,19 @@ export default function PlanTripScreen() {
       });
 
       if (error) throw error;
+      await trackAnalyticsEvent({
+        userId: authUser.id,
+        name: 'trip_created',
+        properties: {
+          tripId,
+          source: 'plan_trip_wizard',
+          destination: formData.destination,
+          durationDays: Math.max(1, Math.round((new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / 86_400_000) + 1),
+          travelerCount: formData.adults + formData.children,
+          budgetMinor: rupeesToPaise(formData.totalBudget),
+          currency: formData.currency,
+        },
+      });
 
       await clearDraft();
       router.replace(`/(tabs)/trip-generation/${tripId}`);

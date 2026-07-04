@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackAnalyticsEvent } from '../analytics/analytics';
 import type { ActivityInput, ItineraryActivity, TripBasicsInput, TripDetails, TripRecord, TripStatus, TripSummary } from './types';
 import { cacheTripDetails, getCachedTripDetails } from './cache';
 
@@ -96,6 +97,14 @@ export async function updateTripBasics(tripId: string, basics: TripBasicsInput) 
 export async function updateTripStatus(tripId: string, status: TripStatus) {
   const { error } = await supabase.from('trips').update({ status }).eq('id', tripId);
   if (error) throw error;
+  if (status === 'completed') {
+    const { data: auth } = await supabase.auth.getUser();
+    await trackAnalyticsEvent({
+      userId: auth.user?.id,
+      name: 'trip_completed',
+      properties: { tripId },
+    });
+  }
 }
 
 export async function deleteTrip(tripId: string) {
@@ -144,6 +153,16 @@ export async function generateItinerary(tripId: string, options?: { regenerateDa
 
   if (error) throw error;
   if ((data as any)?.error) throw new Error((data as any).message ?? 'Itinerary generation failed.');
+  const { data: auth } = await supabase.auth.getUser();
+  await trackAnalyticsEvent({
+    userId: auth.user?.id,
+    name: options?.regenerateDay ? 'itinerary_regenerated' : 'itinerary_generated',
+    properties: {
+      tripId,
+      feature: 'itinerary',
+      source: options?.regenerateDay ? 'day_regeneration' : 'full_generation',
+    },
+  });
   return data;
 }
 

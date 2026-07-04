@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackAnalyticsEvent } from '../analytics/analytics';
 import type { JourneyOptionForAlert, PriceAlertRow, PriceHistoryRow } from './types';
 
 export async function fetchJourneyOptionsForAlerts(): Promise<JourneyOptionForAlert[]> {
@@ -70,6 +71,16 @@ export async function createPriceAlert({
     next_check_at: new Date().toISOString(),
   });
   if (error) throw error;
+  await trackAnalyticsEvent({
+    userId,
+    name: 'price_alert_created',
+    properties: {
+      mode: option.mode,
+      provider: option.provider ?? 'mock-price-provider',
+      targetPriceMinor,
+      dataLabel: '[MOCK DATA]',
+    },
+  });
 }
 
 export async function updatePriceAlertStatus(alertId: string, status: 'active' | 'paused' | 'cancelled') {
