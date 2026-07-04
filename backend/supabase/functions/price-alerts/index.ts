@@ -134,10 +134,13 @@ async function processAlert(service: any, alert: AlertRow, forceDropPercent: num
       user_id: alert.user_id,
       trip_id: alert.trip_id,
       type: 'price_alert',
+      category: 'price_drop',
       status: 'unread',
       title: `${alert.destination_name} price alert`,
       body: `${evaluation.reason} Latest mock price is ${formatMinor(latestPrice, alert.currency_code)}. Prices may change before booking.`,
       action_url: alert.latest_result_url,
+      delivery_key: `price-alert:${alert.id}:${latestPrice}`,
+      delivered_at: now,
       metadata: {
         price_alert_id: alert.id,
         observed_price_minor: latestPrice,

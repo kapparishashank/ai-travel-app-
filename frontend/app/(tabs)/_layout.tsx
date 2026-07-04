@@ -73,6 +73,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="ticket-finder" options={{ href: null }} />
       <Tabs.Screen name="budget-discovery" options={{ href: null }} />
       <Tabs.Screen name="price-alerts" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="packing" options={{ href: null }} />
       <Tabs.Screen name="safety-mode" options={{ href: null }} />
       <Tabs.Screen name="destination/[id]" options={{ href: null }} />

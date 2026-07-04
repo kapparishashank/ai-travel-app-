@@ -29,6 +29,7 @@ export default function ProfileScreen() {
       </View>
 
       <Button onPress={() => router.push('/(tabs)/profile/settings')}>Account settings</Button>
+      <Button mode="outlined" icon="bell-outline" onPress={() => router.push('/(tabs)/notifications')}>Notifications</Button>
       <Button mode="outlined" onPress={signOut}>Log out</Button>
     </ScreenContainer>
   );

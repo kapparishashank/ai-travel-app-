@@ -10,6 +10,7 @@ import { TravelAILightTheme, TravelAIDarkTheme } from '../src/theme';
 import { Loading } from '../src/components/common/Loading';
 import { Button } from '../src/components/common/Button';
 import { getAuthRedirectTarget, isProfileComplete } from '../src/features/auth/guards';
+import { OfflineIndicator } from '../src/features/offline/OfflineIndicator';
 
 // Global Error Boundary
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
@@ -63,6 +64,7 @@ function RootLayoutNav() {
 
   return (
     <PaperProvider theme={theme}>
+      <OfflineIndicator />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
