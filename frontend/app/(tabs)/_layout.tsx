@@ -70,6 +70,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="plan-trip" options={{ href: null }} />
       <Tabs.Screen name="smart-journey" options={{ href: null }} />
+      <Tabs.Screen name="ticket-finder" options={{ href: null }} />
       <Tabs.Screen name="budget-discovery" options={{ href: null }} />
       <Tabs.Screen name="price-alerts" options={{ href: null }} />
       <Tabs.Screen name="packing" options={{ href: null }} />
