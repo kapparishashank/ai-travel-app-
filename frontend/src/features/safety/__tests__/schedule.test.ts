@@ -29,7 +29,7 @@ describe('safety check-in schedule', () => {
   it('returns an in-app warning without claiming emergency dispatch', () => {
     const warning = missedCheckinWarning(session, '2026-07-04T12:00:00.000Z');
     expect(warning).toContain('in-app warning only');
-    expect(warning).not.toContain('contacted emergency services');
+    expect(warning).toContain('has not contacted emergency services');
   });
 
   it('formats check-in intervals', () => {

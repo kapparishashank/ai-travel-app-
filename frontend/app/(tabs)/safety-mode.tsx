@@ -228,7 +228,7 @@ export default function SafetyModeScreen() {
               </>
             ) : (
               <>
-                <Text style={{ color: theme.colors.onSurfaceVariant }}>Start a schedule for manual “I am safe” check-ins.</Text>
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>Start a schedule for manual "I am safe" check-ins.</Text>
                 <SegmentedButtons
                   value={interval}
                   onValueChange={setInterval}
@@ -258,8 +258,8 @@ export default function SafetyModeScreen() {
               contactsQuery.data?.map((contact) => (
                 <View key={contact.id} style={styles.listItem}>
                   <View style={styles.flex}>
-                    <Text variant="titleSmall">{contact.name}{contact.is_primary ? ' • Primary' : ''}</Text>
-                    <Text style={{ color: theme.colors.onSurfaceVariant }}>{contact.relationship || 'Trusted contact'} • {contact.phone}</Text>
+                    <Text variant="titleSmall">{contact.name}{contact.is_primary ? ' - Primary' : ''}</Text>
+                    <Text style={{ color: theme.colors.onSurfaceVariant }}>{contact.relationship || 'Trusted contact'} - {contact.phone}</Text>
                   </View>
                   <View style={styles.row}>
                     <Button mode="text" icon="phone-outline" onPress={() => contactPerson(contact)}>Call</Button>
@@ -311,7 +311,7 @@ export default function SafetyModeScreen() {
             <Text style={{ color: theme.colors.onSurfaceVariant }}>{safetyInfo?.sourceNote ?? 'Source unavailable. Verify with official channels.'}</Text>
             <Text variant="titleSmall">General guidance</Text>
             {(safetyInfo?.safetyNotes ?? ['Keep official emergency numbers saved.', 'Verify route and weather conditions before travel.']).map((note) => (
-              <Text key={note}>• {note}</Text>
+              <Text key={note}>- {note}</Text>
             ))}
           </Card.Content>
         </Card>
@@ -365,7 +365,7 @@ function ServiceSection({ title, places, onCall }: { title: string; places: Safe
           <View key={place.name} style={styles.listItem}>
             <View style={styles.flex}>
               <Text variant="titleSmall">{place.name}</Text>
-              <Text>{place.distanceKm ? `${place.distanceKm} km • ` : ''}{place.note}</Text>
+              <Text>{place.distanceKm ? `${place.distanceKm} km - ` : ''}{place.note}</Text>
               <SourceText source={place.source} lastUpdated={place.lastUpdated} label={place.dataLabel} />
             </View>
             <Button mode="outlined" icon="phone-outline" onPress={() => onCall(place.phone, place.name)}>Call</Button>
@@ -380,7 +380,7 @@ function SourceText({ source, lastUpdated, label }: { source: string; lastUpdate
   const theme = useTheme();
   return (
     <Text style={{ color: theme.colors.onSurfaceVariant }}>
-      {label} • Source: {source} • Updated: {new Date(lastUpdated).toLocaleString()}
+      {label} - Source: {source} - Updated: {new Date(lastUpdated).toLocaleString()}
     </Text>
   );
 }
