@@ -1,2027 +1,367 @@
-# Product Requirements Document
+﻿# AI Travel App — MVP Product Requirements Document
 
-## AI-Powered Travel Planning and Booking App
-
-**Document version:** 1.0
-**Product stage:** Concept / MVP planning
-**Primary market:** India
-**Platforms:** Android, iOS, and responsive web
-**Working product name:** TravelAI
-**Target launch:** To be decided
+**Version:** 0.1 (Draft)  |  **Date:** July 3, 2026  |  **Owner:** [Your name]  |  **Status:** For review
 
 ---
 
-# 1. Product Overview
+## TL;DR
 
-TravelAI is an AI-powered travel platform that helps users plan, compare, book, manage, and monitor trips from one application.
-
-Most travelers currently use separate applications for itinerary planning, train or flight searches, expense splitting, packing, safety information, and budget management. This creates confusion, repeated searches, unexpected costs, and poor travel decisions.
-
-TravelAI brings these activities together through ten core features:
-
-1. AI Trip Planner
-2. Smart Journey
-3. Smart Ticket Finder
-4. Split Expense Feature
-5. Cheapest Flight Finder
-6. Safety Mode
-7. Budget-Based Discovery
-8. AI Recommended Packing Checklist
-9. Hidden Cost Calculator
-10. Price Drop Alerts
-
-The app will focus on helping users choose trips based on total cost, comfort, time, safety, and personal preferences—not only the lowest advertised price.
+- Your 10 features split into two very different build categories: **AI + your own database** (cheap, fast, no one has to say yes to you) vs. **live travel marketplace data** (needs GDS/OTA partnerships, weeks-to-months, recurring cost, payment compliance).
+- **Phase 1 (MVP) = 6 features**, all buildable with an LLM API plus a couple of cheap utility APIs. This is what "low credits" actually buys you.
+- **Phase 2 = 3 features**, shipped the lean way first — deep-links/affiliate redirects instead of building your own search-and-book backend.
+- **Phase 3** = real in-app booking + price monitoring, once traction justifies the partnership and compliance overhead.
 
 ---
 
-# 2. Product Vision
+## 1. Overview
 
-## Vision Statement
+**Vision:** An AI-first travel companion that plans a trip end-to-end — itinerary, packing, budget, and safety — so travelers stop bouncing between five different apps to do it themselves.
 
-To become an intelligent travel companion that helps every traveler plan safer, more affordable, and more comfortable journeys through personalized AI recommendations.
+**Target user (assumed):** Budget-to-mid-range leisure travelers, often in small groups, who want AI to do the planning grunt work and one place to run the whole trip from.
 
-## Product Mission
+**Competitive reality check:** most of these features exist somewhere already (itinerary tools, Splitwise for expenses, standalone safety apps). Your differentiation is the bundle plus AI quality — not any single feature in isolation. Worth keeping in mind when you get to positioning.
 
-TravelAI will reduce the time, complexity, and uncertainty involved in travel planning by providing:
+**Assumptions this PRD makes** (flag anything wrong and I'll adjust):
 
-* Personalized trip plans
-* Multi-mode transport comparisons
-* Transparent travel costs
-* Safety guidance
-* Smart packing assistance
-* Group expense management
-* Ticket price tracking
-* Budget-friendly destination discovery
-
-## Long-Term Vision
-
-TravelAI should eventually support the complete travel lifecycle:
-
-**Inspiration → Planning → Comparison → Booking → Preparation → Travel → Safety → Expense Management → Post-Trip Insights**
+- Small team or solo founder, likely building with AI-assisted coding tools — hence the "low credits" framing driving every scoping decision below.
+- Mobile-first, cross-platform (one codebase, not separate iOS/Android builds) for v1.
+- India-first launch market, based on the feature set and phrasing ("cab," group expense splitting). Examples below use IRCTC, RedBus, Ola/Uber, and MakeMyTrip where concrete examples help — the structure itself is market-agnostic.
+- Monetization isn't specified, so this PRD stays focused on scope, not business model — though Phase 2's affiliate approach (§5) can double as an early revenue stream.
 
 ---
 
-# 3. Product Goals
+## 2. The Core Scoping Decision
 
-## Primary Goals
+This is really the whole game for building on a tight budget. Your 10 features split into two categories:
 
-* Help users create complete travel plans in less than five minutes.
-* Help users compare bus, train, flight, and cab options in one place.
-* Show realistic trip costs, including hidden expenses.
-* Help budget travelers make better decisions.
-* Improve traveler safety through location-based alerts and emergency information.
-* Reduce the need to switch between multiple travel applications.
-* Generate revenue through bookings, premium subscriptions, and travel partnerships.
+**Category A — "AI + your own database."** Needs an LLM API call and maybe a cheap third-party API (weather, maps). Nobody has to approve you first. Ship in days; cost is basically your LLM bill.
 
-## Secondary Goals
+**Category B — "Live travel marketplace."** Needs real-time inventory/pricing from airlines, railways, bus operators, or OTAs. I checked the current landscape for you:
 
-* Improve trip planning confidence.
-* Increase booking conversion through personalized recommendations.
-* Encourage users to return through price alerts and saved trips.
-* Build a travel preference profile for each user.
-* Support both solo and group travel.
+- **Amadeus for Developers** has a genuinely free, self-serve sandbox for flight search — but actual ticket issuance requires an airline consolidator partner on top, since Self-Service doesn't process the airline payment itself.
+- **Skyscanner's** API is not self-serve at all — you apply to their Partnerships team, they review, and approval favors platforms that already have an audience. No public API key exists.
+- **Duffel** is the exception that's genuinely fast: self-serve signup, no airline accreditation needed, pay-per-booking pricing, real booking in minutes. (It's already the backend for consumer travel-fintech apps that combine trip budgeting, split expenses, and booking — a similar shape to what you're building.)
+- **Travelpayouts** (Aviasales/Hotellook) is a free-to-join affiliate network with ready-made deep-links and widgets — the easiest path to "show flight options" without building anything.
+- **IRCTC** (Indian trains) restricts direct booking-API access; nearly everyone integrates through an authorized reseller/white-label provider instead of going direct. Informational data (PNR/running status) is more open than booking is.
+- **RedBus/SeatSeller, AbhiBus** (Indian buses) require registering as a business partner — again a B2B relationship, not a public key.
 
-## Non-Goals for the Initial MVP
+The pattern is consistent: **search** is often accessible quickly; **booking** always requires a business relationship on top. That's a business-development timeline, not an engineering one — no amount of AI-assisted coding changes it.
 
-The MVP will not include:
-
-* Direct operation of buses, trains, flights, or hotels
-* Travel insurance underwriting
-* Visa processing
-* Full social networking
-* Public trips with unknown travel companions
-* Cryptocurrency payments
-* International multi-currency expense settlement
-* Fully autonomous emergency response
-* Guaranteed predictions of future prices
+**The MVP below is every Category A feature, fully built**, plus a trimmed **Safety Mode**, plus **Split Expense** (pure app logic, zero external dependency). The four features needing live travel data move to Phase 2 (lean deep-links) and Phase 3 (real booking).
 
 ---
 
-# 4. Target Users
+## 3. Feature Prioritization Snapshot
 
-## 4.1 College Students
+#
+Feature (as you defined it)
+Phase
+Why
 
-**Characteristics**
+1
+AI Trip Planner
+**Phase 1**
+Core differentiator — pure LLM + your DB
 
-* Limited budgets
-* Usually travel in groups
-* Prefer buses and trains
-* Need expense splitting
-* Search for affordable stays and activities
+7
+Budget-Based Discovery
+**Phase 1** (merged into #1)
+Same inputs/output shape as the Trip Planner; building separately duplicates work
 
-**Main needs**
+2
+Smart Journey
+**Phase 1** — as an *advisory*, not live comparison
+"Flight is faster, train is cheaper" doesn't need live prices, just typical ones — which an LLM can estimate
 
-* Cheapest travel options
-* Group expense tracking
-* Budget-based recommendations
-* Hidden cost calculations
-* Packing guidance
+8
+AI Packing Checklist
+**Phase 1**
+LLM + one weather API call
 
-## 4.2 Young Professionals
+9
+Hidden Cost Calculator
+**Phase 1**
+LLM-estimated ranges, clearly labeled as estimates
 
-**Characteristics**
+4
+Split Expense Feature
+**Phase 1**
+Zero AI, zero external API — just well-tested math. Drives group/viral usage
 
-* Limited planning time
-* Prefer convenience and comfort
-* Take weekend trips
-* Compare flights, trains, and buses
+6
+Safety Mode
+**Phase 1** — trimmed scope
+Emergency contacts + SOS + live-location share + "nearby help." No safety-scored routing yet
 
-**Main needs**
+5
+Cheapest Flight Finder
+**Phase 2**
+Needs live prices across providers — start via affiliate/deep-link
 
-* Fast itinerary generation
-* Smart journey comparisons
-* Price alerts
-* Comfortable travel recommendations
-* Short-trip planning
+3
+Smart Ticket Finder
+**Phase 2 → 3**
+Deep-link search in Phase 2; real in-app booking in Phase 3 once a GDS/OTA partnership is in place
 
-## 4.3 Families
-
-**Characteristics**
-
-* Travel with children or older family members
-* Prioritize safety and comfort
-* Need realistic schedules
-* Require larger budgets and more planning
-
-**Main needs**
-
-* Family-friendly itineraries
-* Safe hotel and transport suggestions
-* Low-walking or accessibility options
-* Hidden cost estimates
-* Medical and emergency information
-
-## 4.4 Solo Travelers
-
-**Characteristics**
-
-* Need greater safety awareness
-* Prefer flexible plans
-* May book at short notice
-* Depend on local recommendations
-
-**Main needs**
-
-* Safety Mode
-* Safe transport suggestions
-* Emergency contacts
-* Budget discovery
-* Personalized packing lists
-
-## 4.5 Women Travelers
-
-**Characteristics**
-
-* May require enhanced safety information
-* Need safe transport and accommodation options
-* Benefit from live safety alerts
-
-**Main needs**
-
-* Location safety scores
-* Safer routes and transport
-* Night-travel warnings
-* Emergency support
-* Trusted accommodation recommendations
-
-## 4.6 Frequent Travelers
-
-**Characteristics**
-
-* Regularly compare ticket prices
-* Have established travel preferences
-* Value speed and personalization
-
-**Main needs**
-
-* Saved traveler profiles
-* Price Drop Alerts
-* Fast rebooking
-* Loyalty program integration
-* Personalized recommendations
+10
+Price Drop Alerts
+**Phase 3**
+Can't alert on a price feed that doesn't exist yet — depends on #3/#5 going live first
 
 ---
 
-# 5. User Problems
+## 4. Phase 1 (MVP) — Feature Specs
 
-## Problem 1: Travel planning is fragmented
+**Suggested build order:**
 
-Users switch between maps, blogs, ticket platforms, weather apps, hotel applications, and spreadsheets.
+1. **Trip Planner + Budget Discovery** — the foundation; every other Phase 1 feature reads from the `Trip` object this creates.
+2. **Packing Checklist + Hidden Cost Calculator + Smart Journey advisory** — fast follows, same trip data, different prompts.
+3. **Split Expense** — independent module; a second person on the team can build this in parallel.
+4. **Safety Mode (Lite)** — independent module.
 
-**Product response:** Provide one connected trip workspace.
+### 4.1 AI Trip Planner (incl. Budget-Based Discovery)
 
-## Problem 2: Cheapest does not always mean best
+**User story:** "I enter my destination (or leave it blank), dates, budget, group size, and interests, and get a day-by-day plan that fits my budget."
 
-A cheap ticket may include long layovers, inconvenient departure times, expensive baggage, or costly transport to the airport.
+**Inputs:** destination (optional — if blank, suggest 2–3 options), start/end date, traveler count, interests (multi-select), total budget + currency.
 
-**Product response:** Compare total cost, time, comfort, safety, and convenience.
+**Output:** day-by-day itinerary (activities, meals, accommodation tier, running estimated cost vs. budget); or, if destination was left blank, 2–3 destination suggestions with a one-line reason each.
 
-## Problem 3: Travelers underestimate trip costs
+**Tech approach:** one structured prompt to Claude/GPT requesting JSON output (day → activities/meals/est. cost). No live pricing needed — everything is labeled "AI-estimated." This is the cheapest possible version of "real."
 
-Users often calculate only ticket and hotel prices while ignoring food, local transport, baggage charges, taxes, platform fees, and emergency expenses.
+**Out of scope for v1:** live price checking, actual hotel/activity booking, multi-city route optimization.
 
-**Product response:** Use a Hidden Cost Calculator to estimate the complete trip cost.
+### 4.2 Smart Journey (Advisory Mode)
 
-## Problem 4: Planning requires too much time
+**User story:** "I want to know whether flight, train, bus, or cab makes sense for my route, without searching fares myself."
 
-Users may spend hours researching destinations, routes, activities, and ticket prices.
+**Output:** a short per-leg comparison — mode, typical price range, typical duration, comfort note, plus a recommendation — folded into the itinerary output above.
 
-**Product response:** Generate personalized itineraries and recommendations with AI.
+**Tech approach:** same LLM call as the Trip Planner, extended with a transport-advisory block. Label clearly: "typical prices, not live fares — tap to check live fares" (that tap is your Phase 2 deep-link).
 
-## Problem 5: Group expenses create conflict
+**Out of scope for v1:** live comparison, booking.
 
-Group travelers often forget who paid and how much each person owes.
+### 4.3 AI Recommended Packing Checklist
 
-**Product response:** Track, split, and simplify expense settlements.
+**Inputs:** destination, dates (duration derived), trip type/activities, traveler type.
 
-## Problem 6: Safety information is difficult to find
+**Output:** categorized checklist (clothing, documents, electronics, destination-specific items) with checkboxes.
 
-Travelers may not know which areas to avoid, whether night travel is safe, or where nearby emergency services are located.
+**Tech approach:** pull a weather forecast/climate summary (OpenWeatherMap or similar has a workable free tier), feed it plus trip details into an LLM prompt for a structured checklist.
 
-**Product response:** Provide location-based safety guidance and emergency information.
+**Out of scope for v1:** "buy missing item" shopping links (a nice Phase 2 affiliate add-on).
 
-## Problem 7: Users do not know when to book
+### 4.4 Hidden Cost Calculator
 
-Ticket prices change frequently, and users may book too early, too late, or at an expensive rate.
+**Inputs:** destination, duration, traveler count, chosen transport mode, accommodation type.
 
-**Product response:** Track prices and notify users when meaningful drops occur.
+**Output:** estimated ranges for local transport, food/day, entry tickets, baggage norms, tourist taxes, tipping, SIM/data, insurance, plus a total.
 
-## Problem 8: Packing recommendations are generic
+**Tech approach:** LLM estimate from general destination knowledge, clearly labeled as an estimate. Optional later upgrade: blend with a small hand-maintained baseline-cost table per city.
 
-Standard packing lists do not consider destination, weather, trip length, activities, or transport mode.
+**Out of scope for v1:** live per-airline baggage-fee lookups — too variable to estimate reliably and low value for the engineering cost.
 
-**Product response:** Generate a personalized packing checklist.
+### 4.5 Split Expense Feature
 
----
+**Inputs:** trip group + members; expenses (payer, amount, split type — equal/custom/percentage, category).
 
-# 6. Product Principles
+**Output:** running per-person balance, "settle up" suggestions via debt-simplification (minimum number of payments to zero everyone out), expense history.
 
-1. **Total cost over advertised cost**
-   Show the realistic amount users are likely to spend.
+**Tech approach:** pure app logic — no AI, no external API. The cheapest, best-understood feature on this list.
 
-2. **Explain recommendations**
-   Every AI recommendation should include a clear reason.
+**Out of scope for v1:** actually moving money in-app (UPI/PayPal payout) — that's a payments/compliance project on its own. v1 tracks who-owes-whom; people settle outside the app.
 
-3. **Personalization with user control**
-   Users must be able to edit AI-generated plans.
+### 4.6 Safety Mode (Lite)
 
-4. **Safety without false guarantees**
-   Safety information must be presented as guidance, not certainty.
+**Inputs:** emergency contacts (added manually), a "share live location" toggle for an active trip.
 
-5. **Simple before advanced**
-   The main experience should work for users with limited travel knowledge.
+**Output:** SOS button sending current GPS + a message to emergency contacts; time-boxed live location sharing; "nearby help" (hospitals, police, embassies) via Google Places API.
 
-6. **Transparent sponsored results**
-   Paid or promoted listings must be clearly labeled.
+**Tech approach:** device GPS + Google Places nearby-search for the relevant categories, plus either a real SMS API (Twilio, pay-per-message) or — cheaper and faster to ship — the phone's native share sheet to open WhatsApp/SMS pre-filled with a location link.
 
-7. **Privacy by design**
-   Collect only the location and personal information necessary for the feature.
+**Out of scope for v1:** safety-scored route suggestions (needs crime/safety data most map APIs don't provide), automatic dispatch to local emergency numbers (112/911) — a liability-heavy integration that needs legal review before it's anywhere near a feature.
 
-8. **India-first experience**
-   Prioritize trains, buses, UPI payments, regional destinations, local languages, and budget travel.
+**Flag for attention:** Safety Mode touches real emergencies. Even in "lite" form, put a clear in-app disclaimer ("this does not replace calling local emergency services") and get a legal read before launch — not because it's unusually hard to build, but because the cost of getting it wrong is unusually high.
 
 ---
 
-# 7. Key User Inputs
+## 5. Phase 2 — Lean Travel Search (Deep-Link / Affiliate Pattern)
 
-The app may collect the following information during onboarding or trip creation:
+Don't build your own search-and-compare backend yet. Redirect the user to an existing provider with the search pre-filled from their trip data. You get most of the perceived feature at a fraction of the engineering cost — and some of these pay you a referral commission.
 
-* Starting location
-* Destination
-* Travel dates
-* Flexible or fixed dates
-* Number of travelers
-* Traveler ages
-* Solo, couple, family, friends, or work trip
-* Total budget
-* Preferred transport mode
-* Comfort preference
-* Safety preference
-* Food preferences
-* Interests
-* Preferred activity pace
-* Accessibility requirements
-* Luggage requirements
-* Accommodation preference
-* Weather preference
-* Previous travel behavior
+Need
+Option
+Access model
+Notes
 
-Users should be able to skip non-essential questions.
+Flight search (global)
+Amadeus Self-Service
+Self-serve signup, free sandbox
+Search/price APIs are open; ticket issuance needs a consolidator partner
 
----
+Flight search (global)
+Skyscanner Travel API
+Apply to Partnerships team; not guaranteed
+Best once you have real traffic to show them
 
-# 8. Core Features
+Flight/hotel deep-links
+Travelpayouts (Aviasales/Hotellook)
+Free signup, affiliate network
+Easiest starting point — widgets + deep-links + commission
 
-# 8.1 AI Trip Planner
+Train (India)
+IRCTC
+Restricted direct access
+Go through an authorized reseller/white-label provider rather than direct
 
-## Objective
+Bus (India)
+redBus/SeatSeller, AbhiBus
+Business partner registration
+Same pattern as IRCTC
 
-Create a personalized, realistic, day-by-day travel plan based on the user’s destination, dates, budget, interests, group type, and travel preferences.
+**How this maps to your features:**
 
-## User Story
-
-As a traveler, I want the app to create a complete itinerary so that I do not have to research every place and activity manually.
-
-## User Inputs
-
-* Source and destination
-* Travel dates
-* Number of days
-* Number and type of travelers
-* Budget
-* Interests
-* Travel pace
-* Preferred transport
-* Food preferences
-* Hotel preference
-* Accessibility requirements
-
-## Expected Output
-
-* Day-wise itinerary
-* Recommended places
-* Suggested visit times
-* Estimated duration at each location
-* Travel time between locations
-* Local transport recommendations
-* Food recommendations
-* Estimated daily cost
-* Safety notes
-* Weather-aware suggestions
-* Alternative activities
-* Total estimated trip cost
-
-## Functional Requirements
-
-* Generate an itinerary within a reasonable response time.
-* Allow users to regenerate the entire plan.
-* Allow regeneration of one day only.
-* Allow users to add, remove, replace, or reorder activities.
-* Allow users to lock selected activities before regeneration.
-* Display map routes for each day.
-* Identify overpacked schedules.
-* Warn users when locations may be closed.
-* Save generated itineraries.
-* Share itineraries through a link or PDF.
-* Add selected tickets and hotels to the itinerary.
-* Recalculate cost when activities change.
-* Offer indoor alternatives for poor weather.
-* Clearly distinguish confirmed bookings from AI suggestions.
-
-## AI Logic
-
-The AI should consider:
-
-* Distance between locations
-* Opening and closing hours
-* Expected visit duration
-* User budget
-* Traveler age group
-* Weather conditions
-* Local transport availability
-* Popularity and relevance
-* User interests
-* Meal timings
-* Rest periods
-* Safety after dark
-* Accessibility requirements
-
-## Recommendation Ranking
-
-Each activity can receive a weighted score:
-
-* User interest match: 25%
-* Budget fit: 20%
-* Distance efficiency: 15%
-* Rating and popularity: 15%
-* Time availability: 10%
-* Safety suitability: 10%
-* Weather suitability: 5%
-
-Weights may change based on user preferences.
-
-## Edge Cases
-
-* Destination has limited available data.
-* Attraction is temporarily closed.
-* User budget is too low.
-* Travel dates overlap with extreme weather.
-* The user selects too many activities.
-* API data conflicts with AI knowledge.
-* The itinerary includes long travel times.
-* Internet connectivity is poor during the trip.
+- **#5 Cheapest Flight Finder** → power the "compare" view with Travelpayouts/Amadeus search data; the "book" button deep-links out (and earns commission where available).
+- **#3 Smart Ticket Finder** → same deep-link pattern, extended to train/bus via a reseller partner for IRCTC/bus inventory.
 
 ---
 
-# 8.2 Smart Journey
+## 6. Phase 3 — Full Integration & Scale
 
-## Objective
-
-Compare bus, train, flight, cab, and mixed-mode travel options from the user’s source to destination.
-
-## User Story
-
-As a traveler, I want to compare all travel modes so that I can choose the best balance of price, time, comfort, and convenience.
-
-## Expected Comparison
-
-* Cheapest option
-* Fastest option
-* Most comfortable option
-* Lowest environmental impact option
-* Best option for families
-* Best option for solo travelers
-* Best overall option
-
-## Information Displayed
-
-* Base fare
-* Taxes and fees
-* Baggage cost
-* Local transport cost to departure point
-* Travel duration
-* Waiting time
-* Number of transfers
-* Departure and arrival time
-* Comfort rating
-* Cancellation policy
-* Reliability estimate
-* Total estimated journey cost
-
-## Functional Requirements
-
-* Search multiple transport modes from one search.
-* Support one-way and round trips.
-* Support fixed and flexible dates.
-* Compare direct and connecting routes.
-* Include first-mile and last-mile travel estimates.
-* Provide a “Why recommended?” explanation.
-* Allow users to prioritize price, time, comfort, or safety.
-* Allow sorting and filtering.
-* Redirect to partners or support in-app booking.
-* Save selected journey options.
-* Add booked transport to the itinerary.
-
-## Smart Journey Score
-
-Example score:
-
-* Total price: 30%
-* Duration: 20%
-* Comfort: 15%
-* Convenience: 15%
-* Reliability: 10%
-* Cancellation flexibility: 5%
-* Safety: 5%
-
-## Mixed-Mode Example
-
-The system may recommend:
-
-* Metro to railway station
-* Train to destination city
-* Cab to hotel
-
-The complete journey should be displayed as one route.
+- **Real in-app booking:** move from deep-links to owning the booking flow. Duffel is the fastest path for flights specifically (self-serve, pay-per-booking, no accreditation needed) if you want in-app booking without the full GDS/consolidator route. Trains/buses still require the reseller relationships noted above.
+- **Price Drop Alerts (#10):** needs a live price feed to exist first (from whichever Phase 2/3 integration you picked) plus a scheduled job to poll it and Firebase Cloud Messaging (or similar) to notify.
+- **Advanced Safety Mode:** safety-scored routing, direct emergency-service dispatch — both need data partnerships or legal frameworks that are separate projects in themselves.
+- **Split Expense settlement:** actual in-app money movement (UPI/PayPal payout), once you're ready for the compliance overhead that comes with it.
 
 ---
 
-# 8.3 Smart Ticket Finder
+## 7. Suggested Lean Tech Stack
 
-## Objective
+Every layer here is chosen because it has almost no backend code to write yourself — which is what keeps an AI-assisted build fast and cheap. Check current pricing/limits before committing, since free-tier terms shift over time.
 
-Find and rank relevant bus, train, and flight tickets according to user preferences.
+Layer
+Suggestion
+Why
 
-## User Story
+Frontend
+React Native (Expo) or Flutter
+One codebase for iOS + Android
 
-As a user, I want to find suitable tickets in one search without checking multiple booking applications.
+Backend / DB
+Supabase or Firebase
+Auth, database, storage, and realtime (needed for live-location sharing) out of the box
 
-## Functional Requirements
+AI
+Claude or GPT API
+Powers §4.1–4.4 via structured JSON output
 
-* Search bus, train, and flight inventory.
-* Display availability and current fare.
-* Show seat class or cabin type.
-* Display operator or airline information.
-* Show departure and arrival terminals.
-* Show cancellation and refund conditions.
-* Filter by:
+Weather
+OpenWeatherMap or similar
+Feeds the Packing Checklist
 
-  * Price
-  * Departure time
-  * Arrival time
-  * Duration
-  * Operator
-  * Number of stops
-  * Refundability
-  * Seat class
-* Sort by:
+Maps/Places
+Google Maps Platform (Places API)
+Powers "nearby help" in Safety Mode
 
-  * Recommended
-  * Cheapest
-  * Fastest
-  * Most comfortable
-* Save passenger profiles securely.
-* Add tickets to a trip.
-* Generate booking confirmation records.
-* Show failed-booking and refund status.
-* Avoid presenting stale prices as confirmed prices.
+Notifications
+Firebase Cloud Messaging
+Needed later for Price Drop Alerts; useful now for safety alerts
 
-## Ranking Logic
-
-The system should rank tickets using:
-
-* User preferences
-* Total journey cost
-* Duration
-* Departure convenience
-* Number of transfers
-* Refund rules
-* Reliability
-* Seat or cabin quality
-* Historical user behavior
+SOS delivery
+Native share-sheet (WhatsApp/SMS) for v1
+Costs nothing, ships in a day; upgrade to Twilio later if needed
 
 ---
 
-# 8.4 Split Expense Feature
+## 8. Core Data Entities
 
-## Objective
+Design this once before prompting your AI coding tool to build anything — the Trip Planner, Packing Checklist, Hidden Cost Calculator, and Smart Journey advisory all read/write the same `Trip` and `Itinerary` objects. Defining the shape upfront avoids rebuilding it four times.
 
-Allow group travelers to record, divide, and settle shared travel expenses.
-
-## User Story
-
-As a group traveler, I want the app to calculate who owes whom so that the group can settle expenses easily.
-
-## Expense Types
-
-* Equal split
-* Exact amount
-* Percentage split
-* Share-based split
-* Item-based split
-* Selected-member split
-
-## Functional Requirements
-
-* Create a trip expense group.
-* Invite members using phone number, email, QR code, or link.
-* Add an expense.
-* Select who paid.
-* Select participating members.
-* Attach receipt images.
-* Categorize expenses.
-* Support multiple payers.
-* Edit or delete expenses.
-* Add notes.
-* Show each person’s balance.
-* Minimize the number of settlement transactions.
-* Mark payments as settled.
-* Export an expense report.
-* Send settlement reminders.
-* Support offline expense entry and later synchronization.
-* Support UPI payment links in India.
-
-## Expense Categories
-
-* Transport
-* Accommodation
-* Food
-* Activities
-* Shopping
-* Fuel
-* Emergency
-* Miscellaneous
-
-## Settlement Example
-
-Instead of asking five people to make multiple payments, the app should calculate the minimum set of transfers required to settle the group.
-
-## AI Support
-
-AI may:
-
-* Extract amount and merchant from receipt images.
-* Suggest an expense category.
-* Detect possible duplicate expenses.
-* Identify missing members.
-* Summarize group spending.
-* Warn when the group is exceeding its budget.
+- **User** — id, name, email, phone, home_currency, emergency_contacts[]
+- **Trip** — id, owner_id, destination, start_date, end_date, budget_total, budget_currency, interests[], traveler_count, status
+- **Itinerary** — id, trip_id, day_number, activities[], meals[], transport_advisory, estimated_cost
+- **PackingList** — id, trip_id, items[] {name, category, checked}
+- **HiddenCostEstimate** — id, trip_id, category, est_min, est_max, notes
+- **ExpenseGroup** — id, trip_id, member_ids[]
+- **Expense** — id, group_id, paid_by, amount, currency, split_type, split_details, category, date
+- **SafetySession** — id, user_id, trip_id, emergency_contacts[], share_active, expires_at
 
 ---
 
-# 8.5 Cheapest Flight Finder
+## 9. Non-Functional Requirements
 
-## Objective
-
-Find low-cost flight options while considering the complete cost and travel inconvenience.
-
-## User Story
-
-As a traveler, I want to find affordable flights without being misled by low base fares.
-
-## Functional Requirements
-
-* Search one-way, round-trip, and multi-city flights.
-* Support flexible date searches.
-* Show nearby airports.
-* Compare direct and connecting flights.
-* Include baggage charges.
-* Include seat-selection fees when available.
-* Include convenience fees and taxes.
-* Display layover length.
-* Identify overnight layovers.
-* Show self-transfer warnings.
-* Compare refundable and non-refundable options.
-* Provide fare history when available.
-* Indicate whether the price is low, average, or high.
-* Allow users to create a Price Drop Alert.
-* Redirect to a booking provider or support in-app booking.
-
-## AI Recommendation Labels
-
-* Cheapest Base Fare
-* Cheapest Total Cost
-* Best Value
-* Fastest
-* Best for Families
-* Best Refund Policy
-* Avoid Long Layover
-* Budget Option with Baggage
-
-## Important Rule
-
-The cheapest flight recommendation must use the estimated final cost, not only the advertised base fare.
+- **Performance:** itinerary generation should feel responsive — show a loading state, target under ~10s for a full itinerary.
+- **Privacy/security:** location data and emergency contacts are sensitive. Encrypt at rest, time-box any location share, get explicit consent, and define a retention/deletion policy. India-based users fall under the DPDP Act; EU users would add GDPR obligations.
+- **Cost control:** cache LLM responses for repeated/common queries, set a sensible per-user generation limit, especially before a paid tier exists.
+- **Clarity of "AI-estimated" content:** visually distinguish AI estimates from confirmed/live data everywhere, so no one mistakes a guess for a quote.
 
 ---
 
-# 8.6 Safety Mode
+## 10. Risks & Mitigations
 
-## Objective
+Risk
+Mitigation
 
-Provide useful safety information before and during a trip.
+LLM gives wrong/outdated specifics (hours, closed venues, prices)
+Label everything as AI-estimated, make it easy to edit, collect feedback
 
-## User Story
+Safety Mode liability if a response is delayed or fails
+Clear disclaimers, legal review, never claim "guaranteed safety"
 
-As a traveler, I want destination and location safety guidance so that I can make informed decisions.
+Location-data privacy concerns
+Explicit consent, time-boxed sharing, minimal retention, relevant privacy-law compliance
 
-## Safety Mode Components
+LLM API cost scaling with growth
+Cache common queries, rate-limit free users, track cost per user
 
-* Destination safety overview
-* Area safety indicators
-* Night-travel warnings
-* Emergency contacts
-* Nearby hospitals
-* Nearby police stations
-* Embassy or consulate details for international trips
-* Weather and disaster alerts
-* Safer transport recommendations
-* Emergency location sharing
-* Scheduled check-ins
+Feature overlap/confusion (#2 vs. #5 vs. #3)
+Position clearly in-app: Trip Planner = advisory, Ticket Finder = live/bookable (Phase 2+)
 
-## Functional Requirements
-
-* Allow users to activate Safety Mode for a trip.
-* Display local emergency numbers.
-* Show nearby emergency services on a map.
-* Allow users to save trusted contacts.
-* Share live location only after explicit consent.
-* Allow scheduled “I am safe” check-ins.
-* Notify trusted contacts after a missed check-in, subject to user settings.
-* Provide warnings for severe weather or major local disruptions.
-* Allow one-tap access to call emergency services.
-* Show areas where extra caution may be required.
-* Cache critical safety details for offline access.
-* Allow users to report incorrect safety information.
-* Display the source and last-updated time for safety data.
-
-## Safety Score Inputs
-
-A safety indicator may consider:
-
-* Official travel advisories
-* Crime statistics where legally available
-* Recent verified incidents
-* Lighting and transport availability
-* Time of day
-* Weather alerts
-* Crowd density
-* User reports
-* Distance from emergency services
-
-## Safety Disclaimer
-
-The app must not claim that any destination, route, or area is completely safe. Safety scores should be described as informational estimates.
-
-## Privacy Requirements
-
-* Live location must be opt-in.
-* Users must be able to stop sharing instantly.
-* Location history should not be retained longer than necessary.
-* Trusted contacts must be clearly visible.
-* Safety data must not be sold for unrelated advertising.
+Travel-data partnerships slower/costlier than expected
+Deep-link/affiliate model ships value before formal partnerships land
 
 ---
 
-# 8.7 Budget-Based Discovery
+## 11. Success Metrics for MVP
 
-## Objective
-
-Help users discover destinations, activities, food, and experiences that match their available budget.
-
-## User Story
-
-As a budget-conscious user, I want recommendations based on what I can afford.
-
-## Discovery Inputs
-
-* Total budget
-* Starting city
-* Number of travelers
-* Trip duration
-* Travel dates
-* Interests
-* Preferred distance
-* Transport preference
-
-## Recommendation Categories
-
-* Destinations within budget
-* Free activities
-* Low-cost activities
-* Affordable food
-* Budget stays
-* Weekend trips
-* One-day outings
-* Seasonal experiences
-
-## Functional Requirements
-
-* Allow users to enter a maximum budget.
-* Suggest destinations reachable within that budget.
-* Break down estimated transport, stay, food, and activity costs.
-* Display budget confidence levels.
-* Allow filters for beach, mountains, heritage, adventure, nightlife, food, nature, and relaxation.
-* Support “near me” local outing discovery.
-* Allow users to save destinations.
-* Convert a discovery result into a full trip plan.
-* Show low-cost alternatives.
-* Identify destinations that are not realistically affordable.
-* Adjust results when the number of travelers changes.
-
-## Recommendation Logic
-
-Total estimated cost should include:
-
-**Transport + Accommodation + Food + Local Travel + Activities + Fees + Emergency Buffer**
+- **Activation:** % of signups who generate at least one complete itinerary
+- **Engagement:** avg. AI itineraries generated per user per month
+- **Retention:** % of users who return within 30 days to plan another trip
+- **Group virality:** % of trips with 2+ members (Split Expense usage) — proxy for network effect
+- **Safety adoption:** % of trips with Safety Mode activated
+- **Unit economics:** LLM cost per itinerary generated
+- **Quality:** user feedback (thumbs up/down) on generated itineraries
 
 ---
 
-# 8.8 AI Recommended Packing Checklist
+## 12. Explicitly Out of Scope for MVP
 
-## Objective
-
-Generate a personalized packing list based on the trip context.
-
-## User Story
-
-As a traveler, I want a checklist designed for my trip so that I do not forget important items or carry unnecessary things.
-
-## Inputs
-
-* Destination
-* Dates
-* Weather
-* Number of days
-* Transport mode
-* Activities
-* Traveler type
-* Accommodation
-* Luggage limits
-* Medical needs
-* International or domestic travel
-
-## Checklist Categories
-
-* Documents
-* Clothing
-* Footwear
-* Toiletries
-* Medicines
-* Electronics
-* Safety items
-* Activity-specific equipment
-* Food and water items
-* Children’s items
-* Optional items
-* Items not recommended
-
-## Functional Requirements
-
-* Generate a checklist automatically.
-* Allow users to add custom items.
-* Allow users to remove suggestions.
-* Mark items as packed.
-* Show packing progress.
-* Group items by category.
-* Update recommendations when weather changes.
-* Warn about baggage restrictions.
-* Support shared group packing lists.
-* Assign items to group members.
-* Cache the checklist offline.
-* Prevent the AI from recommending prohibited or unsafe items.
-
-## AI Logic
-
-Examples:
-
-* Rain forecast → umbrella, rain jacket, waterproof cover
-* Cold destination → thermal wear, gloves, moisturizer
-* Beach trip → sunscreen, swimwear, waterproof bag
-* Flight journey → travel documents, power bank rules, baggage limits
-* Trekking trip → appropriate shoes, hydration, first-aid items
+- In-app flight/train/bus ticket booking and payments
+- Live price comparison across multiple OTA providers
+- Real-time price-drop monitoring/alerts
+- Safety-scored route suggestions
+- Automatic dispatch to local emergency authorities
+- In-app settlement/payment of split expenses
+- Multi-currency live FX conversion
+- Separate native iOS/Android codebases
 
 ---
 
-# 8.9 Hidden Cost Calculator
+## 13. Open Questions for You
 
-## Objective
-
-Estimate the realistic total cost of a trip beyond the visible ticket and hotel prices.
-
-## User Story
-
-As a traveler, I want to know the true cost before booking so that I do not exceed my budget.
-
-## Cost Categories
-
-* Ticket base fare
-* Taxes
-* Convenience fees
-* Baggage fees
-* Seat-selection fees
-* Airport or station transport
-* Local transport
-* Accommodation taxes
-* Hotel deposits
-* Food
-* Attraction tickets
-* Tour fees
-* Parking
-* Toll charges
-* Internet or SIM cost
-* Currency conversion fees
-* Cancellation protection
-* Tips
-* Emergency buffer
-
-## Functional Requirements
-
-* Calculate estimated trip cost automatically.
-* Allow users to edit every cost.
-* Display confirmed and estimated costs separately.
-* Show per-person and group totals.
-* Display low, expected, and high-cost scenarios.
-* Recalculate when the itinerary changes.
-* Warn when the total exceeds the user’s budget.
-* Explain why each hidden cost was included.
-* Track actual spending during the trip.
-* Compare estimated cost with actual cost after the trip.
-
-## Confidence Levels
-
-Each estimate should display a confidence level:
-
-* High confidence
-* Medium confidence
-* Low confidence
-
-The confidence should depend on the quality and freshness of available data.
+- Primary launch market/geography — India-only to start, or wider from day one?
+- Monetization model — freemium, subscription, affiliate commissions (§5), or booking fees later?
+- Platform priority — iOS, Android, or both equally?
+- Team size and technical skill level — changes how aggressively Phase 1's build order (§4) can parallelize?
+- Existing brand/app name/design assets to build around?
 
 ---
 
-# 8.10 Price Drop Alerts
-
-## Objective
-
-Notify users when tracked ticket or accommodation prices fall meaningfully.
-
-## User Story
-
-As a traveler, I want to track prices so that I can book when the fare becomes more affordable.
-
-## Functional Requirements
-
-* Allow users to track flights, buses, trains, and hotels where supported.
-* Let users define a target price.
-* Allow tracking for fixed or flexible dates.
-* Store route and traveler details.
-* Check prices at controlled intervals.
-* Notify users when:
-
-  * Price falls below target
-  * Price falls by a chosen percentage
-  * A significantly better option appears
-  * Availability becomes limited
-* Support push notification, email, and in-app notification preferences.
-* Show price history.
-* Display current price, previous price, and change percentage.
-* Allow users to pause or delete an alert.
-* Allow direct navigation from the alert to the booking result.
-* Prevent repeated notifications for insignificant changes.
-* Clearly state that prices may change before checkout.
-
-## AI Price Guidance
-
-The AI may display:
-
-* Book now
-* Good price
-* Consider waiting
-* Price is higher than usual
-* Limited data available
-
-These labels must be presented as predictions, not guarantees.
-
----
-
-# 9. Main User Flows
-
-# 9.1 New User Onboarding
-
-1. User opens the app.
-2. User selects language.
-3. User signs up using phone, email, Google, or Apple.
-4. App asks for optional travel preferences.
-5. User selects interests and budget style.
-6. User grants or declines location and notification permissions.
-7. User reaches the home screen.
-
-# 9.2 Create a Trip
-
-1. User taps “Plan a Trip.”
-2. User enters source and destination.
-3. User selects dates.
-4. User enters group details.
-5. User enters budget.
-6. User selects interests and preferences.
-7. AI creates the itinerary.
-8. User reviews and edits the plan.
-9. User checks journey options.
-10. User selects tickets.
-11. Hidden Cost Calculator updates the total.
-12. User saves or books the trip.
-13. Packing Checklist becomes available.
-14. User activates Price Drop Alerts or Safety Mode.
-
-# 9.3 Smart Journey Flow
-
-1. User enters source, destination, and date.
-2. App searches transport providers.
-3. App creates comparable journey options.
-4. User chooses a priority such as cheapest or fastest.
-5. App ranks options.
-6. User opens one option.
-7. App shows fare details and hidden costs.
-8. User books or saves the journey.
-
-# 9.4 Group Expense Flow
-
-1. User creates a trip group.
-2. User invites members.
-3. A member adds an expense.
-4. User selects payer and participants.
-5. App calculates balances.
-6. Members review expenses.
-7. App recommends minimum settlements.
-8. Members pay through UPI or mark payments as completed.
-
-# 9.5 Safety Mode Flow
-
-1. User activates Safety Mode.
-2. User selects trusted contacts.
-3. User chooses location-sharing and check-in settings.
-4. App loads emergency information.
-5. App monitors relevant verified alerts.
-6. User receives safety guidance.
-7. A missed check-in triggers the configured workflow.
-8. User can stop Safety Mode at any time.
-
-# 9.6 Price Alert Flow
-
-1. User selects a route or hotel.
-2. User taps “Track Price.”
-3. User enters target price.
-4. User chooses notification preferences.
-5. App checks partner prices periodically.
-6. Price falls below the condition.
-7. User receives a notification.
-8. User opens the latest result and books.
-
----
-
-# 10. Functional Requirements
-
-## 10.1 Account and Profile
-
-* User registration and login
-* Phone and email verification
-* Social login
-* Password reset
-* Profile editing
-* Saved traveler profiles
-* Saved preferences
-* Notification settings
-* Language settings
-* Data download and account deletion
-
-## 10.2 Search
-
-* Location autocomplete
-* Recent searches
-* Saved searches
-* Search filters
-* Flexible dates
-* Search history
-* Voice search in a later phase
-
-## 10.3 Trip Management
-
-* Create, edit, duplicate, archive, and delete trips
-* Save draft trips
-* Invite travelers
-* Share trip links
-* Add bookings
-* Store documents securely
-* View trip timeline
-* Export itinerary
-
-## 10.4 Booking
-
-* Partner redirection or in-app booking
-* Fare validation before checkout
-* Passenger detail collection
-* Payment processing
-* Booking status
-* Booking confirmation
-* Cancellation request
-* Refund tracking
-* Invoice generation
-
-## 10.5 Notifications
-
-* Booking confirmation
-* Price drop
-* Schedule change
-* Weather warning
-* Safety alert
-* Packing reminder
-* Expense reminder
-* Upcoming trip reminder
-* Missed safety check-in
-
-## 10.6 Payments
-
-* UPI
-* Debit cards
-* Credit cards
-* Net banking
-* Supported wallets
-* Refund processing
-* Payment failure recovery
-* Secure payment gateway integration
-
-## 10.7 Admin Dashboard
-
-Administrators should be able to:
-
-* Manage users
-* Review reported content
-* Manage destinations
-* View API health
-* Manage travel partners
-* View bookings
-* View refunds
-* Configure notification rules
-* Audit AI responses
-* Review safety data sources
-* Manage promotional content
-* View product analytics
-
----
-
-# 11. Non-Functional Requirements
-
-## 11.1 Performance
-
-* Main screen should load quickly on standard mobile networks.
-* Search progress should be visible to users.
-* Cached trip details should open without a network connection.
-* AI-generated content should stream or show progress rather than leaving a blank screen.
-* The platform should support traffic spikes during holidays.
-
-## 11.2 Availability
-
-* Target production availability: 99.9%
-* Booking and payment services should use failover mechanisms.
-* Critical safety information should be cached.
-* Failed partner API calls should not crash the app.
-
-## 11.3 Scalability
-
-The architecture should support:
-
-* Increasing user volume
-* Multiple travel suppliers
-* Regional expansion
-* Multiple languages
-* Large numbers of active Price Drop Alerts
-* High-volume notifications
-
-## 11.4 Security
-
-* Encrypt data in transit and at rest.
-* Use secure authentication tokens.
-* Apply role-based access control.
-* Do not store raw card data.
-* Conduct regular vulnerability testing.
-* Log sensitive administrative actions.
-* Rate-limit authentication and search APIs.
-* Detect suspicious login or payment activity.
-
-## 11.5 Privacy
-
-* Obtain consent before collecting precise location.
-* Allow users to disable location tracking.
-* Provide account and data deletion.
-* Retain personal data only as required.
-* Separate safety location data from advertising systems.
-* Clearly explain AI data usage.
-* Follow applicable privacy and data-protection requirements.
-
-## 11.6 Accessibility
-
-* Support screen readers.
-* Provide adequate text contrast.
-* Support dynamic text sizes.
-* Avoid color-only status indicators.
-* Make important actions accessible by keyboard on web.
-* Provide descriptive labels for icons.
-* Support reduced-motion settings.
-
-## 11.7 Localization
-
-MVP language:
-
-* English
-
-Early expansion:
-
-* Hindi
-* Telugu
-* Tamil
-* Kannada
-* Malayalam
-* Marathi
-* Bengali
-
-The app should support local date, currency, number, and language formats.
-
-## 11.8 Reliability
-
-* Prices must be revalidated before payment.
-* AI results must not overwrite confirmed booking data.
-* Duplicate notifications should be prevented.
-* Expense changes should be auditable.
-* Offline changes should resolve synchronization conflicts safely.
-
----
-
-# 12. AI System Requirements
-
-## 12.1 AI Responsibilities
-
-AI may be used for:
-
-* Itinerary creation
-* Activity ranking
-* Journey recommendation explanations
-* Budget estimation
-* Packing checklist generation
-* Receipt extraction
-* Expense categorization
-* Destination discovery
-* Safety information summarization
-* Price trend interpretation
-* Natural-language travel assistant
-
-## 12.2 AI Guardrails
-
-The AI must:
-
-* Avoid presenting uncertain data as fact.
-* Display when information was last updated.
-* Avoid inventing ticket prices or availability.
-* Use live APIs for time-sensitive information.
-* Separate suggestions from confirmed bookings.
-* Avoid guaranteeing safety.
-* Avoid guaranteeing future ticket prices.
-* Avoid recommending illegal or prohibited activities.
-* Avoid unsafe medical advice.
-* Avoid collecting unnecessary personal information.
-* Provide source attribution where appropriate.
-* Ask for confirmation before making booking-related changes.
-
-## 12.3 Data Priority
-
-When sources conflict, the app should prioritize:
-
-1. Confirmed booking data
-2. Official government or transport data
-3. Live supplier API data
-4. Verified business information
-5. Recent trusted third-party data
-6. AI-generated estimates
-
-## 12.4 Human Feedback Loop
-
-Users should be able to:
-
-* Like or dislike recommendations
-* Report incorrect information
-* Replace unsuitable activities
-* Mark estimates as inaccurate
-* Provide post-trip feedback
-* Report safety data issues
-
-Feedback should improve future ranking models.
-
-## 12.5 AI Response Structure
-
-Recommendations should use a structured format containing:
-
-* Recommendation title
-* Reason
-* Estimated price
-* Estimated duration
-* Confidence level
-* Source or update time
-* Alternatives
-* Warning or limitation, when applicable
-
----
-
-# 13. Required APIs and Integrations
-
-Actual providers should be selected based on pricing, coverage, reliability, and commercial agreements.
-
-## 13.1 Maps and Location
-
-Required capabilities:
-
-* Geocoding
-* Place search
-* Distance calculation
-* Route planning
-* Public transport information
-* Nearby hospitals and police stations
-* Map display
-
-Possible provider categories:
-
-* Google Maps Platform
-* Mapbox
-* OpenStreetMap-based services
-
-## 13.2 Flight APIs
-
-Required capabilities:
-
-* Flight search
-* Fare details
-* Baggage information
-* Availability
-* Booking or affiliate redirection
-* Price tracking
-
-Possible integrations:
-
-* Airline or global distribution partners
-* Flight aggregation platforms
-* Online travel agency affiliate APIs
-
-## 13.3 Train APIs
-
-Required capabilities:
-
-* Station search
-* Train schedules
-* Availability where permitted
-* Fare information
-* Booking redirection
-* Running status
-
-Indian railway booking and availability integrations must follow authorized access requirements.
-
-## 13.4 Bus APIs
-
-Required capabilities:
-
-* Operator search
-* Route search
-* Seat availability
-* Boarding points
-* Fare
-* Cancellation rules
-* Booking
-
-## 13.5 Hotel APIs
-
-Required capabilities:
-
-* Hotel search
-* Room availability
-* Taxes and fees
-* Ratings
-* Cancellation rules
-* Booking
-
-## 13.6 Weather APIs
-
-Required capabilities:
-
-* Current weather
-* Hourly forecast
-* Multi-day forecast
-* Severe weather alerts
-* Historical averages
-
-## 13.7 Safety and Emergency Data
-
-Required capabilities:
-
-* Official travel advisories
-* Severe weather warnings
-* Emergency contacts
-* Nearby emergency services
-* Disaster alerts
-* Verified local incident data where legally and ethically permitted
-
-## 13.8 Payment APIs
-
-* UPI-supported payment gateway
-* Card and net-banking gateway
-* Refund API
-* Payment status webhook
-* Invoice support
-
-## 13.9 Notification APIs
-
-* Mobile push notifications
-* Email
-* SMS for critical account or safety workflows
-* Notification preference management
-
-## 13.10 AI and Machine Learning Services
-
-* Large language model for itinerary generation
-* Embedding or semantic search service
-* Recommendation engine
-* OCR service for receipts
-* Content moderation
-* Translation service
-* Speech-to-text in a future phase
-
-## 13.11 Analytics and Monitoring
-
-* Product analytics
-* Crash reporting
-* Performance monitoring
-* API monitoring
-* Centralized logging
-* A/B testing
-* Feature flags
-
----
-
-# 14. Application Screens
-
-## 14.1 Authentication
-
-* Splash screen
-* Language selection
-* Sign-up
-* Login
-* OTP verification
-* Password reset
-* Permission request screens
-
-## 14.2 Main Navigation
-
-Recommended tabs:
-
-* Home
-* Explore
-* Trips
-* Expenses
-* Profile
-
-## 14.3 Home Screen
-
-Components:
-
-* Search bar
-* Plan a Trip button
-* Smart Journey shortcut
-* Budget Discovery shortcut
-* Upcoming trip
-* Price Drop Alerts
-* Recommended destinations
-* Recent searches
-
-## 14.4 Trip Creation Screens
-
-* Source and destination
-* Dates
-* Travelers
-* Budget
-* Interests
-* Travel preferences
-* Review inputs
-* AI generation progress
-
-## 14.5 Trip Details
-
-* Overview
-* Itinerary
-* Journey
-* Bookings
-* Budget
-* Packing
-* Safety
-* Group members
-* Expenses
-
-## 14.6 Smart Journey Screen
-
-* Transport mode comparison
-* Recommended journey card
-* Cheapest option
-* Fastest option
-* Comfort comparison
-* Filters
-* Hidden cost breakdown
-* Route map
-
-## 14.7 Ticket Search Screens
-
-* Search form
-* Results list
-* Filters
-* Ticket details
-* Passenger details
-* Payment
-* Booking confirmation
-* Cancellation and refund
-
-## 14.8 Expense Screens
-
-* Group overview
-* Member balances
-* Add expense
-* Receipt upload
-* Expense details
-* Settlement suggestions
-* UPI settlement
-* Expense report
-
-## 14.9 Safety Screens
-
-* Safety dashboard
-* Emergency contacts
-* Trusted contacts
-* Live location sharing
-* Check-in settings
-* Nearby emergency services
-* Active alerts
-* Safety privacy controls
-
-## 14.10 Packing Screens
-
-* Packing categories
-* Checklist
-* Progress
-* Weather update
-* Shared items
-* Assigned items
-
-## 14.11 Price Alert Screens
-
-* Create alert
-* Active alerts
-* Price history
-* Alert details
-* Notification settings
-
-## 14.12 Profile Screens
-
-* Personal information
-* Traveler profiles
-* Preferences
-* Payment methods
-* Notification settings
-* Privacy controls
-* Language
-* Help and support
-* Delete account
-
-## 14.13 Admin Screens
-
-* User management
-* Booking management
-* Content moderation
-* Safety data review
-* Partner management
-* Refund management
-* Analytics
-* AI quality dashboard
-* System health
-
----
-
-# 15. MVP Scope
-
-The MVP should prove that users value AI-assisted planning and multi-mode cost comparison.
-
-## 15.1 MVP Features
-
-### Included
-
-1. User authentication
-2. Basic user profile
-3. AI Trip Planner
-4. Smart Journey comparison
-5. Basic Smart Ticket Finder with partner redirection
-6. Split Expense Feature
-7. Budget-Based Discovery
-8. AI Packing Checklist
-9. Hidden Cost Calculator
-10. Basic Price Drop Alerts for supported providers
-11. Basic Safety Mode with emergency contacts and nearby services
-12. Saved trips
-13. Push notifications
-14. English language
-15. Basic admin dashboard
-
-### Limited in MVP
-
-* Flight, train, and bus coverage may depend on initial API partnerships.
-* Safety Mode will provide information and check-ins but not automated emergency dispatch.
-* Price predictions will use simple rules until sufficient historical data is available.
-* Ticket booking may initially redirect users to partner platforms.
-* Hotel booking may be introduced after initial transport validation.
-* Offline support will be limited to saved itineraries, packing lists, and emergency information.
-
-## 15.2 MVP Exclusions
-
-* Full international visa guidance
-* Social travel matching
-* Unknown traveler group joining
-* Advanced loyalty point optimization
-* Travel insurance marketplace
-* Voice assistant
-* Full multi-city international planning
-* Wearable device integration
-* Automatic emergency calling
-* Advanced carbon offset marketplace
-* Corporate travel management
-
----
-
-# 16. MVP Prioritization
-
-## Must Have
-
-* Sign-up and login
-* Trip creation
-* AI itinerary
-* Journey comparison
-* Basic ticket search
-* Cost breakdown
-* Saved trips
-* Expense splitting
-* Packing checklist
-* Basic safety information
-* Price alerts
-* Push notifications
-
-## Should Have
-
-* Flexible date search
-* Receipt scanning
-* UPI settlement links
-* Collaborative itinerary editing
-* Weather-based itinerary changes
-* Multiple traveler profiles
-* Export itinerary to PDF
-
-## Could Have
-
-* Hotel booking
-* Regional languages
-* Price history charts
-* Shared group packing
-* AI travel chatbot
-* Local outing mode
-* Voice input
-
-## Not in Initial Release
-
-* Public social travel groups
-* Automated emergency response
-* Visa application processing
-* International expense settlement
-* Corporate travel controls
-
----
-
-# 17. Future Scope
-
-## Phase 2
-
-* Hotel search and booking
-* Local outing mode
-* Regional language support
-* Collaborative trip editing
-* Receipt OCR
-* UPI settlement
-* Advanced weather replanning
-* Better fare history
-* Travel document storage
-* AI travel chatbot
-
-## Phase 3
-
-* International travel planning
-* Visa and document guidance
-* Travel insurance comparison
-* Loyalty points optimization
-* Multi-currency expenses
-* Offline maps
-* Voice assistant
-* Real-time trip disruption management
-* Restaurant and activity booking
-
-## Phase 4
-
-* Personalized travel subscription
-* Corporate travel management
-* Smartwatch safety integration
-* Carbon footprint tracking
-* Automated rebooking assistance
-* AI-generated trip memories
-* Advanced predictive pricing
-* Partner marketplace for local experiences
-
----
-
-# 18. Monetization Model
-
-## Booking Commission
-
-Earn commission from:
-
-* Flights
-* Buses
-* Trains where commercially permitted
-* Hotels
-* Activities
-* Insurance
-* Cabs
-
-## Premium Subscription
-
-Possible premium benefits:
-
-* Unlimited AI itinerary regeneration
-* Advanced Price Drop Alerts
-* Advanced safety check-ins
-* Offline trip access
-* Family travel profiles
-* Premium support
-* Advanced budget forecasting
-* No advertisements
-
-## Sponsored Listings
-
-* Hotels
-* Activities
-* Restaurants
-* Destination promotions
-
-Sponsored recommendations must be clearly labeled.
-
-## Business Partnerships
-
-* Tourism boards
-* Universities
-* Corporate travel programs
-* Event organizers
-* Travel operators
-
----
-
-# 19. Success Metrics
-
-# 19.1 North Star Metric
-
-**Number of completed trips planned and actively managed through the app per month**
-
-A trip may count as actively managed when the user completes meaningful actions such as saving an itinerary, selecting a journey, tracking a price, recording an expense, or using a packing checklist.
-
-## 19.2 Acquisition Metrics
-
-* New users per week
-* Cost per install
-* Sign-up conversion rate
-* Referral conversion rate
-* Organic versus paid acquisition
-
-## 19.3 Activation Metrics
-
-* Percentage of new users creating a first trip
-* Percentage completing trip preferences
-* Percentage generating an itinerary
-* Time to first itinerary
-* Percentage saving the first trip
-
-## 19.4 Engagement Metrics
-
-* Monthly active users
-* Weekly active users
-* Trips created per user
-* Itinerary edits per trip
-* Ticket searches per trip
-* Packing checklist completion rate
-* Expenses added per group
-* Active Price Drop Alerts
-* Safety Mode activation rate
-
-## 19.5 Conversion Metrics
-
-* Search-to-booking click rate
-* Booking completion rate
-* Price alert-to-booking rate
-* Itinerary-to-ticket-search rate
-* Partner revenue per active user
-* Premium subscription conversion
-
-## 19.6 Retention Metrics
-
-* Day 7 retention
-* Day 30 retention
-* Three-month repeat trip rate
-* Percentage of users creating a second trip
-* Price alert return rate
-
-## 19.7 AI Quality Metrics
-
-* Itinerary acceptance rate
-* Percentage of suggested activities retained
-* Recommendation helpfulness rating
-* AI regeneration rate
-* Incorrect-information report rate
-* Budget estimate accuracy
-* Packing recommendation completion rate
-* Response latency
-
-## 19.8 Expense Feature Metrics
-
-* Group invitations accepted
-* Expenses added per trip
-* Settlement completion rate
-* Average time to settle
-* Duplicate expense detection accuracy
-
-## 19.9 Safety Metrics
-
-* Safety Mode activation rate
-* Trusted contacts added
-* Check-in completion rate
-* Emergency information access rate
-* Incorrect safety data reports
-* Safety alert delivery success
-
-## 19.10 Reliability Metrics
-
-* API success rate
-* Search failure rate
-* Booking failure rate
-* Payment failure rate
-* Crash-free sessions
-* Notification delivery rate
-* Price data freshness
-* Platform uptime
-
----
-
-# 20. Initial Success Targets
-
-Targets should be finalized after baseline testing. Suggested early targets include:
-
-* At least 60% of signed-up users create a trip.
-* At least 50% of generated itineraries are saved.
-* At least 40% of trip creators use Smart Journey.
-* At least 25% of group trips use Split Expenses.
-* At least 30% of users create a Price Drop Alert.
-* At least 50% of packing-list users mark one or more items complete.
-* AI itinerary satisfaction reaches at least 4 out of 5.
-* Fewer than 5% of AI responses are reported as materially incorrect.
-* More than 99% of critical notifications are successfully processed.
-* Crash-free session rate remains above 99.5%.
-
----
-
-# 21. Analytics Events
-
-Important events to track include:
-
-* `signup_started`
-* `signup_completed`
-* `trip_creation_started`
-* `trip_created`
-* `itinerary_generated`
-* `itinerary_regenerated`
-* `activity_added`
-* `activity_removed`
-* `journey_search_started`
-* `journey_option_selected`
-* `ticket_result_opened`
-* `booking_redirect_clicked`
-* `booking_completed`
-* `hidden_cost_viewed`
-* `price_alert_created`
-* `price_alert_triggered`
-* `packing_item_checked`
-* `expense_added`
-* `settlement_completed`
-* `safety_mode_activated`
-* `trusted_contact_added`
-* `safety_checkin_completed`
-* `recommendation_reported`
-* `trip_completed`
-
-Analytics must avoid exposing sensitive personal or precise location information unnecessarily.
-
----
-
-# 22. Risks and Mitigation
-
-## Risk 1: Incorrect AI Information
-
-**Mitigation**
-
-* Use live APIs for prices, timings, weather, and availability.
-* Display confidence levels.
-* Show data sources and update times.
-* Allow users to report errors.
-* Prevent AI from presenting estimates as confirmed facts.
-
-## Risk 2: Stale Ticket Prices
-
-**Mitigation**
-
-* Revalidate fares before checkout.
-* Display when a fare was last checked.
-* Clearly communicate possible price changes.
-* Use supplier webhooks where available.
-
-## Risk 3: Safety Liability
-
-**Mitigation**
-
-* Use official and trusted data.
-* Avoid guarantees.
-* Display clear disclaimers.
-* Provide direct access to official emergency services.
-* Review safety workflows legally before launch.
-
-## Risk 4: API Dependency
-
-**Mitigation**
-
-* Use multiple providers where possible.
-* Build provider abstraction layers.
-* Cache non-sensitive data.
-* Monitor API performance.
-* Provide graceful fallback messages.
-
-## Risk 5: Low Booking Margins
-
-**Mitigation**
-
-* Add premium subscriptions.
-* Build hotel and activity partnerships.
-* Improve conversion through personalization.
-* Add sponsored listings with transparent labels.
-
-## Risk 6: User Privacy Concerns
-
-**Mitigation**
-
-* Make location sharing optional.
-* Use minimal data collection.
-* Provide clear privacy settings.
-* Support deletion and consent withdrawal.
-* Separate safety information from advertising data.
-
-## Risk 7: Notification Fatigue
-
-**Mitigation**
-
-* Allow granular notification settings.
-* Group low-priority alerts.
-* Avoid repeated small-price-change notifications.
-* Apply relevance thresholds.
-
-## Risk 8: Users Overtrust AI
-
-**Mitigation**
-
-* Explain uncertainty.
-* Label AI-generated content.
-* Require confirmation before bookings or major changes.
-* Show alternative options.
-
----
-
-# 23. Dependencies
-
-The MVP depends on:
-
-* Reliable maps and place APIs
-* Transport search partners
-* Payment gateway approval
-* Weather data provider
-* Notification infrastructure
-* AI model access
-* Safety data availability
-* Legal review
-* Privacy and data-retention policies
-* Travel affiliate or booking agreements
-* Mobile app store approvals
-
----
-
-# 24. Acceptance Criteria
-
-The MVP will be considered launch-ready when:
-
-1. Users can register and create a profile.
-2. Users can generate, edit, save, and reopen an itinerary.
-3. Smart Journey can compare at least two transport modes for supported routes.
-4. Users can view estimated total journey costs.
-5. Ticket results clearly display whether prices are live or estimated.
-6. Users can create and receive supported Price Drop Alerts.
-7. Group members can add and settle expenses.
-8. Users can generate and complete a packing checklist.
-9. Users can access emergency contacts and nearby services.
-10. Saved critical trip information remains available offline.
-11. All payment and booking actions require explicit confirmation.
-12. AI outputs show limitations where live data is unavailable.
-13. Core analytics events are recorded.
-14. Privacy controls and account deletion are functional.
-15. Critical security testing is complete.
-16. Crash and API reliability targets are met.
-17. Customer support and incident-response workflows are documented.
-
----
-
-# 25. Example End-to-End Scenario
-
-A group of four students wants to travel from Hyderabad to Goa for four days with a total budget of ₹40,000.
-
-1. One student enters Hyderabad, Goa, dates, four travelers, and the ₹40,000 budget.
-2. Budget-Based Discovery confirms whether the trip is realistic.
-3. AI Trip Planner creates a four-day itinerary.
-4. Smart Journey compares bus, train, and flight options.
-5. Hidden Cost Calculator adds station travel, local transport, food, stay, activities, and an emergency buffer.
-6. The group chooses a train because it offers the best balance of cost and comfort.
-7. Smart Ticket Finder redirects them to an approved booking provider.
-8. A Price Drop Alert is created for the selected dates.
-9. The trip organizer invites the other three travelers.
-10. The app generates a shared packing checklist.
-11. During the trip, members record accommodation, food, and transport expenses.
-12. Safety Mode provides emergency contacts and nearby services.
-13. At the end of the trip, the app calculates the minimum payments needed to settle all expenses.
-
----
-
-# 26. Product Summary
-
-TravelAI will differentiate itself by combining AI planning, total-cost transparency, multi-mode journey comparison, personal safety, and group travel management in one platform.
-
-The strongest initial value proposition is:
-
-> Plan the complete trip, compare the smartest way to travel, understand the real cost, and manage everything in one place.
-
-The MVP should prioritize trustworthy recommendations, transparent costs, simple user flows, and strong integration between the ten core features. It should not attempt to replace every travel service at launch. Instead, it should become the intelligent layer that helps users make better travel decisions across the full journey.
+## 14. Building This Efficiently (Minimizing Dev/AI-Tool Cost)
+
+- Design the schema in §8 before writing a single prompt to your AI coding tool — redoing a data model mid-build burns far more credits than getting it right once upfront.
+- Build one feature fully (backend + UI) before starting the next, in the order suggested in §4 — half-finished parallel features are the biggest source of wasted iterations, since the tool re-loads context every time you switch.
+- Use structured JSON output from the LLM (not free text you parse yourself) for every AI feature — far fewer follow-up fixes.
+- Ship on one platform pattern (cross-platform framework, or even mobile-web first) rather than two native codebases.
+- Lean on free tiers (Supabase/Firebase, Google Maps, OpenWeatherMap) as long as usage allows — check current limits before building against them.
+- Don't touch Phase 2/3 until Phase 1 is live. The temptation to "just add live flight prices" early is exactly what turns a low-cost MVP into an expensive one.
