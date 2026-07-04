@@ -1,4 +1,5 @@
 import { storage } from '../../utils/storage';
+import { registerExpenseQueueTrip } from '../offline/expenseRegistry';
 import type { QueuedExpenseOperation, SplitExpenseRecord } from './types';
 
 const cacheKey = (tripId: string) => `travelai:split-expenses:${tripId}`;
@@ -16,6 +17,7 @@ export async function getCachedSplitExpenses(tripId: string): Promise<SplitExpen
 export async function enqueueExpenseOperation(tripId: string, operation: QueuedExpenseOperation) {
   const queue = await getQueuedExpenseOperations(tripId);
   queue.push(operation);
+  await registerExpenseQueueTrip(tripId);
   await storage.setItem(queueKey(tripId), JSON.stringify(queue));
 }
 
