@@ -228,7 +228,7 @@ export default function SafetyModeScreen() {
               </>
             ) : (
               <>
-                <Text style={{ color: theme.colors.onSurfaceVariant }}>Start a schedule for manual "I am safe" check-ins.</Text>
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>Start a schedule for manual I am safe check-ins.</Text>
                 <SegmentedButtons
                   value={interval}
                   onValueChange={setInterval}
