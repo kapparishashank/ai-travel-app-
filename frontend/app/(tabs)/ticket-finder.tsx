@@ -16,6 +16,7 @@ import { filterTicketResults, priceStatusLabel, sortTicketResults } from '../../
 import { fetchTrips } from '../../src/features/trips/api';
 import { useAuthStore } from '../../src/store/authStore';
 import { formatINR } from '../../src/utils/currency';
+import { isSafeExternalUrl } from '../../src/utils/externalLinks';
 
 const modeOptions: Array<TicketMode | 'all'> = ['all', 'flight', 'train', 'bus'];
 const sortOptions: TicketSort[] = ['recommended', 'price', 'departure', 'arrival', 'duration'];
@@ -89,6 +90,10 @@ export default function TicketFinderScreen() {
       const validation = await provider?.validateLatestPrice(bookingTicket.id);
       if (validation) {
         setMessage(validation.message);
+      }
+      if (!isSafeExternalUrl(bookingTicket.partnerBookingUrl)) {
+        setMessage('Unsafe partner URL blocked.');
+        return;
       }
       await Linking.openURL(bookingTicket.partnerBookingUrl);
     } catch {

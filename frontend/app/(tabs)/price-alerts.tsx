@@ -18,6 +18,7 @@ import { calculatePercentageChange } from '../../src/features/priceAlerts/logic'
 import type { JourneyOptionForAlert, PriceAlertRow, PriceHistoryRow } from '../../src/features/priceAlerts/types';
 import { useAuthStore } from '../../src/store/authStore';
 import { formatINR, rupeesToPaise } from '../../src/utils/currency';
+import { describeExternalUrl, isSafeExternalUrl } from '../../src/utils/externalLinks';
 
 export default function PriceAlertsScreen() {
   const queryClient = useQueryClient();
@@ -95,8 +96,18 @@ export default function PriceAlertsScreen() {
             ])}
             onHistory={() => setHistoryAlert(alert)}
             onOpenLatest={() => {
-              if (alert.latest_result_url) Linking.openURL(alert.latest_result_url);
-              else Alert.alert('No booking link', 'The latest mock result does not include a partner URL.');
+              if (!alert.latest_result_url) {
+                Alert.alert('No booking link', 'The latest mock result does not include a partner URL.');
+                return;
+              }
+              if (!isSafeExternalUrl(alert.latest_result_url)) {
+                Alert.alert('Unsafe link blocked', 'This result link is not an allowed external URL.');
+                return;
+              }
+              Alert.alert('Open latest result?', `This will open ${describeExternalUrl(alert.latest_result_url)} outside TravelAI. Prices may change before booking.`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Open', onPress: () => Linking.openURL(alert.latest_result_url!) },
+              ]);
             }}
             onCheck={() => checkMutation.mutate(alert.id)}
             onSimulate={() => simulateMutation.mutate(alert.id)}
