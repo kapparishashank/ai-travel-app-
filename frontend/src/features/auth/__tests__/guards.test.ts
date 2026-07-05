@@ -47,6 +47,18 @@ describe('auth guards', () => {
     ).toBe('/(tabs)');
   });
 
+  it('keeps verified users inside onboarding until onboarding is finished', () => {
+    expect(
+      getAuthRedirectTarget({
+        initialized: true,
+        sessionUserId: 'user-1',
+        emailVerified: true,
+        profileComplete: true,
+        inOnboardingGroup: true,
+      })
+    ).toBeNull();
+  });
+
   it('checks required profile fields', () => {
     expect(isProfileComplete(null)).toBe(false);
     expect(

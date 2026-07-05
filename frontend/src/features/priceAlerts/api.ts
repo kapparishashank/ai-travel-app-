@@ -9,7 +9,7 @@ export async function fetchJourneyOptionsForAlerts(): Promise<JourneyOptionForAl
     .order('depart_at', { ascending: true })
     .limit(30);
   if (error) throw error;
-  return (data ?? []).map((row: any) => ({
+  const options = (data ?? []).map((row: any) => ({
     id: row.id,
     trip_id: row.trip_id,
     mode: row.mode,
@@ -22,6 +22,29 @@ export async function fetchJourneyOptionsForAlerts(): Promise<JourneyOptionForAl
     currency_code: row.currency_code,
     booking_url: row.booking_url,
   }));
+  if (options.length) return options;
+
+  const { data: trips } = await supabase
+    .from('trips')
+    .select('id,origin_name,destination_name,start_date,currency_code')
+    .order('start_date', { ascending: true })
+    .limit(1);
+  const trip = (trips ?? [])[0] as any;
+  if (!trip) return [];
+
+  return [{
+    id: `mock-alert-option-${trip.id}`,
+    trip_id: trip.id,
+    mode: 'train',
+    provider: 'mock-rail-provider',
+    operator_name: 'Indian Railways demo fare',
+    origin_name: trip.origin_name ?? 'Hyderabad',
+    destination_name: trip.destination_name ?? 'Goa',
+    depart_at: `${trip.start_date ?? new Date().toISOString().slice(0, 10)}T06:15:00+05:30`,
+    total_price_minor: 560000,
+    currency_code: trip.currency_code ?? 'INR',
+    booking_url: null,
+  }];
 }
 
 export async function fetchPriceAlerts(): Promise<PriceAlertRow[]> {

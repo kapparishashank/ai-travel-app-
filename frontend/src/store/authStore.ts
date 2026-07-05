@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         emailVerified: Boolean(authUser?.email_confirmed_at),
       });
 
-      supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      supabase.auth.onAuthStateChange(async (_event: string, nextSession: Session | null) => {
         const nextUser = nextSession?.user ?? null;
         const nextProfile = nextUser ? await fetchProfile(nextUser.id) : null;
 

@@ -48,7 +48,7 @@ export function getAuthRedirectTarget(state: AuthRouteState): AuthRedirectTarget
     return state.inOnboardingGroup ? null : '/(onboarding)/profile-setup';
   }
 
-  if (state.inAuthGroup || state.inOnboardingGroup) {
+  if (state.inAuthGroup) {
     return '/(tabs)';
   }
 
