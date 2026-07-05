@@ -18,7 +18,6 @@ import {
   notificationCategories,
   notificationCategoryLabels,
   type NotificationCategory,
-  type NotificationPreferences,
   type TravelNotification,
 } from '../../src/features/notifications/types';
 import { useAuthStore } from '../../src/store/authStore';

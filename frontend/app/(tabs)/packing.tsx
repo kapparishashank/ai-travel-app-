@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Checkbox, Dialog, Portal, ProgressBar, Snackbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { addPackingItem, createPackingList, fetchPackingForTrip, generatePackingChecklist, resetPackedStatus, syncPackingQueue, updatePackingItem } from '../../src/features/packing/api';
-import { applyQueuedPackingOperation, cachePackingList, enqueuePackingOperation, getCachedPackingList } from '../../src/features/packing/cache';
+import { cachePackingList, enqueuePackingOperation, getCachedPackingList } from '../../src/features/packing/cache';
 import { buildFallbackPackingItems } from '../../src/features/packing/fallback';
 import { packingCategories, type PackingCategory, type PackingItemView, type PackingPriority } from '../../src/features/packing/types';
 import { calculatePackingProgress, packingCategoryLabels, serializePackingNotes } from '../../src/features/packing/utils';
@@ -26,8 +26,8 @@ export default function PackingScreen() {
   const authUser = useAuthStore((state) => state.authUser);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<PackingCategory | 'all'>('all');
-  const [items, setItems] = useState<PackingItemView[]>([]);
-  const [listId, setListId] = useState<string | null>(null);
+  const [localItems, setLocalItems] = useState<PackingItemView[] | null>(null);
+  const [listIdOverride, setListIdOverride] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState('');
@@ -46,12 +46,9 @@ export default function PackingScreen() {
 
   const selectedTrip = useMemo(() => {
     const trips = tripsQuery.data ?? [];
-    return trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
+    const effectiveSelectedTripId = selectedTripId ?? trips[0]?.id;
+    return trips.find((trip) => trip.id === effectiveSelectedTripId) ?? trips[0] ?? null;
   }, [selectedTripId, tripsQuery.data]);
-
-  useEffect(() => {
-    if (!selectedTripId && selectedTrip) setSelectedTripId(selectedTrip.id);
-  }, [selectedTrip, selectedTripId]);
 
   const packingQuery = useQuery({
     queryKey: ['packing', selectedTrip?.id],
@@ -71,14 +68,9 @@ export default function PackingScreen() {
     enabled: Boolean(selectedTrip?.id),
   });
 
-  useEffect(() => {
-    if (packingQuery.data) {
-      setItems(packingQuery.data.items);
-      setListId(packingQuery.data.list?.id ?? null);
-    }
-  }, [packingQuery.data]);
-
   const members = selectedTrip?.trip_members ?? [];
+  const items = localItems ?? packingQuery.data?.items ?? [];
+  const listId = listIdOverride ?? packingQuery.data?.list?.id ?? null;
   const progress = useMemo(() => calculatePackingProgress(items), [items]);
   const filteredItems = useMemo(
     () => items.filter((item) => categoryFilter === 'all' || item.packingCategory === categoryFilter),
@@ -107,9 +99,9 @@ export default function PackingScreen() {
         return { list: fallbackList, items: fallbackItems, fallback: true };
       }
     },
-    onSuccess: async (result: any) => {
-      setItems(result.items);
-      setListId(result.list?.id ?? null);
+    onSuccess: async (result: { list?: { id?: string } | null; items: PackingItemView[]; fallback?: boolean }) => {
+      setLocalItems(result.items);
+      setListIdOverride(result.list?.id ?? null);
       setMessage(result.fallback ? 'Generated a fallback packing list for offline use.' : 'Packing list generated and saved.');
       queryClient.invalidateQueries({ queryKey: ['packing', selectedTrip?.id] });
     },
@@ -117,7 +109,7 @@ export default function PackingScreen() {
   });
 
   const saveLocal = async (nextItems: PackingItemView[]) => {
-    setItems(nextItems);
+    setLocalItems(nextItems);
     if (selectedTrip) {
       await cachePackingList(selectedTrip.id, {
         list: packingQuery.data?.list ?? (listId ? { id: listId, trip_id: selectedTrip.id, user_id: authUser?.id ?? null, title: 'Packing list', status: 'active' } : null),
@@ -133,16 +125,16 @@ export default function PackingScreen() {
       if (!activeListId) {
         const created = await createPackingList(selectedTrip.id, authUser?.id ?? null, `${selectedTrip.destination_name} packing list`);
         activeListId = created.id;
-        setListId(created.id);
+        setListIdOverride(created.id);
       }
     } catch {
       activeListId = `offline-list-${selectedTrip.id}`;
-      setListId(activeListId);
+      setListIdOverride(activeListId);
     }
 
     const now = new Date().toISOString();
     const localItem: PackingItemView = {
-      id: `local-${Date.now()}`,
+      id: `local-${now}`,
       packing_list_id: activeListId,
       trip_id: selectedTrip.id,
       assigned_to: input.assignedTo || null,
@@ -177,7 +169,7 @@ export default function PackingScreen() {
       await saveLocal([saved, ...items]);
       setMessage('Packing item added.');
     } catch {
-      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'add', tripId: selectedTrip.id, listId: activeListId, item: localItem, createdAt: now });
+      await enqueuePackingOperation({ id: `op-${now}`, type: 'add', tripId: selectedTrip.id, listId: activeListId, item: localItem, createdAt: now });
       setMessage('Saved offline. This item will sync when connectivity returns.');
     }
   };
@@ -206,7 +198,8 @@ export default function PackingScreen() {
     try {
       await updatePackingItem(item.id, dbPatch);
     } catch {
-      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'update', itemId: item.id, patch: dbPatch, createdAt: new Date().toISOString() });
+      const createdAt = new Date().toISOString();
+      await enqueuePackingOperation({ id: `op-${createdAt}`, type: 'update', itemId: item.id, patch: dbPatch, createdAt });
     }
   };
 
@@ -221,7 +214,8 @@ export default function PackingScreen() {
       const { deletePackingSuggestion } = await import('../../src/features/packing/api');
       await deletePackingSuggestion(item);
     } catch {
-      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'delete', itemId: item.id, createdAt: new Date().toISOString() });
+      const createdAt = new Date().toISOString();
+      await enqueuePackingOperation({ id: `op-${createdAt}`, type: 'delete', itemId: item.id, createdAt });
     }
   };
 
@@ -234,7 +228,8 @@ export default function PackingScreen() {
       await resetPackedStatus(selectedTrip.id);
       setMessage('Packed status reset.');
     } catch {
-      await enqueuePackingOperation({ id: `op-${Date.now()}`, type: 'reset', tripId: selectedTrip.id, createdAt: new Date().toISOString() });
+      const createdAt = new Date().toISOString();
+      await enqueuePackingOperation({ id: `op-${createdAt}`, type: 'reset', tripId: selectedTrip.id, createdAt });
       setMessage('Reset saved offline and will sync later.');
     }
   };
@@ -259,7 +254,11 @@ export default function PackingScreen() {
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
         contentContainerStyle={styles.container}
-        refreshControl={<RefreshControl refreshing={packingQuery.isRefetching} onRefresh={() => packingQuery.refetch()} />}
+        refreshControl={<RefreshControl refreshing={packingQuery.isRefetching} onRefresh={() => {
+          setLocalItems(null);
+          setListIdOverride(null);
+          packingQuery.refetch();
+        }} />}
       >
         <View style={styles.header}>
           <View>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Dialog, Portal } from 'react-native-paper';
 import { Button } from '../../components/common/Button';
@@ -15,31 +15,17 @@ type ActivityDialogProps = {
 };
 
 export function ActivityDialog({ visible, activity, loading, onDismiss, onSave }: ActivityDialogProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('activity');
-  const [location, setLocation] = useState('');
-  const [startTime, setStartTime] = useState('10:00');
-  const [endTime, setEndTime] = useState('11:00');
-  const [cost, setCost] = useState('0');
-  const [transport, setTransport] = useState('');
-  const [reason, setReason] = useState('');
-  const [safetyNote, setSafetyNote] = useState('');
-  const [weatherNote, setWeatherNote] = useState('');
-
-  useEffect(() => {
-    setTitle(activity?.title ?? '');
-    setDescription(activity?.description ?? '');
-    setCategory(activity?.category ?? 'activity');
-    setLocation(activity?.location_name ?? '');
-    setStartTime(activity?.local_start_time?.slice(0, 5) ?? '10:00');
-    setEndTime(activity?.local_end_time?.slice(0, 5) ?? '11:00');
-    setCost(String(activity ? paiseToRupees(activity.estimated_cost_minor) : 0));
-    setTransport(activity?.metadata?.recommended_transport ?? '');
-    setReason(activity?.metadata?.recommendation_reason ?? '');
-    setSafetyNote(activity?.metadata?.safety_note ?? '');
-    setWeatherNote(activity?.metadata?.weather_note ?? '');
-  }, [activity, visible]);
+  const [title, setTitle] = useState(activity?.title ?? '');
+  const [description, setDescription] = useState(activity?.description ?? '');
+  const [category, setCategory] = useState(activity?.category ?? 'activity');
+  const [location, setLocation] = useState(activity?.location_name ?? '');
+  const [startTime, setStartTime] = useState(activity?.local_start_time?.slice(0, 5) ?? '10:00');
+  const [endTime, setEndTime] = useState(activity?.local_end_time?.slice(0, 5) ?? '11:00');
+  const [cost, setCost] = useState(String(activity ? paiseToRupees(activity.estimated_cost_minor) : 0));
+  const [transport, setTransport] = useState(activity?.metadata?.recommended_transport ?? '');
+  const [reason, setReason] = useState(activity?.metadata?.recommendation_reason ?? '');
+  const [safetyNote, setSafetyNote] = useState(activity?.metadata?.safety_note ?? '');
+  const [weatherNote, setWeatherNote] = useState(activity?.metadata?.weather_note ?? '');
 
   const canSave = title.trim().length >= 2 && /^\d{2}:\d{2}$/.test(startTime) && /^\d{2}:\d{2}$/.test(endTime);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Dialog, Portal } from 'react-native-paper';
 import { Button } from '../../components/common/Button';
@@ -15,11 +15,7 @@ type RenameDialogProps = {
 };
 
 export function RenameTripDialog({ trip, visible, loading, onDismiss, onSave }: RenameDialogProps) {
-  const [title, setTitle] = useState('');
-
-  useEffect(() => {
-    setTitle(trip?.title ?? '');
-  }, [trip]);
+  const [title, setTitle] = useState(trip?.title ?? '');
 
   return (
     <Portal>
@@ -46,23 +42,13 @@ type BasicsDialogProps = {
 };
 
 export function EditTripBasicsDialog({ trip, visible, loading, onDismiss, onSave }: BasicsDialogProps) {
-  const [title, setTitle] = useState('');
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [budget, setBudget] = useState('');
-  const [currency, setCurrency] = useState('INR');
-
-  useEffect(() => {
-    setTitle(trip?.title ?? '');
-    setOrigin(trip?.origin_name ?? '');
-    setDestination(trip?.destination_name ?? '');
-    setStartDate(trip?.start_date ?? '');
-    setEndDate(trip?.end_date ?? '');
-    setBudget(String(trip ? paiseToRupees(trip.total_budget_minor) : ''));
-    setCurrency(trip?.currency_code ?? 'INR');
-  }, [trip]);
+  const [title, setTitle] = useState(trip?.title ?? '');
+  const [origin, setOrigin] = useState(trip?.origin_name ?? '');
+  const [destination, setDestination] = useState(trip?.destination_name ?? '');
+  const [startDate, setStartDate] = useState(trip?.start_date ?? '');
+  const [endDate, setEndDate] = useState(trip?.end_date ?? '');
+  const [budget, setBudget] = useState(String(trip ? paiseToRupees(trip.total_budget_minor) : ''));
+  const [currency, setCurrency] = useState(trip?.currency_code ?? 'INR');
 
   const canSave = title.trim().length >= 2 && origin.trim().length >= 2 && destination.trim().length >= 2 && Number(budget) > 0;
 

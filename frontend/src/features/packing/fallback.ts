@@ -1,5 +1,4 @@
-import type { PackingItemView } from './types';
-import type { PackingCategory, PackingPriority } from './types';
+import type { PackingCategory, PackingItemView, PackingPriority } from './types';
 import { mapPackingCategoryToDb, serializePackingNotes } from './utils';
 
 type FallbackTrip = {
@@ -17,7 +16,7 @@ export function buildFallbackPackingItems(trip: FallbackTrip, listId: string): P
   const children = Number(trip.metadata?.travelers?.children ?? 0);
   const now = new Date().toISOString();
 
-  const specs: Array<[string, PackingCategory, number, string, PackingPriority]> = [
+  const specs: [string, PackingCategory, number, string, PackingPriority][] = [
     ['Government ID and booking confirmations', 'documents', 1, 'Needed for travel and accommodation check-in.', 'high'],
     ['Offline copies of tickets', 'documents', 1, 'Useful when mobile data is unreliable.', 'high'],
     ['Light breathable outfits', 'clothing', Math.max(2, days), `Covers ${days} days in ${trip.destination_name}.`, 'high'],

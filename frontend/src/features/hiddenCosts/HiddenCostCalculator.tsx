@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Dialog, Portal, Snackbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,6 +31,7 @@ const categoryLabels: Record<HiddenCostCategory, string> = {
 
 const statusOptions: CostStatus[] = ['estimated', 'confirmed'];
 const confidenceOptions: CostConfidence[] = ['high', 'medium', 'low'];
+type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type HiddenCostCalculatorProps = {
   initialItems: HiddenCostItem[];
@@ -52,10 +53,6 @@ export function HiddenCostCalculator({
   const [emergencyBufferPercentage, setEmergencyBufferPercentage] = useState('10');
   const [dialogState, setDialogState] = useState<{ mode: 'add' | 'edit'; item?: HiddenCostItem } | null>(null);
   const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
 
   const bufferPercent = Math.max(0, Number(emergencyBufferPercentage || 0));
   const totals = useMemo(
@@ -198,6 +195,7 @@ export function HiddenCostCalculator({
       </View>
 
       <CostDialog
+        key={dialogState?.item?.id ?? dialogState?.mode ?? 'cost-closed'}
         visible={!!dialogState}
         item={dialogState?.item}
         onDismiss={() => setDialogState(null)}
@@ -234,26 +232,14 @@ function CostDialog({
 }) {
   const theme = useTheme();
   const [form, setForm] = useState<CostFormState>({
-    name: '',
-    category: 'other',
-    amount: '0.00',
-    status: 'estimated',
-    confidence: 'medium',
-    explanation: '',
-    dataSource: '',
+    name: item?.name ?? '',
+    category: item?.category ?? 'other',
+    amount: item ? formatMinorAsDecimal(item.amountMinor) : '0.00',
+    status: item?.status ?? 'estimated',
+    confidence: item?.confidence ?? 'medium',
+    explanation: item?.explanation ?? '',
+    dataSource: item?.dataSource ?? '',
   });
-
-  useEffect(() => {
-    setForm({
-      name: item?.name ?? '',
-      category: item?.category ?? 'other',
-      amount: item ? formatMinorAsDecimal(item.amountMinor) : '0.00',
-      status: item?.status ?? 'estimated',
-      confidence: item?.confidence ?? 'medium',
-      explanation: item?.explanation ?? '',
-      dataSource: item?.dataSource ?? '',
-    });
-  }, [item, visible]);
 
   const patchForm = (patch: Partial<CostFormState>) => setForm((current) => ({ ...current, ...patch }));
 
@@ -317,11 +303,11 @@ function CostDialog({
   );
 }
 
-function TotalMetric({ label, value, icon }: { label: string; value: number; icon: string }) {
+function TotalMetric({ label, value, icon }: { label: string; value: number; icon: MaterialIconName }) {
   const theme = useTheme();
   return (
     <View style={styles.metric}>
-      <MaterialCommunityIcons name={icon as any} size={20} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
       <View style={styles.metricText}>
         <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
         <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{formatINR(value)}</Text>

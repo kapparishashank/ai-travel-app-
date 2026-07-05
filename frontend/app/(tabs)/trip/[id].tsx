@@ -364,6 +364,7 @@ export default function TripDetailsScreen() {
       </ScrollView>
 
       <ActivityDialog
+        key={activityDialog?.activity?.id ?? activityDialog?.mode ?? 'activity-closed'}
         visible={!!activityDialog}
         activity={activityDialog?.activity}
         loading={activityMutation.isPending}

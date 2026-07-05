@@ -212,6 +212,7 @@ export default function TripsScreen() {
       </ScrollView>
 
       <RenameTripDialog
+        key={renameTripTarget?.id ?? 'rename-closed'}
         trip={renameTripTarget}
         visible={!!renameTripTarget}
         loading={renameMutation.isPending}
@@ -226,6 +227,7 @@ export default function TripsScreen() {
       />
 
       <EditTripBasicsDialog
+        key={editTripTarget?.id ?? 'basics-closed'}
         trip={editTripTarget}
         visible={!!editTripTarget}
         loading={basicsMutation.isPending}

@@ -296,6 +296,7 @@ export default function ExpensesScreen() {
       </ScrollView>
 
       <ExpenseDialog
+        key={dialogExpense?.id ?? (dialogExpense === null ? 'new-expense' : 'closed-expense')}
         visible={dialogExpense !== undefined}
         expense={dialogExpense ?? undefined}
         members={data.members}
@@ -359,18 +360,6 @@ function ExpenseDialog({
   const [splitType, setSplitType] = useState<SplitType>(expense?.splitType ?? 'equal');
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
-
-  React.useEffect(() => {
-    setTitle(expense?.title ?? '');
-    setAmount(expense ? String(expense.amountMinor / 100) : '');
-    setCategory(expense?.category ?? 'food');
-    setNotes(expense?.notes ?? '');
-    setPaidByMemberId(expense?.paidByMemberId ?? members[0]?.id ?? '');
-    setParticipantIds(expense?.participants ?? members.map((member) => member.id));
-    setSplitType(expense?.splitType ?? 'equal');
-    setValues(Object.fromEntries((expense?.splits ?? []).map((split) => [split.memberId, String(split.amountMinor / 100)])));
-    setError('');
-  }, [expense, members, visible]);
 
   const toggleParticipant = (id: string) => {
     setParticipantIds((current) => (current.includes(id) ? current.filter((memberId) => memberId !== id) : [...current, id]));

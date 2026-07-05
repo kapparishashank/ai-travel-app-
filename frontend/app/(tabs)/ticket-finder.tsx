@@ -18,8 +18,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { formatINR } from '../../src/utils/currency';
 import { isSafeExternalUrl } from '../../src/utils/externalLinks';
 
-const modeOptions: Array<TicketMode | 'all'> = ['all', 'flight', 'train', 'bus'];
-const sortOptions: TicketSort[] = ['recommended', 'price', 'departure', 'arrival', 'duration'];
+const modeOptions: (TicketMode | 'all')[] = ['all', 'flight', 'train', 'bus'];
 const refundOptions: RefundabilityFilter[] = ['all', 'refundable', 'non_refundable'];
 const timeWindows: TicketFilters['departureWindow'][] = ['any', 'morning', 'afternoon', 'evening', 'night'];
 
@@ -173,7 +172,7 @@ export default function TicketFinderScreen() {
             ))}
           </ControlGroup>
           <ControlGroup title="Sort">
-            {(['recommended', 'price', 'departure', 'arrival', 'duration'] as TicketSort[]).map((option) => (
+            {(['recommended', 'price', 'departure', 'arrival', 'duration'] satisfies TicketSort[]).map((option) => (
               <Button key={option} mode={sort === option ? 'contained' : 'outlined'} onPress={() => setSort(option)}>{label(option)}</Button>
             ))}
           </ControlGroup>

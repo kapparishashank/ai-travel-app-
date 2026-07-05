@@ -38,7 +38,6 @@ export default function SafetyModeScreen() {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportText, setReportText] = useState('');
   const [locationSnapshot, setLocationSnapshot] = useState<SafetyLocationSnapshot>({ permission: 'unknown' });
-  const [locationSharing, setLocationSharing] = useState(false);
   const [interval, setInterval] = useState('60');
 
   const tripsQuery = useQuery({
@@ -69,11 +68,8 @@ export default function SafetyModeScreen() {
     queryFn: getLocationConsent,
   });
 
-  React.useEffect(() => {
-    setLocationSharing(Boolean(consentQuery.data));
-  }, [consentQuery.data]);
-
   const safetyInfo = safetyQuery.data;
+  const locationSharing = locationSnapshot.permission === 'granted' || Boolean(consentQuery.data);
   const activeSession = sessionQuery.data;
   const warning = activeSession ? missedCheckinWarning(activeSession, new Date().toISOString()) : null;
   const emergencyNumbers = safetyInfo?.emergencyNumbers.length ? safetyInfo.emergencyNumbers : officialEmergencyFallback;
@@ -132,7 +128,6 @@ export default function SafetyModeScreen() {
             const snapshot = await requestCurrentLocation();
             setLocationSnapshot(snapshot);
             const granted = snapshot.permission === 'granted';
-            setLocationSharing(granted);
             await saveLocationConsent(granted);
             if (!granted) Alert.alert('Location unavailable', snapshot.error ?? 'You can still use basic safety information.');
           },
@@ -142,9 +137,9 @@ export default function SafetyModeScreen() {
   };
 
   const stopLocationSharing = async () => {
-    setLocationSharing(false);
     setLocationSnapshot({ permission: 'denied' });
     await saveLocationConsent(false);
+    queryClient.invalidateQueries({ queryKey: ['safety-location-consent'] });
   };
 
   const callNumber = (number: string, label: string) => {
@@ -318,6 +313,7 @@ export default function SafetyModeScreen() {
       </ScrollView>
 
       <ContactDialog
+        key={contactDialog?.id ?? (contactDialog === null ? 'new-contact' : 'closed-contact')}
         visible={contactDialog !== undefined}
         contact={contactDialog ?? undefined}
         loading={contactMutation.isPending}
@@ -411,13 +407,6 @@ function ContactDialog({
   const [phone, setPhone] = useState(contact?.phone ?? '');
   const [relationship, setRelationship] = useState(contact?.relationship ?? '');
   const [isPrimary, setIsPrimary] = useState(contact?.is_primary ? 'yes' : 'no');
-
-  React.useEffect(() => {
-    setName(contact?.name ?? '');
-    setPhone(contact?.phone ?? '');
-    setRelationship(contact?.relationship ?? '');
-    setIsPrimary(contact?.is_primary ? 'yes' : 'no');
-  }, [contact, visible]);
 
   return (
     <Portal>

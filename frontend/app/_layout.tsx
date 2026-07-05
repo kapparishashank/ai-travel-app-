@@ -38,7 +38,7 @@ function RootLayoutNav() {
   // Initialize Auth
   useEffect(() => {
     initialize();
-  }, []);
+  }, [initialize]);
 
   // Handle Redirects
   useEffect(() => {

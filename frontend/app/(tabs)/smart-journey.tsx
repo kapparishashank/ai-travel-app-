@@ -20,7 +20,7 @@ import { formatINR } from '../../src/utils/currency';
 
 const priorityOptions: JourneyPriority[] = ['balanced', 'price', 'time', 'comfort', 'convenience'];
 const sortOptions: JourneySort[] = ['recommended', 'price', 'duration', 'comfort', 'departure'];
-const modeOptions: Array<JourneyMode | 'all'> = ['all', 'bus', 'train', 'flight', 'cab', 'mixed'];
+const modeOptions: (JourneyMode | 'all')[] = ['all', 'bus', 'train', 'flight', 'cab', 'mixed'];
 
 export default function SmartJourneyScreen() {
   const theme = useTheme();

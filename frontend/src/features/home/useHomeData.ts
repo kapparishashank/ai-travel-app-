@@ -54,6 +54,7 @@ export function useHomeData() {
     loading: true,
     refreshing: false,
   });
+  const [currentTime] = useState(() => Date.now());
 
   const load = useCallback(
     async (mode: 'initial' | 'refresh' = 'initial') => {
@@ -110,10 +111,6 @@ export function useHomeData() {
     [authUser, refreshProfile]
   );
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
   const upcomingTrip = useMemo(
     () => state.trips.find((trip) => trip.status !== 'completed' && trip.status !== 'cancelled') ?? null,
     [state.trips]
@@ -127,9 +124,16 @@ export function useHomeData() {
   const isTripNear = useMemo(() => {
     if (!upcomingTrip) return false;
     const start = new Date(`${upcomingTrip.startDate}T00:00:00`);
-    const daysUntil = (start.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    const daysUntil = (start.getTime() - currentTime) / (1000 * 60 * 60 * 24);
     return daysUntil >= 0 && daysUntil <= 14;
-  }, [upcomingTrip]);
+  }, [currentTime, upcomingTrip]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [load]);
 
   return {
     ...state,
