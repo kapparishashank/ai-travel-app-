@@ -326,9 +326,10 @@ export default function ExpensesScreen() {
 function SummaryTile({ label, value, tone }: { label: string; value: string; tone?: 'danger' | 'success' }) {
   const theme = useTheme();
   const color = tone === 'danger' ? theme.colors.error : tone === 'success' ? theme.colors.primary : theme.colors.onSurface;
+  const backgroundColor = tone === 'danger' ? theme.colors.errorContainer : tone === 'success' ? theme.colors.primaryContainer : theme.colors.surfaceVariant;
   return (
-    <View style={styles.summaryTile}>
-      <Text style={{ color: theme.colors.onSurfaceVariant }}>{label}</Text>
+    <View style={[styles.summaryTile, { backgroundColor, borderColor: tone ? color : theme.colors.outlineVariant }]}>
+      <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
       <Text variant="titleLarge" style={{ color }}>{value}</Text>
     </View>
   );
@@ -487,10 +488,14 @@ const styles = StyleSheet.create({
   summaryTile: {
     minWidth: 160,
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d0d7de',
+    borderWidth: 1,
     borderRadius: 8,
     padding: 12,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   balanceLine: {
     flexDirection: 'row',

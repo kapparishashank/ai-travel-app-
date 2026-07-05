@@ -13,14 +13,15 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
   const theme = useTheme();
 
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons 
-        name="alert-circle-outline" 
-        size={64} 
-        color={theme.colors.error} 
-        style={styles.icon} 
-      />
-      <Text style={[styles.title, { color: theme.colors.error }]}>Something Went Wrong</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.errorContainer, borderColor: theme.colors.error }]}>
+      <View style={[styles.iconShell, { backgroundColor: theme.colors.surface }]}>
+        <MaterialCommunityIcons
+          name="alert-circle-outline"
+          size={34}
+          color={theme.colors.error}
+        />
+      </View>
+      <Text style={[styles.title, { color: theme.colors.error }]}>Something went wrong</Text>
       <Text style={[styles.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
       {!!onRetry && (
         <Button mode="outlined" onPress={onRetry} style={styles.button} color={theme.colors.error}>
@@ -33,11 +34,19 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 32,
+    padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginVertical: 8,
   },
-  icon: {
+  iconShell: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
   },
   title: {

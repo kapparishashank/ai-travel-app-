@@ -19,12 +19,40 @@ export function Card({
   mode = 'elevated',
   accessibilityLabel,
 }: CardProps) {
+  if (mode === 'outlined') {
+    return (
+      <PaperCard
+        onPress={onPress}
+        style={[styles.card, style]}
+        mode="outlined"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole={onPress ? 'button' : undefined}
+      >
+        {children}
+      </PaperCard>
+    );
+  }
+
+  if (mode === 'contained') {
+    return (
+      <PaperCard
+        onPress={onPress}
+        style={[styles.card, style]}
+        mode="contained"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole={onPress ? 'button' : undefined}
+      >
+        {children}
+      </PaperCard>
+    );
+  }
+
   return (
     <PaperCard
       onPress={onPress}
       style={[styles.card, style]}
       elevation={elevation}
-      mode={mode as 'elevated'}
+      mode="elevated"
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={onPress ? 'button' : undefined}
     >
@@ -36,6 +64,7 @@ export function Card({
 const styles = StyleSheet.create({
   card: {
     marginVertical: 8,
-    borderRadius: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });

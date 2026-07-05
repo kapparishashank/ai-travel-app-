@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInput as PaperTextInput, HelperText } from 'react-native-paper';
+import { HelperText, TextInput as PaperTextInput, useTheme } from 'react-native-paper';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 
 interface TextInputProps {
@@ -33,6 +33,8 @@ export function TextInput({
   onRightIconPress,
   accessibilityLabel,
 }: TextInputProps) {
+  const theme = useTheme();
+
   return (
     <View style={[styles.container, style]}>
       <PaperTextInput
@@ -45,6 +47,10 @@ export function TextInput({
         autoCapitalize={autoCapitalize}
         placeholder={placeholder}
         mode="outlined"
+        outlineStyle={styles.outline}
+        activeOutlineColor={theme.colors.primary}
+        outlineColor={theme.colors.outlineVariant}
+        style={{ backgroundColor: theme.colors.surface }}
         left={leftIcon ? <PaperTextInput.Icon icon={leftIcon} /> : undefined}
         right={
           rightIcon ? (
@@ -64,8 +70,11 @@ export function TextInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 6,
+    marginVertical: 5,
     width: '100%',
+  },
+  outline: {
+    borderRadius: 8,
   },
   errorText: {
     paddingLeft: 4,

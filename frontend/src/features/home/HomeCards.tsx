@@ -6,13 +6,16 @@ import { Card } from '../../components/common/Card';
 import { formatINR } from '../../utils/currency';
 import type { HomeAlert, HomeDestination, HomeSearch, HomeTrip } from './types';
 
+type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
+
 function DemoLabel({ visible }: { visible?: boolean }) {
   const theme = useTheme();
   if (!visible) return null;
 
   return (
-    <View style={[styles.demoPill, { borderColor: theme.colors.outlineVariant }]}>
-      <Text style={[styles.demoText, { color: theme.colors.onSurfaceVariant }]}>Demo data</Text>
+    <View style={[styles.demoPill, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surfaceVariant }]}>
+      <MaterialCommunityIcons name="database-outline" size={12} color={theme.colors.onSurfaceVariant} />
+      <Text style={[styles.demoText, { color: theme.colors.onSurfaceVariant }]}>Demo</Text>
     </View>
   );
 }
@@ -43,7 +46,7 @@ export function ShortcutCard({
     <Card onPress={onPress} style={styles.shortcutCard} accessibilityLabel={title}>
       <View style={styles.shortcutContent}>
         <View style={[styles.iconTile, { backgroundColor: theme.colors.primaryContainer }]}>
-          <MaterialCommunityIcons name={icon as any} size={24} color={theme.colors.primary} />
+          <MaterialCommunityIcons name={icon as MaterialIconName} size={24} color={theme.colors.primary} />
         </View>
         <View style={styles.flex}>
           <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{title}</Text>
@@ -69,7 +72,9 @@ export function TripCard({ trip, onPress }: { trip: HomeTrip; onPress: () => voi
         <DemoLabel visible={trip.isDemo} />
       </View>
       <View style={styles.metaRow}>
-        <Text style={[styles.metaText, { color: theme.colors.primary }]}>{trip.status}</Text>
+        <View style={[styles.statusPill, { backgroundColor: theme.colors.primaryContainer }]}>
+          <Text style={[styles.statusText, { color: theme.colors.primary }]}>{trip.status}</Text>
+        </View>
         <Text style={[styles.metaText, { color: theme.colors.onSurfaceVariant }]}>
           {formatINR(trip.budgetMinor)}
         </Text>
@@ -109,7 +114,7 @@ export function DestinationCard({
   return (
     <Card onPress={onPress} style={styles.destinationCard} accessibilityLabel={`Explore ${destination.name}`}>
       <View style={[styles.destinationIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
-        <MaterialCommunityIcons name={destination.icon as any} size={24} color={theme.colors.secondary} />
+        <MaterialCommunityIcons name={destination.icon as MaterialIconName} size={24} color={theme.colors.secondary} />
       </View>
       <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{destination.name}</Text>
       <Text style={[styles.cardBody, { color: theme.colors.onSurfaceVariant }]}>{destination.region}</Text>
@@ -174,8 +179,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   shortcutCard: {
-    padding: 14,
-    minHeight: 88,
+    padding: 16,
+    minHeight: 96,
   },
   shortcutContent: {
     flexDirection: 'row',
@@ -191,7 +196,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   cardBody: {
     fontSize: 13,
@@ -205,15 +210,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   tripCard: {
-    padding: 16,
+    padding: 18,
   },
   alertCard: {
-    padding: 14,
-    minWidth: 260,
+    padding: 16,
+    minWidth: 280,
   },
   destinationCard: {
-    padding: 14,
-    width: 220,
+    padding: 16,
+    width: 230,
   },
   destinationIcon: {
     width: 42,
@@ -230,7 +235,7 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   searchCard: {
-    padding: 14,
+    padding: 16,
   },
   metaRow: {
     flexDirection: 'row',
@@ -248,10 +253,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   demoText: {
     fontSize: 11,
     fontWeight: '800',
+  },
+  statusPill: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'capitalize',
   },
   skeleton: {
     borderRadius: 8,

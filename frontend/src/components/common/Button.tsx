@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button as PaperButton } from 'react-native-paper';
+import type { IconSource } from 'react-native-paper/lib/typescript/components/Icon';
 import { StyleProp, ViewStyle, StyleSheet } from 'react-native';
 
 interface ButtonProps {
@@ -8,7 +9,7 @@ interface ButtonProps {
   mode?: 'text' | 'outlined' | 'contained' | 'elevated' | 'contained-tonal';
   loading?: boolean;
   disabled?: boolean;
-  icon?: any; // To allow expo/vector-icons or string
+  icon?: IconSource;
   style?: StyleProp<ViewStyle>;
   color?: string;
   accessibilityLabel?: string;
@@ -48,6 +49,7 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     marginVertical: 4,
+    minHeight: 44,
     justifyContent: 'center',
   },
 });

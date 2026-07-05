@@ -21,6 +21,7 @@ import { formatINR, rupeesToPaise } from '../../src/utils/currency';
 import { describeExternalUrl, isSafeExternalUrl } from '../../src/utils/externalLinks';
 
 export default function PriceAlertsScreen() {
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.authUser);
   const [createDialog, setCreateDialog] = useState(false);
@@ -66,14 +67,16 @@ export default function PriceAlertsScreen() {
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={alertsQuery.isFetching} onRefresh={() => alertsQuery.refetch()} />}
       >
-        <Card style={styles.card}>
+        <Card style={styles.heroCard}>
           <Card.Content style={styles.gap}>
             <View style={styles.headerRow}>
               <View style={styles.flex}>
                 <Text variant="headlineSmall">Price Drop Alerts</Text>
-                <Text>Mock-provider alerts for saved journey options. Prices may change before booking and future prices are not guaranteed.</Text>
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>
+                  Mock-provider alerts for saved journey options. Prices may change before booking and future prices are not guaranteed.
+                </Text>
               </View>
-              <Button icon="plus" onPress={() => setCreateDialog(true)}>Create alert</Button>
+              <Button icon="plus" onPress={() => setCreateDialog(true)} accessibilityLabel="Create price drop alert">Create alert</Button>
             </View>
           </Card.Content>
         </Card>
@@ -159,10 +162,17 @@ function AlertCard({
           <View style={styles.flex}>
             <Text variant="titleLarge">{alert.origin_name} to {alert.destination_name}</Text>
             <Text style={{ color: theme.colors.onSurfaceVariant }}>
-              {alert.mode} - {alert.depart_on} - {alert.alert_label || '[MOCK DATA]'}
+              {alert.mode} - {alert.depart_on}
             </Text>
           </View>
-          <Text style={{ color: alert.status === 'active' ? theme.colors.primary : theme.colors.onSurfaceVariant }}>{alert.status}</Text>
+          <View style={styles.pillRow}>
+            <View style={[styles.dataPill, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surfaceVariant }]}>
+              <Text style={[styles.pillText, { color: theme.colors.onSurfaceVariant }]}>{alert.alert_label || 'Mock data'}</Text>
+            </View>
+            <View style={[styles.dataPill, { borderColor: alert.status === 'active' ? theme.colors.primary : theme.colors.outlineVariant }]}>
+              <Text style={[styles.pillText, { color: alert.status === 'active' ? theme.colors.primary : theme.colors.onSurfaceVariant }]}>{alert.status}</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.metricGrid}>
           <Metric label="Current" value={alert.last_seen_price_minor != null ? formatINR(alert.last_seen_price_minor) : 'Not checked'} />
@@ -173,9 +183,11 @@ function AlertCard({
           <Metric label="Last checked" value={alert.last_checked_at ? new Date(alert.last_checked_at).toLocaleString() : 'Never'} />
         </View>
         {!!alert.last_worker_error && <Text style={{ color: theme.colors.error }}>Worker error: {alert.last_worker_error}</Text>}
-        <Text style={{ color: theme.colors.onSurfaceVariant }}>
+        <View style={[styles.warningBox, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <Text style={{ color: theme.colors.onSecondaryContainer }}>
           Prices are mock or estimated during development and may change before booking. TravelAI does not guarantee future prices.
-        </Text>
+          </Text>
+        </View>
         <View style={styles.actions}>
           {alert.status === 'active' ? <Button mode="outlined" icon="pause" onPress={onPause}>Pause</Button> : <Button mode="outlined" icon="play" onPress={onResume}>Resume</Button>}
           <Button mode="outlined" icon="history" onPress={onHistory}>History</Button>
@@ -286,10 +298,11 @@ function HistoryDialog({ alert, onDismiss }: { alert: PriceAlertRow | null; onDi
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
+  const theme = useTheme();
   return (
     <View style={styles.metric}>
-      <Text>{label}</Text>
-      <Text variant="titleSmall">{value}</Text>
+      <Text style={{ color: theme.colors.onSurfaceVariant }}>{label}</Text>
+      <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>{value}</Text>
     </View>
   );
 }
@@ -315,6 +328,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   card: { borderRadius: 8 },
+  heroCard: { borderRadius: 8, paddingVertical: 2 },
   gap: { gap: 12 },
   headerRow: {
     flexDirection: 'row',
@@ -335,7 +349,29 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#d0d7de',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
+    gap: 4,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  dataPill: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  pillText: {
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'capitalize',
+  },
+  warningBox: {
+    borderRadius: 8,
+    padding: 12,
   },
   actions: {
     flexDirection: 'row',

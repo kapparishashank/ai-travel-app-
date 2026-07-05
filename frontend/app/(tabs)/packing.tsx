@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Checkbox, Dialog, Portal, ProgressBar, Snackbar, useTheme } from 'react-native-paper';
+import type { MD3Theme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../../src/components/common/Button';
@@ -19,6 +20,12 @@ import { calculatePackingProgress, packingCategoryLabels, serializePackingNotes 
 import { fetchTrips } from '../../src/features/trips/api';
 import type { TripSummary } from '../../src/features/trips/types';
 import { useAuthStore } from '../../src/store/authStore';
+
+function priorityColor(priority: PackingPriority, theme: MD3Theme) {
+  if (priority === 'high') return theme.colors.error;
+  if (priority === 'medium') return theme.colors.secondary;
+  return theme.colors.onSurfaceVariant;
+}
 
 export default function PackingScreen() {
   const theme = useTheme();
@@ -265,36 +272,61 @@ export default function PackingScreen() {
               {selectedTrip.destination_name} - {selectedTrip.start_date} to {selectedTrip.end_date}
             </Text>
           </View>
-          <Button icon="auto-fix" onPress={() => generateMutation.mutate()} loading={generateMutation.isPending}>
+          <Button icon="auto-fix" onPress={() => generateMutation.mutate()} loading={generateMutation.isPending} accessibilityLabel="Generate packing checklist">
             Generate list
           </Button>
         </View>
 
-        <Card style={styles.panel}>
-          <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Checklist context</Text>
-          <TextInput label="Weather context" value={generationInputs.weatherContext} onChangeText={(weatherContext) => setGenerationInputs((current) => ({ ...current, weatherContext }))} />
-          <TextInput label="Baggage limit" value={generationInputs.baggageLimit} onChangeText={(baggageLimit) => setGenerationInputs((current) => ({ ...current, baggageLimit }))} />
-          <TextInput label="Accommodation type" value={generationInputs.accommodationType} onChangeText={(accommodationType) => setGenerationInputs((current) => ({ ...current, accommodationType }))} />
-          <TextInput label="Accessibility or medical notes" value={generationInputs.accessibilityOrMedicalNotes} onChangeText={(accessibilityOrMedicalNotes) => setGenerationInputs((current) => ({ ...current, accessibilityOrMedicalNotes }))} />
-          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
-            Medicine suggestions are general packing reminders only, not medical advice.
-          </Text>
-        </Card>
-
-        <Card style={styles.panel}>
+        <Card style={styles.progressPanel}>
           <View style={styles.progressHeader}>
-            <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Packing progress</Text>
-            <Text style={[styles.progressValue, { color: theme.colors.primary }]}>{progress.percent}%</Text>
+            <View>
+              <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Packing progress</Text>
+              <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
+                {progress.packed} of {progress.total} packable items packed
+              </Text>
+            </View>
+            <View style={[styles.progressBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+              <Text style={[styles.progressValue, { color: theme.colors.primary }]}>{progress.percent}%</Text>
+            </View>
           </View>
           <ProgressBar progress={progress.percent / 100} color={theme.colors.primary} style={styles.progress} />
-          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
-            {progress.packed} of {progress.total} packable items packed. {progress.highPriorityRemaining} high-priority items remain.
-          </Text>
+          {progress.highPriorityRemaining > 0 && (
+            <View style={[styles.warningStrip, { backgroundColor: theme.colors.errorContainer }]}>
+              <MaterialCommunityIcons name="alert-outline" size={18} color={theme.colors.error} />
+              <Text style={[styles.warningText, { color: theme.colors.error }]}>
+                {progress.highPriorityRemaining} high-priority items remain.
+              </Text>
+            </View>
+          )}
           <View style={styles.actionRow}>
-            <Button icon="plus" onPress={() => setAddDialogOpen(true)}>Add custom item</Button>
+            <Button icon="plus" onPress={() => setAddDialogOpen(true)} accessibilityLabel="Add custom packing item">Add custom item</Button>
             <Button mode="outlined" icon="backup-restore" onPress={() => setConfirmReset(true)} disabled={!items.some((item) => item.is_packed)}>
               Reset packed
             </Button>
+          </View>
+        </Card>
+
+        <Card style={styles.panel}>
+          <View style={styles.panelHeading}>
+            <View style={[styles.smallIconTile, { backgroundColor: theme.colors.secondaryContainer }]}>
+              <MaterialCommunityIcons name="clipboard-text-outline" size={20} color={theme.colors.secondary} />
+            </View>
+            <View style={styles.flex}>
+              <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Checklist context</Text>
+              <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>Inputs guide AI suggestions and deterministic fallback lists.</Text>
+            </View>
+          </View>
+          <View style={styles.contextGrid}>
+            <TextInput label="Weather context" value={generationInputs.weatherContext} onChangeText={(weatherContext) => setGenerationInputs((current) => ({ ...current, weatherContext }))} />
+            <TextInput label="Baggage limit" value={generationInputs.baggageLimit} onChangeText={(baggageLimit) => setGenerationInputs((current) => ({ ...current, baggageLimit }))} />
+            <TextInput label="Accommodation type" value={generationInputs.accommodationType} onChangeText={(accommodationType) => setGenerationInputs((current) => ({ ...current, accommodationType }))} />
+            <TextInput label="Accessibility or medical notes" value={generationInputs.accessibilityOrMedicalNotes} onChangeText={(accessibilityOrMedicalNotes) => setGenerationInputs((current) => ({ ...current, accessibilityOrMedicalNotes }))} />
+          </View>
+          <View style={[styles.infoStrip, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <MaterialCommunityIcons name="medical-bag" size={18} color={theme.colors.onSurfaceVariant} />
+            <Text style={[styles.notice, styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+              Medicine suggestions are general packing reminders only, not medical advice.
+            </Text>
           </View>
         </Card>
 
@@ -359,15 +391,26 @@ function PackingItemCard({
 }) {
   const theme = useTheme();
   const [quantity, setQuantity] = useState(String(item.quantity));
+  const priorityTone = priorityColor(item.priority, theme);
   return (
     <Card style={styles.itemCard}>
       <View style={styles.itemHeader}>
         <Checkbox status={item.is_packed ? 'checked' : 'unchecked'} onPress={onTogglePacked} />
         <View style={styles.itemBody}>
           <Text style={[styles.itemName, { color: theme.colors.onSurface }]}>{item.item_name}</Text>
-          <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>
-            {packingCategoryLabels[item.packingCategory]} - {item.priority} priority - {item.aiGenerated ? 'AI-generated' : 'Custom'}
-          </Text>
+          <View style={styles.badgeRow}>
+            <View style={[styles.metaBadge, { borderColor: theme.colors.outlineVariant }]}>
+              <Text style={[styles.badgeText, { color: theme.colors.onSurfaceVariant }]}>{packingCategoryLabels[item.packingCategory]}</Text>
+            </View>
+            <View style={[styles.metaBadge, { borderColor: priorityTone }]}>
+              <Text style={[styles.badgeText, { color: priorityTone }]}>{item.priority} priority</Text>
+            </View>
+            <View style={[styles.metaBadge, { borderColor: item.aiGenerated ? theme.colors.primary : theme.colors.outlineVariant }]}>
+              <Text style={[styles.badgeText, { color: item.aiGenerated ? theme.colors.primary : theme.colors.onSurfaceVariant }]}>
+                {item.aiGenerated ? 'AI estimate' : 'Custom'}
+              </Text>
+            </View>
+          </View>
         </View>
         <MaterialCommunityIcons name={item.is_packed ? 'check-circle' : 'circle-outline'} size={22} color={item.is_packed ? theme.colors.primary : theme.colors.outline} />
       </View>
@@ -476,22 +519,35 @@ function CustomItemDialog({
 const styles = StyleSheet.create({
   center: { justifyContent: 'center', padding: 24 },
   container: { padding: 16, paddingBottom: 32, maxWidth: 1180, width: '100%', alignSelf: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginTop: 8, marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '900' },
-  subtitle: { fontSize: 14, marginTop: 4 },
+  flex: { flex: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginTop: 12, marginBottom: 12, flexWrap: 'wrap' },
+  title: { fontSize: 30, fontWeight: '900' },
+  subtitle: { fontSize: 14, marginTop: 4, lineHeight: 20 },
   panel: { padding: 16 },
+  progressPanel: { padding: 18 },
+  panelHeading: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 10 },
+  smallIconTile: { width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  contextGrid: { gap: 2 },
   panelTitle: { fontSize: 17, fontWeight: '900' },
   notice: { fontSize: 13, lineHeight: 19, marginTop: 4 },
-  progressHeader: { flexDirection: 'row', justifyContent: 'space-between' },
+  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  progressBadge: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   progressValue: { fontSize: 16, fontWeight: '900' },
   progress: { height: 8, borderRadius: 8, marginTop: 8 },
+  warningStrip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 8, padding: 10, marginTop: 12 },
+  warningText: { fontSize: 13, fontWeight: '800', flex: 1 },
+  infoStrip: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 8, padding: 10, marginTop: 8 },
+  infoText: { flex: 1, marginTop: 0 },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 8 },
-  filters: { gap: 8, paddingVertical: 8 },
+  filters: { gap: 8, paddingVertical: 10 },
   itemList: { gap: 8 },
-  itemCard: { padding: 14 },
+  itemCard: { padding: 16 },
   itemHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   itemBody: { flex: 1 },
   itemName: { fontSize: 17, fontWeight: '900' },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  metaBadge: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  badgeText: { fontSize: 11, fontWeight: '900', textTransform: 'capitalize' },
   reason: { fontSize: 14, lineHeight: 20, marginTop: 8 },
   inlineControls: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 8 },
   quantityInput: { width: 110 },

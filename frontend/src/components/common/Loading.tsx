@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 96,
   },
   message: {
     marginTop: 12,
