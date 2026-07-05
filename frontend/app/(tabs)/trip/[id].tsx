@@ -41,7 +41,9 @@ import {
 import type { ActivityInput, ItineraryActivity, TripDay } from '../../../src/features/trips/types';
 import { formatINR } from '../../../src/utils/currency';
 
-const sectionIcons: Record<string, string> = {
+type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
+
+const sectionIcons: Record<string, MaterialIconName> = {
   Overview: 'view-dashboard-outline',
   Itinerary: 'calendar-text-outline',
   Journey: 'routes',
@@ -80,8 +82,8 @@ export default function TripDetailsScreen() {
     return { progress, estimatedTotal, selectedTransport, warnings };
   }, [tripQuery.data]);
 
-  const days = (tripQuery.data?.days ?? []) as TripDay[];
-  const activities = (tripQuery.data?.itineraryItems ?? []) as ItineraryActivity[];
+  const days = useMemo(() => (tripQuery.data?.days ?? []) as TripDay[], [tripQuery.data?.days]);
+  const activities = useMemo(() => (tripQuery.data?.itineraryItems ?? []) as ItineraryActivity[], [tripQuery.data?.itineraryItems]);
   const selectedDay = useMemo(() => {
     if (!days.length) return null;
     return days.find((day) => day.id === selectedDayId) ?? days[0];
@@ -265,7 +267,7 @@ export default function TripDetailsScreen() {
           {sections.map((section) => (
             <Card key={section.title} style={styles.sectionCard} accessibilityLabel={`${section.title} section`}>
               <View style={styles.sectionHeader}>
-                <MaterialCommunityIcons name={sectionIcons[section.title] as any} size={22} color={theme.colors.primary} />
+                <MaterialCommunityIcons name={sectionIcons[section.title]} size={22} color={theme.colors.primary} />
                 <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{section.title}</Text>
               </View>
               <Text style={[styles.sectionBody, { color: theme.colors.onSurfaceVariant }]}>{section.body}</Text>
@@ -404,11 +406,11 @@ export default function TripDetailsScreen() {
   );
 }
 
-function OverviewMetric({ label, value, icon }: { label: string; value: string; icon: string }) {
+function OverviewMetric({ label, value, icon }: { label: string; value: string; icon: MaterialIconName }) {
   const theme = useTheme();
   return (
     <View style={styles.metric}>
-      <MaterialCommunityIcons name={icon as any} size={20} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
       <View style={styles.metricText}>
         <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
         <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{value}</Text>

@@ -80,7 +80,7 @@ export type TicketProvider = {
 };
 
 export type TicketFilters = {
-  modes: Array<TicketMode | 'all'>;
+  modes: (TicketMode | 'all')[];
   maxPriceMinor: number;
   departureWindow: 'any' | 'morning' | 'afternoon' | 'evening' | 'night';
   arrivalWindow: 'any' | 'morning' | 'afternoon' | 'evening' | 'night';

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
@@ -206,7 +206,8 @@ function CreateAlertDialog({
   const [optionId, setOptionId] = useState('');
   const [targetPrice, setTargetPrice] = useState('16000');
   const [percentageDrop, setPercentageDrop] = useState('10');
-  const selected = options.find((option) => option.id === optionId) ?? options[0];
+  const selectedOptionId = optionId || options[0]?.id || '';
+  const selected = options.find((option) => option.id === selectedOptionId) ?? options[0];
   const mutation = useMutation({
     mutationFn: () => {
       if (!authUser?.id || !selected) throw new Error('Select a journey option first.');
@@ -221,10 +222,6 @@ function CreateAlertDialog({
     onError: (err: any) => Alert.alert('Could not create alert', err.message ?? 'Please try again.'),
   });
 
-  React.useEffect(() => {
-    if (visible && options[0] && !optionId) setOptionId(options[0].id);
-  }, [visible, options, optionId]);
-
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss}>
@@ -237,7 +234,7 @@ function CreateAlertDialog({
               <>
                 <Text variant="titleSmall">Journey option</Text>
                 <SegmentedButtons
-                  value={selected?.id ?? ''}
+                  value={selectedOptionId}
                   onValueChange={setOptionId}
                   buttons={options.slice(0, 4).map((option) => ({
                     value: option.id,

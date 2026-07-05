@@ -114,7 +114,7 @@ function withTimestamps(row: any) {
   };
 }
 
-function matches(row: any, filters: Array<{ field: string; op: 'eq' | 'in'; value: any }>) {
+function matches(row: any, filters: { field: string; op: 'eq' | 'in'; value: any }[]) {
   return filters.every((filter) => {
     if (filter.op === 'eq') return row[filter.field] === filter.value;
     if (filter.op === 'in') return filter.value.includes(row[filter.field]);
@@ -139,7 +139,7 @@ function attachRelations(table: string, rows: any[], db: TableStore) {
 }
 
 class MockQuery {
-  private filters: Array<{ field: string; op: 'eq' | 'in'; value: any }> = [];
+  private filters: { field: string; op: 'eq' | 'in'; value: any }[] = [];
   private orderBy: { field: string; ascending: boolean }[] = [];
   private maxRows: number | null = null;
   private singleMode: 'single' | 'maybeSingle' | null = null;

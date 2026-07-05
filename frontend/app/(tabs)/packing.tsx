@@ -24,7 +24,6 @@ export default function PackingScreen() {
   const theme = useTheme();
   const queryClient = useQueryClient();
   const authUser = useAuthStore((state) => state.authUser);
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<PackingCategory | 'all'>('all');
   const [localItems, setLocalItems] = useState<PackingItemView[] | null>(null);
   const [listIdOverride, setListIdOverride] = useState<string | null>(null);
@@ -46,9 +45,8 @@ export default function PackingScreen() {
 
   const selectedTrip = useMemo(() => {
     const trips = tripsQuery.data ?? [];
-    const effectiveSelectedTripId = selectedTripId ?? trips[0]?.id;
-    return trips.find((trip) => trip.id === effectiveSelectedTripId) ?? trips[0] ?? null;
-  }, [selectedTripId, tripsQuery.data]);
+    return trips[0] ?? null;
+  }, [tripsQuery.data]);
 
   const packingQuery = useQuery({
     queryKey: ['packing', selectedTrip?.id],
@@ -69,7 +67,7 @@ export default function PackingScreen() {
   });
 
   const members = selectedTrip?.trip_members ?? [];
-  const items = localItems ?? packingQuery.data?.items ?? [];
+  const items = useMemo(() => localItems ?? packingQuery.data?.items ?? [], [localItems, packingQuery.data?.items]);
   const listId = listIdOverride ?? packingQuery.data?.list?.id ?? null;
   const progress = useMemo(() => calculatePackingProgress(items), [items]);
   const filteredItems = useMemo(

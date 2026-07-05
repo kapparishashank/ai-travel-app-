@@ -110,7 +110,7 @@ export default function HomeScreen() {
                 <ShortcutCard
                   title="Budget Discovery"
                   description="Find destinations that match your budget and travel pace."
-                  icon="wallet-search-outline"
+                  icon="wallet-outline"
                   onPress={() => router.push('/(tabs)/budget-discovery')}
                 />
               </View>

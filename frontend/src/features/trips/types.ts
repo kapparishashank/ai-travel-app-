@@ -16,7 +16,7 @@ export type TripRecord = {
   metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
-  trip_members?: Array<{ id: string; display_name: string; status: string; role: string }>;
+  trip_members?: { id: string; display_name: string; status: string; role: string }[];
 };
 
 export type TripSummary = TripRecord & {

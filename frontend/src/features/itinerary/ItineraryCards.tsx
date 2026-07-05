@@ -6,7 +6,9 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { formatINR } from '../../utils/currency';
 import type { ItineraryActivity, TripDay } from '../trips/types';
-import { durationLabel, getDataStatus, getDayTotal } from './utils';
+import { durationLabel, getDataStatus } from './utils';
+
+type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 export function ItinerarySummary({
   dayCount,
@@ -39,11 +41,11 @@ export function ItinerarySummary({
   );
 }
 
-function SummaryMetric({ label, value, icon }: { label: string; value: string; icon: string }) {
+function SummaryMetric({ label, value, icon }: { label: string; value: string; icon: MaterialIconName }) {
   const theme = useTheme();
   return (
     <View style={styles.metric}>
-      <MaterialCommunityIcons name={icon as any} size={20} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
       <View>
         <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{value}</Text>
         <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
@@ -166,11 +168,11 @@ export function ActivityCard({
   );
 }
 
-function InfoChip({ icon, text }: { icon: string; text: string }) {
+function InfoChip({ icon, text }: { icon: MaterialIconName; text: string }) {
   const theme = useTheme();
   return (
     <View style={[styles.infoChip, { borderColor: theme.colors.outlineVariant }]}>
-      <MaterialCommunityIcons name={icon as any} size={14} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={14} color={theme.colors.primary} />
       <Text style={[styles.infoChipText, { color: theme.colors.onSurfaceVariant }]}>{text}</Text>
     </View>
   );

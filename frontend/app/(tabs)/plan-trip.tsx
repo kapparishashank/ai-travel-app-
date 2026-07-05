@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -65,7 +65,7 @@ export default function PlanTripScreen() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const createdTripIdRef = useRef<string | null>(null);
+  const [createdTripId, setCreatedTripId] = useState<string | null>(null);
   const hasResetFromStore = useRef(false);
   const isWide = width >= 800;
 
@@ -75,13 +75,13 @@ export default function PlanTripScreen() {
     getValues,
     reset,
     setError,
-    watch,
     formState: { errors },
   } = useForm<PlanTripFormData>({
     resolver: zodResolver(planTripSchema),
     defaultValues: draft,
     mode: 'onBlur',
   });
+  const values = useWatch({ control }) as PlanTripFormData;
 
   useEffect(() => {
     hydrate();
@@ -96,14 +96,10 @@ export default function PlanTripScreen() {
 
   useEffect(() => {
     if (!hydrated) return;
-    const subscription = watch((value) => {
-      updateDraft(value as Partial<PlanTripFormData>);
-    });
-    return () => subscription.unsubscribe();
-  }, [hydrated, updateDraft, watch]);
+    updateDraft(values);
+  }, [hydrated, updateDraft, values]);
 
   const progress = (step + 1) / planTripSteps.length;
-  const values = watch();
 
   const reviewRows = useMemo(
     () => [
@@ -133,7 +129,7 @@ export default function PlanTripScreen() {
     await clearDraft();
     setStep(0);
     setErrorMessage('');
-    createdTripIdRef.current = null;
+    setCreatedTripId(null);
   };
 
   const validateCurrentStep = () => {
@@ -170,7 +166,7 @@ export default function PlanTripScreen() {
       return;
     }
 
-    if (submitting || createdTripIdRef.current) return;
+    if (submitting || createdTripId) return;
 
     setSubmitting(true);
     setErrorMessage('');
@@ -186,7 +182,7 @@ export default function PlanTripScreen() {
     });
 
     const tripId = createTripId();
-    createdTripIdRef.current = tripId;
+    setCreatedTripId(tripId);
 
     try {
       const { error } = await supabase.from('trips').insert({
@@ -236,7 +232,7 @@ export default function PlanTripScreen() {
       await clearDraft();
       router.replace(`/(tabs)/trip-generation/${tripId}`);
     } catch (error: any) {
-      createdTripIdRef.current = null;
+      setCreatedTripId(null);
       setErrorMessage(error.message ?? 'Could not save your trip draft.');
     } finally {
       setSubmitting(false);
@@ -403,7 +399,7 @@ export default function PlanTripScreen() {
           {step < editableStepCount - 1 ? (
             <Button onPress={goNext} disabled={submitting}>Continue</Button>
           ) : (
-            <Button onPress={handleSubmit(saveDraftTrip)} loading={submitting} disabled={!!createdTripIdRef.current}>
+            <Button onPress={handleSubmit(saveDraftTrip)} loading={submitting} disabled={!!createdTripId}>
               Create draft
             </Button>
           )}

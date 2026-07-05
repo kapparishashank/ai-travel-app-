@@ -1,3 +1,5 @@
+export type AdminDashboardRow = Record<string, string | number | boolean | null | undefined>;
+
 export type AdminDashboardData = {
   role: 'admin' | 'support' | 'viewer';
   metrics: {
@@ -7,14 +9,14 @@ export type AdminDashboardData = {
     activePriceAlerts: number;
     systemHealth: 'healthy' | 'degraded' | 'mock';
   };
-  aiGenerationErrors: Array<Record<string, any>>;
-  reportedRecommendations: Array<Record<string, any>>;
-  safetyDataReports: Array<Record<string, any>>;
-  providerHealth: Array<{
+  aiGenerationErrors: AdminDashboardRow[];
+  reportedRecommendations: AdminDashboardRow[];
+  safetyDataReports: AdminDashboardRow[];
+  providerHealth: {
     provider: string;
     feature: string;
     status: string;
     last_checked_at: string;
     message?: string | null;
-  }>;
+  }[];
 };

@@ -4,7 +4,7 @@ import type { TripDetails } from './types';
 const RECENT_TRIP_CACHE_KEY = 'travelai.recentTripDetails.v1';
 
 export type CachedTripDetails = Omit<TripDetails, 'safetySessions'> & {
-  safetySessions: Array<{
+  safetySessions: {
     id: string;
     trip_id: string | null;
     user_id: string;
@@ -14,7 +14,7 @@ export type CachedTripDetails = Omit<TripDetails, 'safetySessions'> & {
     ends_at: string | null;
     last_checkin_at: string | null;
     next_checkin_due_at: string | null;
-  }>;
+  }[];
   cachedAt: string;
 };
 

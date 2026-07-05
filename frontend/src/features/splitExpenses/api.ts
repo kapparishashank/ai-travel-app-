@@ -91,7 +91,7 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
     participantsByExpense.set(row.expense_id, [...(participantsByExpense.get(row.expense_id) ?? []), row.trip_member_id]);
   });
 
-  const splitsByExpense = new Map<string, Array<{ memberId: string; amountMinor: number }>>();
+  const splitsByExpense = new Map<string, { memberId: string; amountMinor: number }[]>();
   (splitsResult.data ?? []).forEach((row: any) => {
     splitsByExpense.set(row.expense_id, [
       ...(splitsByExpense.get(row.expense_id) ?? []),

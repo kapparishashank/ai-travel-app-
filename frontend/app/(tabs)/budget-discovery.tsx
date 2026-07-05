@@ -149,7 +149,7 @@ export default function BudgetDiscoveryScreen() {
               ))}
             </View>
             {!!error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
-            <Button icon="wallet-search-outline" loading={loading} onPress={runDiscovery}>Find destinations</Button>
+            <Button icon="wallet-outline" loading={loading} onPress={runDiscovery}>Find destinations</Button>
           </Card.Content>
         </Card>
 

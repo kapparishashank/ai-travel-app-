@@ -5,7 +5,7 @@ import { Card, Text, useTheme } from 'react-native-paper';
 import { Button } from '../src/components/common/Button';
 import { ScreenContainer } from '../src/components/common/ScreenContainer';
 import { fetchAdminDashboard } from '../src/features/admin/api';
-import type { AdminDashboardData } from '../src/features/admin/types';
+import type { AdminDashboardData, AdminDashboardRow } from '../src/features/admin/types';
 import { useAuthStore } from '../src/store/authStore';
 
 export default function AdminDashboardScreen() {
@@ -92,7 +92,7 @@ function Metric({ title, value }: { title: string; value: string }) {
   );
 }
 
-function AdminSection({ title, rows }: { title: string; rows: Array<Record<string, any>> }) {
+function AdminSection({ title, rows }: { title: string; rows: AdminDashboardRow[] }) {
   return (
     <Card style={styles.card}>
       <Card.Content style={styles.gap}>
@@ -103,12 +103,17 @@ function AdminSection({ title, rows }: { title: string; rows: Array<Record<strin
           <View key={`${title}-${index}`} style={styles.row}>
             <Text variant="titleSmall">{row.provider ?? row.feature ?? row.feedback_type ?? row.status ?? row.id ?? 'Record'}</Text>
             <Text>{row.message ?? row.error_message ?? row.status ?? 'No message'}</Text>
-            {row.created_at || row.last_checked_at ? <Text>{new Date(row.created_at ?? row.last_checked_at).toLocaleString()}</Text> : null}
+            <AdminRowDate value={row.created_at ?? row.last_checked_at} />
           </View>
         ))}
       </Card.Content>
     </Card>
   );
+}
+
+function AdminRowDate({ value }: { value: AdminDashboardRow[string] }) {
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+  return <Text>{new Date(value).toLocaleString()}</Text>;
 }
 
 function StateCard({ title, body }: { title: string; body: string }) {

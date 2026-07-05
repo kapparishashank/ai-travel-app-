@@ -6,12 +6,12 @@ export function canApplyMutation(baseUpdatedAt: string | null | undefined, remot
   return new Date(remoteUpdatedAt).getTime() <= new Date(baseUpdatedAt).getTime();
 }
 
-export async function getOfflineQueue<TPayload>(key: string): Promise<Array<OfflineMutation<TPayload>>> {
+export async function getOfflineQueue<TPayload>(key: string): Promise<OfflineMutation<TPayload>[]> {
   const raw = await storage.getItem(key);
   return raw ? JSON.parse(raw) : [];
 }
 
-export async function setOfflineQueue<TPayload>(key: string, queue: Array<OfflineMutation<TPayload>>) {
+export async function setOfflineQueue<TPayload>(key: string, queue: OfflineMutation<TPayload>[]) {
   await storage.setItem(key, JSON.stringify(queue));
 }
 
@@ -40,7 +40,7 @@ export async function processOfflineQueue<TPayload>({
   maxAttempts?: number;
 }): Promise<OfflineSyncResult> {
   const queue = await getOfflineQueue<TPayload>(key);
-  const remaining: Array<OfflineMutation<TPayload>> = [];
+  const remaining: OfflineMutation<TPayload>[] = [];
   let synced = 0;
   let failed = 0;
   let conflicts = 0;
