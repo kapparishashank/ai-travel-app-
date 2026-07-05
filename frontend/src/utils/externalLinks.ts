@@ -1,10 +1,13 @@
-const allowedProtocols = ['https:', 'http:', 'tel:', 'mailto:'];
+const localHttpHosts = ['localhost', '127.0.0.1', '::1'];
 
 export function isSafeExternalUrl(rawUrl: string | null | undefined) {
   if (!rawUrl) return false;
   try {
     const parsed = new URL(rawUrl);
-    return allowedProtocols.includes(parsed.protocol);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'tel:' || parsed.protocol === 'mailto:') {
+      return true;
+    }
+    return parsed.protocol === 'http:' && localHttpHosts.includes(parsed.hostname);
   } catch {
     return false;
   }

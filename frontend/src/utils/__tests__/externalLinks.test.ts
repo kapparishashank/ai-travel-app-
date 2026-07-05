@@ -9,7 +9,8 @@ describe('external URL safety', () => {
     expect(isSafeExternalUrl('mailto:support@example.com')).toBe(true);
   });
 
-  it('blocks script, data, empty, and malformed URLs', () => {
+  it('blocks insecure external web links, script, data, empty, and malformed URLs', () => {
+    expect(isSafeExternalUrl('http://partner.example.com/book')).toBe(false);
     expect(isSafeExternalUrl('javascript:alert(1)')).toBe(false);
     expect(isSafeExternalUrl('data:text/html,hello')).toBe(false);
     expect(isSafeExternalUrl('')).toBe(false);
