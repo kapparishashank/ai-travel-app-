@@ -1,9 +1,10 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { IconButton, ProgressBar, useTheme } from 'react-native-paper';
+import { ProgressBar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
+import { IconButton } from '../../components/common/AnimatedIconButton';
 import { formatINR } from '../../utils/currency';
 import type { ItineraryActivity, TripDay } from '../trips/types';
 import { durationLabel, getDataStatus } from './utils';

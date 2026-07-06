@@ -1,8 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { IconButton, Menu, ProgressBar, useTheme } from 'react-native-paper';
+import { Menu, ProgressBar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '../../components/common/Card';
+import { IconButton } from '../../components/common/AnimatedIconButton';
 import { formatINR } from '../../utils/currency';
 import type { TripSummary } from './types';
 

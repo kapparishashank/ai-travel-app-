@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { Searchbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from '../../src/components/common/Button';
+import { AnimateOnHover } from '../../src/components/common/AnimateOnHover';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { useAuthStore } from '../../src/store/authStore';
@@ -149,13 +150,15 @@ export default function HomeScreen() {
               <SectionHeader
                 title="Active price alerts"
                 action={
-                  <Text
-                    accessibilityRole="button"
-                    onPress={() => router.push('/(tabs)/price-alerts')}
-                    style={[styles.textAction, { color: theme.colors.primary }]}
-                  >
-                    View all
-                  </Text>
+                  <AnimateOnHover>
+                    <Text
+                      accessibilityRole="button"
+                      onPress={() => router.push('/(tabs)/price-alerts')}
+                      style={[styles.textAction, { color: theme.colors.primary }]}
+                    >
+                      View all
+                    </Text>
+                  </AnimateOnHover>
                 }
               />
               {alerts.length ? (

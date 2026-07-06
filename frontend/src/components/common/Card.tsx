@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card as PaperCard } from 'react-native-paper';
 import { StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { AnimateOnHover } from './AnimateOnHover';
 
 interface CardProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export function Card({
   accessibilityLabel,
 }: CardProps) {
   if (mode === 'outlined') {
-    return (
+    const card = (
       <PaperCard
         onPress={onPress}
         style={[styles.card, style]}
@@ -31,10 +32,11 @@ export function Card({
         {children}
       </PaperCard>
     );
+    return onPress ? <AnimateOnHover>{card}</AnimateOnHover> : card;
   }
 
   if (mode === 'contained') {
-    return (
+    const card = (
       <PaperCard
         onPress={onPress}
         style={[styles.card, style]}
@@ -45,9 +47,10 @@ export function Card({
         {children}
       </PaperCard>
     );
+    return onPress ? <AnimateOnHover>{card}</AnimateOnHover> : card;
   }
 
-  return (
+  const card = (
     <PaperCard
       onPress={onPress}
       style={[styles.card, style]}
@@ -59,6 +62,7 @@ export function Card({
       {children}
     </PaperCard>
   );
+  return onPress ? <AnimateOnHover>{card}</AnimateOnHover> : card;
 }
 
 const styles = StyleSheet.create({
