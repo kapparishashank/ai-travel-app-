@@ -1,6 +1,52 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { StyleSheet, type ViewStyle } from 'react-native';
+import { PlatformPressable } from 'expo-router/build/react-navigation/elements';
+import type { BottomTabBarButtonProps } from 'expo-router/build/react-navigation/bottom-tabs';
+
+function AnimatedTabBarButton({
+  style,
+  disabled,
+  onPressIn,
+  onPressOut,
+  onHoverIn,
+  onHoverOut,
+  ...props
+}: BottomTabBarButtonProps) {
+  const [hovered, setHovered] = React.useState(false);
+  const [pressed, setPressed] = React.useState(false);
+
+  return (
+    <PlatformPressable
+      {...props}
+      disabled={disabled}
+      onHoverIn={(event) => {
+        setHovered(true);
+        onHoverIn?.(event);
+      }}
+      onHoverOut={(event) => {
+        setHovered(false);
+        onHoverOut?.(event);
+      }}
+      onPressIn={(event) => {
+        setPressed(true);
+        onPressIn?.(event);
+      }}
+      onPressOut={(event) => {
+        setPressed(false);
+        onPressOut?.(event);
+      }}
+      style={[
+        style,
+        styles.tabBarButton,
+        !disabled && hovered && styles.tabBarButtonHovered,
+        !disabled && pressed && styles.tabBarButtonPressed,
+      ]}
+    />
+  );
+}
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -14,6 +60,7 @@ export default function TabsLayout() {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outlineVariant,
         },
+        tabBarButton: (props) => <AnimatedTabBarButton {...props} />,
         headerStyle: {
           backgroundColor: theme.colors.background,
         },
@@ -83,3 +130,17 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarButton: {
+    transitionDuration: '180ms',
+    transitionProperty: 'transform',
+    transitionTimingFunction: 'ease-out',
+  } as ViewStyle,
+  tabBarButtonHovered: {
+    transform: [{ scale: 1.04 }],
+  },
+  tabBarButtonPressed: {
+    transform: [{ scale: 0.96 }],
+  },
+});
