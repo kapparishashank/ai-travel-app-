@@ -8,11 +8,12 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Searchbar, useTheme } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from '../../src/components/common/Button';
 import { AnimateOnHover } from '../../src/components/common/AnimateOnHover';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { GlowingSearchBar } from '../../src/components/common/GlowingSearchBar';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { useAuthStore } from '../../src/store/authStore';
 import {
@@ -82,13 +83,11 @@ export default function HomeScreen() {
           </Button>
         </View>
 
-        <Searchbar
+        <GlowingSearchBar
           placeholder="Search destinations, trips, or routes"
           value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={submitSearch}
-          onIconPress={submitSearch}
-          accessibilityLabel="Search TravelAI"
+          onChange={setSearch}
+          onSearch={submitSearch}
           style={styles.search}
         />
 
@@ -263,7 +262,6 @@ const styles = StyleSheet.create({
     minWidth: 128,
   },
   search: {
-    borderRadius: 8,
     marginBottom: 8,
   },
   contentGrid: {
