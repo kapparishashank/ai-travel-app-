@@ -2,6 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Dialog, Portal, Snackbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { TextInput } from '../../components/common/TextInput';
@@ -160,7 +167,16 @@ export function HiddenCostCalculator({
             Current buffer: {formatINR(totals.emergencyBufferMinor)}
           </Text>
         </View>
-        <Text style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}>{totals.explanation}</Text>
+        <Accordion type="single" collapsible style={styles.accordion}>
+          <AccordionItem value="calculation-explanation">
+            <AccordionHeader>
+              <AccordionTrigger textStyle={styles.accordionTitle}>Calculation explanation</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>
+              <Text style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}>{totals.explanation}</Text>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
 
       <View style={styles.itemList}>
@@ -175,10 +191,19 @@ export function HiddenCostCalculator({
               </View>
               <Text style={[styles.amount, { color: theme.colors.onSurface }]}>{formatINR(item.amountMinor)}</Text>
             </View>
-            <Text style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}>{item.explanation}</Text>
-            <Text style={[styles.source, { color: theme.colors.onSurfaceVariant }]}>
-              Source: {item.dataSource} - Updated {new Date(item.lastUpdatedAt).toLocaleString()}
-            </Text>
+            <Accordion type="single" collapsible style={styles.accordion}>
+              <AccordionItem value={`cost-${item.id}`}>
+                <AccordionHeader>
+                  <AccordionTrigger textStyle={styles.accordionTitle}>Cost details</AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <Text style={[styles.explanation, { color: theme.colors.onSurfaceVariant }]}>{item.explanation}</Text>
+                  <Text style={[styles.source, { color: theme.colors.onSurfaceVariant }]}>
+                    Source: {item.dataSource} - Updated {new Date(item.lastUpdatedAt).toLocaleString()}
+                  </Text>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <View style={styles.actionRow}>
               <Button mode="text" icon="pencil-outline" onPress={() => setDialogState({ mode: 'edit', item })}>
                 Edit
@@ -380,7 +405,13 @@ const styles = StyleSheet.create({
   explanation: {
     fontSize: 13,
     lineHeight: 19,
-    marginTop: 8,
+  },
+  accordion: {
+    marginTop: 10,
+  },
+  accordionTitle: {
+    fontSize: 13,
+    textTransform: 'uppercase',
   },
   smallText: {
     fontSize: 13,

@@ -3,6 +3,13 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-nativ
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Card, Chip, ProgressBar, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../src/components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { createTripDraftFromSuggestion, saveBudgetDestination } from '../../src/features/budgetDiscovery/api';
@@ -229,14 +236,22 @@ function SuggestionCard({
           <Metric label="Budget remaining" value={formatINR(suggestion.budgetRemainingMinor)} />
           <Metric label="Confidence" value={suggestion.confidence} />
         </View>
-        <Text variant="titleSmall">Why recommended?</Text>
-        {suggestion.reasons.map((reason) => <Text key={reason}>- {reason}</Text>)}
-        {suggestion.lowerCostAlternatives.length > 0 && (
-          <Text style={{ color: theme.colors.onSurfaceVariant }}>
-            Lower-cost alternatives: {suggestion.lowerCostAlternatives.join(', ')}
-          </Text>
-        )}
-        <Text style={{ color: theme.colors.onSurfaceVariant }}>{suggestion.destination.sourceNote}</Text>
+        <Accordion type="single" collapsible>
+          <AccordionItem value={`${suggestion.destination.id}-why`}>
+            <AccordionHeader>
+              <AccordionTrigger textStyle={styles.accordionTitle}>Why recommended?</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>
+              {suggestion.reasons.map((reason) => <Text key={reason}>- {reason}</Text>)}
+              {suggestion.lowerCostAlternatives.length > 0 && (
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>
+                  Lower-cost alternatives: {suggestion.lowerCostAlternatives.join(', ')}
+                </Text>
+              )}
+              <Text style={{ color: theme.colors.onSurfaceVariant }}>{suggestion.destination.sourceNote}</Text>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
         <View style={styles.actions}>
           <Button mode="outlined" icon="bookmark-outline" loading={saving} onPress={onSave}>Save</Button>
           <Button icon="file-plus-outline" loading={creating} onPress={onCreateDraft}>Create trip draft</Button>
@@ -313,5 +328,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  accordionTitle: {
+    fontSize: 13,
+    textTransform: 'uppercase',
   },
 });

@@ -11,6 +11,13 @@ import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../src/components/animate-ui/primitives/radix/accordion';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { addPackingItem, createPackingList, fetchPackingForTrip, generatePackingChecklist, resetPackedStatus, syncPackingQueue, updatePackingItem } from '../../src/features/packing/api';
 import { cachePackingList, enqueuePackingOperation, getCachedPackingList } from '../../src/features/packing/cache';
@@ -26,6 +33,21 @@ function priorityColor(priority: PackingPriority, theme: MD3Theme) {
   if (priority === 'medium') return theme.colors.secondary;
   return theme.colors.onSurfaceVariant;
 }
+
+const packingTipItems = [
+  {
+    title: 'Medicine reminders',
+    content: 'Medicine suggestions are general packing reminders only, not medical advice.',
+  },
+  {
+    title: 'Offline fallback lists',
+    content: 'If AI generation fails, TravelAI creates a deterministic fallback checklist that can be cached for offline access.',
+  },
+  {
+    title: 'Unsafe item guidance',
+    content: 'TravelAI avoids recommending prohibited, illegal, or clearly unsafe items. Always verify airline, rail, hotel, and local rules before packing.',
+  },
+];
 
 export default function PackingScreen() {
   const theme = useTheme();
@@ -322,12 +344,18 @@ export default function PackingScreen() {
             <TextInput label="Accommodation type" value={generationInputs.accommodationType} onChangeText={(accommodationType) => setGenerationInputs((current) => ({ ...current, accommodationType }))} />
             <TextInput label="Accessibility or medical notes" value={generationInputs.accessibilityOrMedicalNotes} onChangeText={(accessibilityOrMedicalNotes) => setGenerationInputs((current) => ({ ...current, accessibilityOrMedicalNotes }))} />
           </View>
-          <View style={[styles.infoStrip, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <MaterialCommunityIcons name="medical-bag" size={18} color={theme.colors.onSurfaceVariant} />
-            <Text style={[styles.notice, styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-              Medicine suggestions are general packing reminders only, not medical advice.
-            </Text>
-          </View>
+          <Accordion type="single" collapsible style={styles.tipsAccordion}>
+            {packingTipItems.map((item, index) => (
+              <AccordionItem key={item.title} value={`packing-tip-${index + 1}`}>
+                <AccordionHeader>
+                  <AccordionTrigger textStyle={styles.accordionTitle}>{item.title}</AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <Text style={[styles.notice, { color: theme.colors.onSurfaceVariant }]}>{item.content}</Text>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </Card>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
@@ -536,8 +564,8 @@ const styles = StyleSheet.create({
   progress: { height: 8, borderRadius: 8, marginTop: 8 },
   warningStrip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 8, padding: 10, marginTop: 12 },
   warningText: { fontSize: 13, fontWeight: '800', flex: 1 },
-  infoStrip: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 8, padding: 10, marginTop: 8 },
-  infoText: { flex: 1, marginTop: 0 },
+  tipsAccordion: { marginTop: 8 },
+  accordionTitle: { fontSize: 13, textTransform: 'uppercase' },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, marginTop: 8 },
   filters: { gap: 8, paddingVertical: 10 },
   itemList: { gap: 8 },

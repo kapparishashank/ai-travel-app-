@@ -10,6 +10,13 @@ import { ConfirmationDialog } from '../../../src/components/common/ConfirmationD
 import { EmptyState } from '../../../src/components/common/EmptyState';
 import { ErrorState } from '../../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../../src/components/common/ScreenContainer';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../../src/components/animate-ui/primitives/radix/accordion';
 import { useAuthStore } from '../../../src/store/authStore';
 import { ActivityDialog } from '../../../src/features/itinerary/ActivityDialog';
 import {
@@ -263,17 +270,25 @@ export default function TripDetailsScreen() {
           </View>
         </Card>
 
-        <View style={[styles.sectionGrid, isWide && styles.sectionGridWide]}>
-          {sections.map((section) => (
-            <Card key={section.title} style={styles.sectionCard} accessibilityLabel={`${section.title} section`}>
-              <View style={styles.sectionHeader}>
-                <MaterialCommunityIcons name={sectionIcons[section.title]} size={22} color={theme.colors.primary} />
-                <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{section.title}</Text>
-              </View>
-              <Text style={[styles.sectionBody, { color: theme.colors.onSurfaceVariant }]}>{section.body}</Text>
-            </Card>
-          ))}
-        </View>
+        <Card style={styles.sectionAccordionCard} accessibilityLabel="Trip details sections">
+          <Accordion type="single" collapsible>
+            {sections.map((section) => (
+              <AccordionItem key={section.title} value={`trip-section-${section.title}`}>
+                <AccordionHeader>
+                  <AccordionTrigger>
+                    <View style={styles.sectionHeader}>
+                      <MaterialCommunityIcons name={sectionIcons[section.title]} size={22} color={theme.colors.primary} />
+                      <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{section.title}</Text>
+                    </View>
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <Text style={[styles.sectionBody, { color: theme.colors.onSurfaceVariant }]}>{section.body}</Text>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Card>
 
         <View style={styles.itineraryHeader}>
           <View>
@@ -498,19 +513,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 8,
   },
-  sectionGrid: {
-    gap: 8,
-    marginTop: 16,
-  },
-  sectionGridWide: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  sectionCard: {
+  sectionAccordionCard: {
     padding: 14,
-    minHeight: 112,
-    flexBasis: '48%',
+    marginTop: 16,
   },
   sectionHeader: {
     flexDirection: 'row',

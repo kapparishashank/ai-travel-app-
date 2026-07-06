@@ -9,6 +9,13 @@ import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../src/components/animate-ui/primitives/radix/accordion';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { saveJourneyOptionToTrip } from '../../src/features/smartJourney/api';
 import { getMockJourneyOptions } from '../../src/features/smartJourney/mockProviders';
@@ -234,12 +241,20 @@ function JourneyOptionCard({
         <ScorePill label="Safety" value={option.safetyGuidanceScore} />
       </View>
 
-      <Text style={[styles.whyTitle, { color: theme.colors.onSurface }]}>Why recommended?</Text>
-      <Text style={[styles.whyText, { color: theme.colors.onSurfaceVariant }]}>{option.whyRecommended}</Text>
-      <Text style={[styles.whyText, { color: theme.colors.onSurfaceVariant }]}>{option.safetyGuidance}</Text>
-      <Text style={[styles.dataStatus, { color: theme.colors.onSurfaceVariant }]}>
-        Data status: {option.dataStatus === 'demo_estimate' ? 'Demo estimate' : 'Provider estimate'} - Last checked {new Date(option.lastCheckedAt).toLocaleString()}
-      </Text>
+      <Accordion type="single" collapsible style={styles.detailAccordion}>
+        <AccordionItem value={`${option.id}-recommendation`}>
+          <AccordionHeader>
+            <AccordionTrigger textStyle={styles.accordionTitle}>Why recommended?</AccordionTrigger>
+          </AccordionHeader>
+          <AccordionContent>
+            <Text style={[styles.whyText, { color: theme.colors.onSurfaceVariant }]}>{option.whyRecommended}</Text>
+            <Text style={[styles.whyText, { color: theme.colors.onSurfaceVariant }]}>{option.safetyGuidance}</Text>
+            <Text style={[styles.dataStatus, { color: theme.colors.onSurfaceVariant }]}>
+              Data status: {option.dataStatus === 'demo_estimate' ? 'Demo estimate' : 'Provider estimate'} - Last checked {new Date(option.lastCheckedAt).toLocaleString()}
+            </Text>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <View style={styles.actionRow}>
         <Button icon="content-save-outline" disabled={!canSave} loading={saving} onPress={onSave}>
@@ -337,7 +352,8 @@ const styles = StyleSheet.create({
   scoreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   scorePill: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
   scorePillText: { fontSize: 12, fontWeight: '800' },
-  whyTitle: { fontSize: 13, fontWeight: '900', textTransform: 'uppercase', marginTop: 12 },
+  detailAccordion: { marginTop: 10 },
+  accordionTitle: { fontSize: 13, textTransform: 'uppercase' },
   whyText: { fontSize: 13, lineHeight: 19, marginTop: 4 },
   dataStatus: { fontSize: 12, marginTop: 8 },
   actionRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },

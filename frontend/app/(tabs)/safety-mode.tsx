@@ -2,6 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { Alert, Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../src/components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import {
@@ -160,6 +167,30 @@ export default function SafetyModeScreen() {
     if (!locationSnapshot.latitude || !locationSnapshot.longitude) return 'Not shared';
     return `${locationSnapshot.latitude.toFixed(3)}, ${locationSnapshot.longitude.toFixed(3)} approximate`;
   }, [locationSnapshot]);
+  const safetyInstructionItems = [
+    {
+      title: 'Visible disclaimer',
+      content: safetyInfo?.disclaimer ?? 'Safety information is general guidance. Verify live conditions and contact local authorities in an emergency.',
+    },
+    {
+      title: 'Location consent',
+      content: 'Location helps show nearby emergency information and can be included in manual check-ins later. You can deny permission and still use emergency numbers, contacts, and offline safety information. TravelAI does not use location for advertising.',
+    },
+    {
+      title: 'Manual check-ins',
+      content: 'Missed check-ins create an in-app warning first. TravelAI does not automatically claim that emergency services or trusted contacts have been contacted.',
+    },
+  ];
+  const offlineInfoItems = [
+    {
+      title: 'Offline emergency information',
+      content: `Emergency guidance for ${destination} is cached after loading. If the network fails, TravelAI shows cached information labelled as cached or mock.`,
+    },
+    {
+      title: 'Source note',
+      content: safetyInfo?.sourceNote ?? 'Source unavailable. Verify with official channels.',
+    },
+  ];
 
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
@@ -173,10 +204,18 @@ export default function SafetyModeScreen() {
             <Text style={{ color: theme.colors.onSurfaceVariant }}>
               Guidance only. TravelAI does not guarantee safety, dispatch emergency services, or contact trusted contacts automatically.
             </Text>
-            <View style={[styles.notice, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surfaceVariant }]}>
-              <Text variant="titleSmall">Visible disclaimer</Text>
-              <Text>{safetyInfo?.disclaimer ?? 'Safety information is general guidance. Verify live conditions and contact local authorities in an emergency.'}</Text>
-            </View>
+            <Accordion type="single" collapsible>
+              {safetyInstructionItems.map((item, index) => (
+                <AccordionItem key={item.title} value={`safety-instruction-${index + 1}`}>
+                  <AccordionHeader>
+                    <AccordionTrigger textStyle={styles.accordionTitle}>{item.title}</AccordionTrigger>
+                  </AccordionHeader>
+                  <AccordionContent>
+                    <Text style={{ color: theme.colors.onSurfaceVariant }}>{item.content}</Text>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
             {warning && (
               <View style={[styles.warning, { borderColor: theme.colors.error }]}>
                 <Text variant="titleSmall" style={{ color: theme.colors.error }}>Missed check-in warning</Text>
@@ -300,14 +339,28 @@ export default function SafetyModeScreen() {
         <Card style={styles.card}>
           <Card.Content style={styles.gap}>
             <Text variant="titleLarge">Offline emergency information</Text>
-            <Text>
-              Emergency guidance for {destination} is cached after loading. If the network fails, TravelAI shows cached information labelled as cached or mock.
-            </Text>
-            <Text style={{ color: theme.colors.onSurfaceVariant }}>{safetyInfo?.sourceNote ?? 'Source unavailable. Verify with official channels.'}</Text>
-            <Text variant="titleSmall">General guidance</Text>
-            {(safetyInfo?.safetyNotes ?? ['Keep official emergency numbers saved.', 'Verify route and weather conditions before travel.']).map((note) => (
-              <Text key={note}>- {note}</Text>
-            ))}
+            <Accordion type="single" collapsible>
+              {offlineInfoItems.map((item, index) => (
+                <AccordionItem key={item.title} value={`offline-info-${index + 1}`}>
+                  <AccordionHeader>
+                    <AccordionTrigger textStyle={styles.accordionTitle}>{item.title}</AccordionTrigger>
+                  </AccordionHeader>
+                  <AccordionContent>
+                    <Text style={{ color: theme.colors.onSurfaceVariant }}>{item.content}</Text>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+              <AccordionItem value="offline-general-guidance">
+                <AccordionHeader>
+                  <AccordionTrigger textStyle={styles.accordionTitle}>General guidance</AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  {(safetyInfo?.safetyNotes ?? ['Keep official emergency numbers saved.', 'Verify route and weather conditions before travel.']).map((note) => (
+                    <Text key={note}>- {note}</Text>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </Card.Content>
         </Card>
       </ScrollView>
@@ -477,6 +530,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     gap: 6,
+  },
+  accordionTitle: {
+    fontSize: 14,
+    fontWeight: '900',
   },
   warning: {
     borderWidth: 1,
