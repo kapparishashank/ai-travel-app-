@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import {
   Animated,
   LayoutAnimation,
@@ -169,7 +169,7 @@ export function AccordionContent({ children, keepRendered = false, style }: Acco
   const accordion = useRequiredAccordionContext();
   const item = useRequiredAccordionItemContext();
   const isOpen = accordion.values.includes(item.value);
-  const opacity = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+  const [opacity] = React.useState(() => new Animated.Value(isOpen ? 1 : 0));
 
   React.useEffect(() => {
     Animated.timing(opacity, {
