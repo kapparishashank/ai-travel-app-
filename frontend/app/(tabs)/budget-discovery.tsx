@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Card, Chip, ProgressBar, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import { Card, Chip, ProgressBar, Text, TextInput, useTheme } from 'react-native-paper';
 import {
   Accordion,
   AccordionContent,
@@ -12,6 +12,7 @@ import {
 } from '../../src/components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { createTripDraftFromSuggestion, saveBudgetDestination } from '../../src/features/budgetDiscovery/api';
 import { discoverBudgetDestinations, parseRupeesToMinor } from '../../src/features/budgetDiscovery/calculations';
 import { budgetDiscoveryTags, type BudgetDestinationSuggestion, type BudgetDiscoveryInput, type BudgetDiscoveryTag, type DiscoveryTransport } from '../../src/features/budgetDiscovery/types';
@@ -136,10 +137,12 @@ export default function BudgetDiscoveryScreen() {
               <TextInput label="Maximum distance (km)" value={maxDistance} onChangeText={setMaxDistance} keyboardType="number-pad" style={styles.input} />
             </View>
             <Text variant="titleSmall">Preferred transport</Text>
-            <SegmentedButtons
+            <SegmentedTabs
+              name="discovery-transport"
+              ariaLabel="Preferred transport"
               value={transport}
-              onValueChange={(value) => setTransport(value as DiscoveryTransport)}
-              buttons={[
+              onChange={(value) => setTransport(value as DiscoveryTransport)}
+              options={[
                 { value: 'train', label: 'Train' },
                 { value: 'bus', label: 'Bus' },
                 { value: 'flight', label: 'Flight' },

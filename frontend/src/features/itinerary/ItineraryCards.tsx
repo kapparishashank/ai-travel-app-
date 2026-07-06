@@ -1,10 +1,11 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ProgressBar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { IconButton } from '../../components/common/AnimatedIconButton';
+import { SegmentedTabs } from '../../components/common/SegmentedTabs';
 import { formatINR } from '../../utils/currency';
 import type { ItineraryActivity, TripDay } from '../trips/types';
 import { durationLabel, getDataStatus } from './utils';
@@ -68,23 +69,21 @@ export function DaySelector({
 }) {
   const theme = useTheme();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayList}>
-      {days.map((day) => {
-        const selected = day.id === selectedDayId;
-        return (
-          <Button
-            key={day.id}
-            mode={selected ? 'contained' : 'outlined'}
-            onPress={() => onSelect(day.id)}
-            accessibilityLabel={`Open day ${day.day_number}`}
-            style={styles.dayButton}
-          >
-            {`Day ${day.day_number} - ${formatINR(dayTotals[day.id] ?? 0)}`}
-          </Button>
-        );
-      })}
+    <View style={styles.dayList}>
+      {days.length > 0 && (
+        <SegmentedTabs
+          name="itinerary-day"
+          ariaLabel="Itinerary day"
+          value={selectedDayId ?? days[0]?.id ?? ''}
+          onChange={onSelect}
+          options={days.map((day) => ({
+            value: day.id,
+            label: `Day ${day.day_number} - ${formatINR(dayTotals[day.id] ?? 0)}`,
+          }))}
+        />
+      )}
       {days.length === 0 && <Text style={{ color: theme.colors.onSurfaceVariant }}>No itinerary days yet.</Text>}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -252,11 +251,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   dayList: {
-    gap: 8,
     paddingVertical: 8,
-  },
-  dayButton: {
-    minWidth: 132,
   },
   warningList: {
     gap: 8,

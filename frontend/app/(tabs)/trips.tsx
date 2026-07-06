@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { SegmentedButtons, Snackbar, useTheme } from 'react-native-paper';
+import { Snackbar, useTheme } from 'react-native-paper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Button } from '../../src/components/common/Button';
@@ -8,6 +8,7 @@ import { ConfirmationDialog } from '../../src/components/common/ConfirmationDial
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { useAuthStore } from '../../src/store/authStore';
 import { ManagedTripCard, TripSkeleton } from '../../src/features/trips/TripCards';
 import { EditTripBasicsDialog, RenameTripDialog } from '../../src/features/trips/TripDialogs';
@@ -140,14 +141,16 @@ export default function TripsScreen() {
           <Button icon="plus" onPress={() => router.push('/(tabs)/plan-trip')}>Plan a Trip</Button>
         </View>
 
-        <SegmentedButtons
+        <SegmentedTabs
+          name="trip-bucket"
+          ariaLabel="Trip status"
           value={bucket}
-          onValueChange={(value) => setBucket(value as TripBucket)}
-          buttons={[
-            { value: 'Upcoming', label: `Upcoming (${grouped.Upcoming.length})`, accessibilityLabel: 'Show upcoming trips' },
-            { value: 'Draft', label: `Draft (${grouped.Draft.length})`, accessibilityLabel: 'Show draft trips' },
-            { value: 'Past', label: `Past (${grouped.Past.length})`, accessibilityLabel: 'Show past trips' },
-            { value: 'Archived', label: `Archived (${grouped.Archived.length})`, accessibilityLabel: 'Show archived trips' },
+          onChange={(value) => setBucket(value as TripBucket)}
+          options={[
+            { value: 'Upcoming', label: `Upcoming (${grouped.Upcoming.length})` },
+            { value: 'Draft', label: `Draft (${grouped.Draft.length})` },
+            { value: 'Past', label: `Past (${grouped.Past.length})` },
+            { value: 'Archived', label: `Archived (${grouped.Archived.length})` },
           ]}
           style={styles.segments}
         />

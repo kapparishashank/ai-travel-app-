@@ -10,6 +10,7 @@ import { ConfirmationDialog } from '../../src/components/common/ConfirmationDial
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { TextInput } from '../../src/components/common/TextInput';
 import {
   Accordion,
@@ -358,14 +359,17 @@ export default function PackingScreen() {
           </Accordion>
         </Card>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          <Button mode={categoryFilter === 'all' ? 'contained' : 'outlined'} onPress={() => setCategoryFilter('all')}>All</Button>
-          {packingCategories.map((category) => (
-            <Button key={category} mode={categoryFilter === category ? 'contained' : 'outlined'} onPress={() => setCategoryFilter(category)}>
-              {packingCategoryLabels[category]}
-            </Button>
-          ))}
-        </ScrollView>
+        <SegmentedTabs
+          name="packing-category-filter"
+          ariaLabel="Packing category filter"
+          value={categoryFilter}
+          onChange={(next) => setCategoryFilter(next as PackingCategory | 'all')}
+          options={[
+            { label: 'All', value: 'all' },
+            ...packingCategories.map((category) => ({ label: packingCategoryLabels[category], value: category })),
+          ]}
+          style={styles.filters}
+        />
 
         {packingQuery.isError && items.length === 0 ? (
           <ErrorState message="Could not load packing list." onRetry={() => packingQuery.refetch()} />
@@ -457,12 +461,16 @@ function PackingItemCard({
           style={styles.quantityInput}
         />
         <View style={styles.assignWrap}>
-          <Button mode={!item.assigned_to ? 'contained-tonal' : 'outlined'} onPress={() => onAssign(null)}>Unassigned</Button>
-          {members.map((member) => (
-            <Button key={member.id} mode={item.assigned_to === member.id ? 'contained' : 'outlined'} onPress={() => onAssign(member.id)}>
-              {member.display_name}
-            </Button>
-          ))}
+          <SegmentedTabs
+            name={`packing-assign-${item.id}`}
+            ariaLabel={`Assign ${item.item_name}`}
+            value={item.assigned_to ?? 'unassigned'}
+            onChange={(memberId) => onAssign(memberId === 'unassigned' ? null : memberId)}
+            options={[
+              { label: 'Unassigned', value: 'unassigned' },
+              ...members.map((member) => ({ label: member.display_name, value: member.id })),
+            ]}
+          />
         </View>
       </View>
       <View style={styles.actionRow}>
@@ -512,26 +520,34 @@ function CustomItemDialog({
             <TextInput label="Quantity" value={form.quantity} onChangeText={(quantity) => patch({ quantity: quantity.replace(/[^\d]/g, '') })} keyboardType="number-pad" />
             <TextInput label="Reason" value={form.reason} onChangeText={(reason) => patch({ reason })} />
             <View style={styles.optionWrap}>
-              {packingCategories.map((category) => (
-                <Button key={category} mode={form.category === category ? 'contained' : 'outlined'} onPress={() => patch({ category })}>
-                  {packingCategoryLabels[category]}
-                </Button>
-              ))}
+              <SegmentedTabs
+                name="custom-packing-category"
+                ariaLabel="Packing item category"
+                value={form.category}
+                onChange={(category) => patch({ category: category as PackingCategory })}
+                options={packingCategories.map((category) => ({ label: packingCategoryLabels[category], value: category }))}
+              />
             </View>
             <View style={styles.optionWrap}>
-              {priorities.map((priority) => (
-                <Button key={priority} mode={form.priority === priority ? 'contained' : 'outlined'} onPress={() => patch({ priority })}>
-                  {priority}
-                </Button>
-              ))}
+              <SegmentedTabs
+                name="custom-packing-priority"
+                ariaLabel="Packing item priority"
+                value={form.priority}
+                onChange={(priority) => patch({ priority: priority as PackingPriority })}
+                options={priorities.map((priority) => ({ label: priority, value: priority }))}
+              />
             </View>
             <View style={styles.optionWrap}>
-              <Button mode={!form.assignedTo ? 'contained-tonal' : 'outlined'} onPress={() => patch({ assignedTo: null })}>Unassigned</Button>
-              {members.map((member) => (
-                <Button key={member.id} mode={form.assignedTo === member.id ? 'contained' : 'outlined'} onPress={() => patch({ assignedTo: member.id })}>
-                  {member.display_name}
-                </Button>
-              ))}
+              <SegmentedTabs
+                name="custom-packing-assignee"
+                ariaLabel="Packing item assignee"
+                value={form.assignedTo ?? 'unassigned'}
+                onChange={(assignedTo) => patch({ assignedTo: assignedTo === 'unassigned' ? null : assignedTo })}
+                options={[
+                  { label: 'Unassigned', value: 'unassigned' },
+                  ...members.map((member) => ({ label: member.display_name, value: member.id })),
+                ]}
+              />
             </View>
           </ScrollView>
         </Dialog.ScrollArea>

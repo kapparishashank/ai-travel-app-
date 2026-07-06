@@ -8,6 +8,7 @@ import { Card } from '../../src/components/common/Card';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { TextInput } from '../../src/components/common/TextInput';
 import { saveTicketResultToTrip } from '../../src/features/ticketFinder/api';
 import { getProviderById, searchMockProviders } from '../../src/features/ticketFinder/providers';
@@ -142,13 +143,13 @@ export default function TicketFinderScreen() {
 
         <Card style={styles.panel}>
           <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Filters and sorting</Text>
-          <ChipRow>
-            {modeOptions.map((mode) => (
-              <Button key={mode} mode={filters.modes.includes(mode) ? 'contained' : 'outlined'} onPress={() => setFilters((current) => ({ ...current, modes: [mode] }))}>
-                {label(mode)}
-              </Button>
-            ))}
-          </ChipRow>
+          <SegmentedTabs
+            name="ticket-mode-filter"
+            ariaLabel="Ticket mode filter"
+            value={filters.modes[0] ?? 'all'}
+            onChange={(mode) => setFilters((current) => ({ ...current, modes: [mode as TicketMode | 'all'] }))}
+            options={modeOptions.map((mode) => ({ label: label(mode), value: mode }))}
+          />
           <View style={styles.formGrid}>
             <TextInput label="Max price" value={String(filters.maxPriceMinor / 100)} onChangeText={(value) => setFilters((current) => ({ ...current, maxPriceMinor: Math.max(0, Number(value.replace(/[^\d]/g, '') || 0) * 100) }))} keyboardType="number-pad" />
             <TextInput label="Max duration minutes" value={String(filters.maxDurationMinutes)} onChangeText={(value) => setFilters((current) => ({ ...current, maxDurationMinutes: Math.max(1, Number(value.replace(/[^\d]/g, '') || 1)) }))} keyboardType="number-pad" />
@@ -157,24 +158,40 @@ export default function TicketFinderScreen() {
             <TextInput label="Class filter" value={filters.seatClass} onChangeText={(seatClass) => setFilters((current) => ({ ...current, seatClass }))} />
           </View>
           <ControlGroup title="Departure">
-            {timeWindows.map((window) => (
-              <Button key={window} mode={filters.departureWindow === window ? 'contained' : 'outlined'} onPress={() => setFilters((current) => ({ ...current, departureWindow: window }))}>{label(window)}</Button>
-            ))}
+            <SegmentedTabs
+              name="ticket-departure-window"
+              ariaLabel="Departure time"
+              value={filters.departureWindow}
+              onChange={(window) => setFilters((current) => ({ ...current, departureWindow: window as TicketFilters['departureWindow'] }))}
+              options={timeWindows.map((window) => ({ label: label(window), value: window }))}
+            />
           </ControlGroup>
           <ControlGroup title="Arrival">
-            {timeWindows.map((window) => (
-              <Button key={window} mode={filters.arrivalWindow === window ? 'contained' : 'outlined'} onPress={() => setFilters((current) => ({ ...current, arrivalWindow: window }))}>{label(window)}</Button>
-            ))}
+            <SegmentedTabs
+              name="ticket-arrival-window"
+              ariaLabel="Arrival time"
+              value={filters.arrivalWindow}
+              onChange={(window) => setFilters((current) => ({ ...current, arrivalWindow: window as TicketFilters['arrivalWindow'] }))}
+              options={timeWindows.map((window) => ({ label: label(window), value: window }))}
+            />
           </ControlGroup>
           <ControlGroup title="Refundability">
-            {refundOptions.map((option) => (
-              <Button key={option} mode={filters.refundability === option ? 'contained' : 'outlined'} onPress={() => setFilters((current) => ({ ...current, refundability: option }))}>{label(option)}</Button>
-            ))}
+            <SegmentedTabs
+              name="ticket-refundability"
+              ariaLabel="Refundability"
+              value={filters.refundability}
+              onChange={(option) => setFilters((current) => ({ ...current, refundability: option as RefundabilityFilter }))}
+              options={refundOptions.map((option) => ({ label: label(option), value: option }))}
+            />
           </ControlGroup>
           <ControlGroup title="Sort">
-            {(['recommended', 'price', 'departure', 'arrival', 'duration'] satisfies TicketSort[]).map((option) => (
-              <Button key={option} mode={sort === option ? 'contained' : 'outlined'} onPress={() => setSort(option)}>{label(option)}</Button>
-            ))}
+            <SegmentedTabs
+              name="ticket-sort"
+              ariaLabel="Ticket sort"
+              value={sort}
+              onChange={(option) => setSort(option as TicketSort)}
+              options={(['recommended', 'price', 'departure', 'arrival', 'duration'] satisfies TicketSort[]).map((option) => ({ label: label(option), value: option }))}
+            />
           </ControlGroup>
         </Card>
 
@@ -304,7 +321,7 @@ function ModeSelector({ selected, onChange }: { selected: TicketMode[]; onChange
 
 function ControlGroup({ title, children }: { title: string; children: React.ReactNode }) {
   const theme = useTheme();
-  return <View style={styles.controlGroup}><Text style={[styles.controlTitle, { color: theme.colors.onSurface }]}>{title}</Text><ChipRow>{children}</ChipRow></View>;
+  return <View style={styles.controlGroup}><Text style={[styles.controlTitle, { color: theme.colors.onSurface }]}>{title}</Text>{children}</View>;
 }
 
 function ChipRow({ children }: { children: React.ReactNode }) {

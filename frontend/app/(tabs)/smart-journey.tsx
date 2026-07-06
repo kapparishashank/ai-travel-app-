@@ -8,6 +8,7 @@ import { Card } from '../../src/components/common/Card';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { TextInput } from '../../src/components/common/TextInput';
 import {
   Accordion,
@@ -117,27 +118,33 @@ export default function SmartJourneyScreen() {
         </Card>
 
         <ControlSection title="Priority">
-          {priorityOptions.map((item) => (
-            <Button key={item} mode={priority === item ? 'contained' : 'outlined'} onPress={() => setPriority(item)}>
-              {labelCase(item)}
-            </Button>
-          ))}
+          <SegmentedTabs
+            name="journey-priority"
+            ariaLabel="Journey priority"
+            value={priority}
+            onChange={(next) => setPriority(next as JourneyPriority)}
+            options={priorityOptions.map((item) => ({ label: labelCase(item), value: item }))}
+          />
         </ControlSection>
 
         <ControlSection title="Mode filter">
-          {modeOptions.map((item) => (
-            <Button key={item} mode={modeFilter === item ? 'contained' : 'outlined'} onPress={() => setModeFilter(item)}>
-              {item === 'all' ? 'All' : labelCase(item)}
-            </Button>
-          ))}
+          <SegmentedTabs
+            name="journey-mode"
+            ariaLabel="Journey mode filter"
+            value={modeFilter}
+            onChange={(next) => setModeFilter(next as JourneyMode | 'all')}
+            options={modeOptions.map((item) => ({ label: item === 'all' ? 'All' : labelCase(item), value: item }))}
+          />
         </ControlSection>
 
         <ControlSection title="Sort">
-          {sortOptions.map((item) => (
-            <Button key={item} mode={sort === item ? 'contained' : 'outlined'} onPress={() => setSort(item)}>
-              {labelCase(item)}
-            </Button>
-          ))}
+          <SegmentedTabs
+            name="journey-sort"
+            ariaLabel="Journey sort"
+            value={sort}
+            onChange={(next) => setSort(next as JourneySort)}
+            options={sortOptions.map((item) => ({ label: labelCase(item), value: item }))}
+          />
         </ControlSection>
 
         {tripsQuery.isError && (
@@ -170,9 +177,7 @@ function ControlSection({ title, children }: { title: string; children: React.Re
   return (
     <View style={styles.controlSection}>
       <Text style={[styles.controlTitle, { color: theme.colors.onBackground }]}>{title}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlRow}>
-        {children}
-      </ScrollView>
+      {children}
     </View>
   );
 }
@@ -328,7 +333,6 @@ const styles = StyleSheet.create({
   notice: { fontSize: 13, lineHeight: 19, marginTop: 8 },
   controlSection: { marginTop: 8 },
   controlTitle: { fontSize: 14, fontWeight: '900', textTransform: 'uppercase', marginBottom: 4 },
-  controlRow: { gap: 8, paddingVertical: 4 },
   optionsList: { gap: 8, marginTop: 8 },
   optionCard: { padding: 16 },
   optionHeader: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },

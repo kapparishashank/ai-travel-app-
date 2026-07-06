@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Alert, Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import { Card, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import {
   createPriceAlert,
   deletePriceAlert,
@@ -245,10 +246,12 @@ function CreateAlertDialog({
             {!!options.length && (
               <>
                 <Text variant="titleSmall">Journey option</Text>
-                <SegmentedButtons
+                <SegmentedTabs
+                  name="price-alert-option"
+                  ariaLabel="Journey option"
                   value={selectedOptionId}
-                  onValueChange={setOptionId}
-                  buttons={options.slice(0, 4).map((option) => ({
+                  onChange={setOptionId}
+                  options={options.slice(0, 4).map((option) => ({
                     value: option.id,
                     label: `${option.mode} ${formatINR(option.total_price_minor)}`,
                   }))}

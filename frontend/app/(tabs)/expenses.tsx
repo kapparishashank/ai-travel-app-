@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import { Card, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { HiddenCostCalculator } from '../../src/features/hiddenCosts/HiddenCostCalculator';
 import { hyderabadGoaHiddenCosts } from '../../src/features/hiddenCosts/demoData';
@@ -406,21 +407,21 @@ function ExpenseDialog({
             <TextInput label="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
             <TextInput label="Notes" value={notes} onChangeText={setNotes} multiline />
             <Text variant="labelLarge">Category</Text>
-            <View style={styles.wrap}>
-              {expenseCategories.map((item) => (
-                <Button key={item} mode={category === item ? 'contained' : 'outlined'} onPress={() => setCategory(item)}>
-                  {item}
-                </Button>
-              ))}
-            </View>
+            <SegmentedTabs
+              name="expense-category"
+              ariaLabel="Expense category"
+              value={category}
+              onChange={(item) => setCategory(item as ExpenseSplitInput['category'])}
+              options={expenseCategories.map((item) => ({ label: item, value: item }))}
+            />
             <Text variant="labelLarge">Payer</Text>
-            <View style={styles.wrap}>
-              {members.map((member) => (
-                <Button key={member.id} mode={paidByMemberId === member.id ? 'contained' : 'outlined'} onPress={() => setPaidByMemberId(member.id)}>
-                  {member.name}
-                </Button>
-              ))}
-            </View>
+            <SegmentedTabs
+              name="expense-payer"
+              ariaLabel="Expense payer"
+              value={paidByMemberId}
+              onChange={setPaidByMemberId}
+              options={members.map((member) => ({ label: member.name, value: member.id }))}
+            />
             <Text variant="labelLarge">Participants</Text>
             <View style={styles.wrap}>
               {members.map((member) => (
@@ -429,10 +430,12 @@ function ExpenseDialog({
                 </Button>
               ))}
             </View>
-            <SegmentedButtons
+            <SegmentedTabs
+              name="expense-split-type"
+              ariaLabel="Expense split type"
               value={splitType}
-              onValueChange={(value) => setSplitType(value as SplitType)}
-              buttons={splitTypes.map((item) => ({ value: item, label: item.replace('_', ' ') }))}
+              onChange={(value) => setSplitType(value as SplitType)}
+              options={splitTypes.map((item) => ({ value: item, label: item.replace('_', ' ') }))}
             />
             {needsValues && participantIds.map((memberId) => (
               <TextInput

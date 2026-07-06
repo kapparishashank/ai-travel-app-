@@ -11,6 +11,7 @@ import {
 } from '../../components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { SegmentedTabs } from '../../components/common/SegmentedTabs';
 import { TextInput } from '../../components/common/TextInput';
 import { formatINR } from '../../utils/currency';
 import { calculateHiddenCostTotals, createCostItem, formatMinorAsDecimal, parseDecimalAmountToMinor } from './calculations';
@@ -283,38 +284,29 @@ function CostDialog({
               leftIcon="cash"
             />
             <Text style={[styles.controlLabel, { color: theme.colors.onSurface }]}>Category</Text>
-            <View style={styles.optionWrap}>
-              {hiddenCostCategories.map((category) => (
-                <Button
-                  key={category}
-                  mode={form.category === category ? 'contained' : 'outlined'}
-                  onPress={() => patchForm({ category })}
-                  style={styles.optionButton}
-                >
-                  {categoryLabels[category]}
-                </Button>
-              ))}
-            </View>
+            <SegmentedTabs
+              name="hidden-cost-category"
+              ariaLabel="Hidden cost category"
+              value={form.category}
+              onChange={(category) => patchForm({ category: category as HiddenCostCategory })}
+              options={hiddenCostCategories.map((category) => ({ label: categoryLabels[category], value: category }))}
+            />
             <Text style={[styles.controlLabel, { color: theme.colors.onSurface }]}>Status</Text>
-            <View style={styles.optionRow}>
-              {statusOptions.map((status) => (
-                <Button key={status} mode={form.status === status ? 'contained' : 'outlined'} onPress={() => patchForm({ status })}>
-                  {status}
-                </Button>
-              ))}
-            </View>
+            <SegmentedTabs
+              name="hidden-cost-status"
+              ariaLabel="Hidden cost status"
+              value={form.status}
+              onChange={(status) => patchForm({ status: status as CostStatus })}
+              options={statusOptions.map((status) => ({ label: status, value: status }))}
+            />
             <Text style={[styles.controlLabel, { color: theme.colors.onSurface }]}>Confidence</Text>
-            <View style={styles.optionRow}>
-              {confidenceOptions.map((confidence) => (
-                <Button
-                  key={confidence}
-                  mode={form.confidence === confidence ? 'contained' : 'outlined'}
-                  onPress={() => patchForm({ confidence })}
-                >
-                  {confidence}
-                </Button>
-              ))}
-            </View>
+            <SegmentedTabs
+              name="hidden-cost-confidence"
+              ariaLabel="Hidden cost confidence"
+              value={form.confidence}
+              onChange={(confidence) => patchForm({ confidence: confidence as CostConfidence })}
+              options={confidenceOptions.map((confidence) => ({ label: confidence, value: confidence }))}
+            />
             <TextInput label="Explanation" value={form.explanation} onChangeText={(explanation) => patchForm({ explanation })} />
             <TextInput label="Data source" value={form.dataSource} onChangeText={(dataSource) => patchForm({ dataSource })} />
           </ScrollView>
@@ -464,18 +456,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 10,
     marginBottom: 4,
-  },
-  optionWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  optionButton: {
-    marginVertical: 2,
   },
 });

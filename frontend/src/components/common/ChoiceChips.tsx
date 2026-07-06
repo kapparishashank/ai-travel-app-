@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Chip, HelperText } from 'react-native-paper';
+import { SegmentedTabs } from './SegmentedTabs';
 
 type ChoiceChipsProps = {
   options: string[];
@@ -11,12 +12,22 @@ type ChoiceChipsProps = {
 };
 
 export function ChoiceChips({ options, selected, onChange, multi = true, error }: ChoiceChipsProps) {
-  const toggle = (option: string) => {
-    if (!multi) {
-      onChange([option]);
-      return;
-    }
+  if (!multi) {
+    return (
+      <View style={styles.container}>
+        <SegmentedTabs
+          name={`choice-${options.join('-')}`}
+          ariaLabel="Choice options"
+          value={selected[0] ?? options[0] ?? ''}
+          onChange={(option) => onChange([option])}
+          options={options.map((option) => ({ label: option, value: option }))}
+        />
+        {!!error && <HelperText type="error">{error}</HelperText>}
+      </View>
+    );
+  }
 
+  const toggle = (option: string) => {
     onChange(
       selected.includes(option)
         ? selected.filter((item) => item !== option)

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
+import { Card, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import {
   Accordion,
   AccordionContent,
@@ -11,6 +11,7 @@ import {
 } from '../../src/components/animate-ui/primitives/radix/accordion';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import {
   createSafeCheckin,
   deleteTrustedContact,
@@ -263,10 +264,12 @@ export default function SafetyModeScreen() {
             ) : (
               <>
                 <Text style={{ color: theme.colors.onSurfaceVariant }}>Start a schedule for manual I am safe check-ins.</Text>
-                <SegmentedButtons
+                <SegmentedTabs
+                  name="safety-checkin-interval"
+                  ariaLabel="Check-in interval"
                   value={interval}
-                  onValueChange={setInterval}
-                  buttons={[
+                  onChange={setInterval}
+                  options={[
                     { value: '30', label: '30 min' },
                     { value: '60', label: '1 hr' },
                     { value: '120', label: '2 hr' },
@@ -469,10 +472,12 @@ function ContactDialog({
           <TextInput label="Name" value={name} onChangeText={setName} />
           <TextInput label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
           <TextInput label="Relationship" value={relationship} onChangeText={setRelationship} />
-          <SegmentedButtons
+          <SegmentedTabs
+            name="trusted-contact-priority"
+            ariaLabel="Trusted contact priority"
             value={isPrimary}
-            onValueChange={setIsPrimary}
-            buttons={[
+            onChange={setIsPrimary}
+            options={[
               { value: 'yes', label: 'Primary' },
               { value: 'no', label: 'Backup' },
             ]}
