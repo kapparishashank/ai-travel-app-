@@ -8,6 +8,7 @@ import { Button } from '../../../src/components/common/Button';
 import { Card } from '../../../src/components/common/Card';
 import { ConfirmationDialog } from '../../../src/components/common/ConfirmationDialog';
 import { EmptyState } from '../../../src/components/common/EmptyState';
+import { MOUNTAIN_IMAGES } from '../../../src/constants/images';
 import { ErrorState } from '../../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../../src/components/common/ScreenContainer';
 import {
@@ -351,6 +352,7 @@ export default function TripDetailsScreen() {
             icon="calendar-plus"
             actionLabel="Generate itinerary"
             onAction={() => generationMutation.mutate(null)}
+            imageUrl={MOUNTAIN_IMAGES.lake}
           />
         ) : selectedActivities.length === 0 ? (
           <EmptyState
@@ -359,6 +361,7 @@ export default function TripDetailsScreen() {
             icon="calendar-blank-outline"
             actionLabel="Add activity"
             onAction={() => setActivityDialog({ mode: 'add' })}
+            imageUrl={MOUNTAIN_IMAGES.valley}
           />
         ) : (
           <View style={styles.timeline}>

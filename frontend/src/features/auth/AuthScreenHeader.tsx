@@ -5,16 +5,18 @@ import { useTheme } from 'react-native-paper';
 type AuthScreenHeaderProps = {
   title: string;
   subtitle: string;
+  titleColor?: string;
+  subtitleColor?: string;
 };
 
-export function AuthScreenHeader({ title, subtitle }: AuthScreenHeaderProps) {
+export function AuthScreenHeader({ title, subtitle, titleColor, subtitleColor }: AuthScreenHeaderProps) {
   const theme = useTheme();
 
   return (
     <View style={styles.header}>
       <Text style={[styles.brand, { color: theme.colors.primary }]}>TravelAI</Text>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>{title}</Text>
-      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>{subtitle}</Text>
+      <Text style={[styles.title, { color: titleColor ?? theme.colors.onBackground }]}>{title}</Text>
+      <Text style={[styles.subtitle, { color: subtitleColor ?? theme.colors.onSurfaceVariant }]}>{subtitle}</Text>
     </View>
   );
 }

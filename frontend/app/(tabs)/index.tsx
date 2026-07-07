@@ -151,6 +151,7 @@ export default function HomeScreen() {
                     icon="airplane-plus"
                     actionLabel="Plan a Trip"
                     onAction={() => router.push('/(tabs)/plan-trip')}
+                    imageUrl={MOUNTAIN_IMAGES.lake}
                   />
                 )}
               </AnimatedView>
@@ -168,12 +169,20 @@ export default function HomeScreen() {
 
               {(activeTrip || upcomingTrip?.status === 'active') && (
                 <AnimatedView type="slideRight" delay={100}>
-                  <ShortcutCard
-                    title="Safety Mode"
-                    description="Start check-ins and keep trusted contacts ready while traveling."
-                    icon="shield-check-outline"
+                  <GlassCard
+                    imageUrl={MOUNTAIN_IMAGES.adventure}
                     onPress={() => router.push('/(tabs)/safety-mode')}
-                  />
+                    style={styles.safetyModeCard}
+                  >
+                    <View style={styles.safetyCardHeader}>
+                      <MaterialCommunityIcons name="shield-check-outline" size={20} color="#FFFFFF" />
+                      <Text style={styles.safetyCardTag}>LIVE TRAVEL PROTECTION</Text>
+                    </View>
+                    <Text style={styles.safetyCardTitle}>Safety Mode</Text>
+                    <Text style={styles.safetyCardDesc}>
+                      Start check-ins and keep trusted contacts ready while traveling.
+                    </Text>
+                  </GlassCard>
                 </AnimatedView>
               )}
 
@@ -209,6 +218,7 @@ export default function HomeScreen() {
                     icon="bell-plus-outline"
                     actionLabel="Create alert"
                     onAction={() => router.push('/(tabs)/price-alerts')}
+                    imageUrl={MOUNTAIN_IMAGES.snow}
                   />
                 )}
               </AnimatedView>
@@ -282,6 +292,7 @@ export default function HomeScreen() {
                     icon="history"
                     actionLabel="Explore"
                     onAction={() => router.push('/(tabs)/explore')}
+                    imageUrl={MOUNTAIN_IMAGES.greenHills}
                   />
                 )}
               </AnimatedView>
@@ -443,5 +454,40 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.30)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  safetyModeCard: {
+    padding: 20,
+    minHeight: 140,
+    justifyContent: 'center',
+    marginVertical: 8,
+  },
+  safetyCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  safetyCardTag: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: 1.2,
+  },
+  safetyCardTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  safetyCardDesc: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.90)',
+    marginTop: 4,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

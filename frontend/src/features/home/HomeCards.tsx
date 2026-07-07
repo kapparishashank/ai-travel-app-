@@ -3,6 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import { Card } from '../../components/common/Card';
+import { GlassCard } from '../../components/common/GlassCard';
+import { getDestinationImage } from '../../constants/images';
 import { formatINR } from '../../utils/currency';
 import type { HomeAlert, HomeDestination, HomeSearch, HomeTrip } from './types';
 
@@ -111,23 +113,27 @@ export function DestinationCard({
   onPress: () => void;
 }) {
   const theme = useTheme();
+  const imageUrl = getDestinationImage(destination.name || destination.id);
+
   return (
-    <Card onPress={onPress} style={styles.destinationCard} accessibilityLabel={`Explore ${destination.name}`}>
-      <View style={[styles.destinationIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
-        <MaterialCommunityIcons name={destination.icon as MaterialIconName} size={24} color={theme.colors.secondary} />
-      </View>
-      <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{destination.name}</Text>
-      <Text style={[styles.cardBody, { color: theme.colors.onSurfaceVariant }]}>{destination.region}</Text>
-      <Text style={[styles.destinationReason, { color: theme.colors.onSurfaceVariant }]}>
+    <GlassCard
+      imageUrl={imageUrl}
+      onPress={onPress}
+      style={styles.destinationCard}
+      accessibilityLabel={`Explore ${destination.name}`}
+    >
+      <Text style={styles.destinationCardTitle}>{destination.name}</Text>
+      <Text style={styles.destinationCardRegion}>{destination.region}</Text>
+      <Text style={styles.destinationCardReason} numberOfLines={3}>
         {destination.reason}
       </Text>
       <View style={styles.rowBetween}>
-        <Text style={[styles.metaText, { color: theme.colors.primary }]}>
+        <Text style={styles.destinationCardPrice}>
           From {formatINR(destination.estimateMinor)}
         </Text>
         <DemoLabel visible={destination.isDemo} />
       </View>
-    </Card>
+    </GlassCard>
   );
 }
 
@@ -217,22 +223,45 @@ const styles = StyleSheet.create({
     minWidth: 280,
   },
   destinationCard: {
-    padding: 16,
-    width: 230,
+    width: 250,
+    minHeight: 220,
+    justifyContent: 'flex-end',
   },
-  destinationIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+  destinationCardTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.40)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  destinationReason: {
-    fontSize: 13,
-    lineHeight: 18,
+  destinationCardRegion: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '700',
+    marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  destinationCardReason: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(255,255,255,0.85)',
     marginTop: 8,
     minHeight: 54,
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  destinationCardPrice: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    marginTop: 10,
   },
   searchCard: {
     padding: 16,

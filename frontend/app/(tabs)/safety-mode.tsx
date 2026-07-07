@@ -12,6 +12,8 @@ import {
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
+import { HeroBanner } from '../../src/components/common/HeroBanner';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import {
   createSafeCheckin,
   deleteTrustedContact,
@@ -196,16 +198,24 @@ export default function SafetyModeScreen() {
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       >
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
-            <Text variant="headlineSmall">Safety Mode</Text>
-            <Text style={{ color: theme.colors.onSurfaceVariant }}>
-              Guidance only. TravelAI does not guarantee safety, dispatch emergency services, or contact trusted contacts automatically.
-            </Text>
-            <Accordion type="single" collapsible>
+        <HeroBanner
+          imageUrl={MOUNTAIN_IMAGES.snow}
+          height={180}
+          overlayOpacity={0.45}
+        >
+          <Text style={[styles.bannerTitle, { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }]}>Safety Mode</Text>
+          <Text style={[styles.bannerSubtitle, { color: 'rgba(255,255,255,0.90)', textShadowColor: 'rgba(0,0,0,0.30)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }]}>
+            Guidance only. TravelAI does not guarantee safety, dispatch emergency services, or contact trusted contacts automatically.
+          </Text>
+        </HeroBanner>
+
+        <View style={styles.container}>
+          <Card style={styles.card}>
+            <Card.Content style={styles.gap}>
+              <Accordion type="single" collapsible>
               {safetyInstructionItems.map((item, index) => (
                 <AccordionItem key={item.title} value={`safety-instruction-${index + 1}`}>
                   <AccordionHeader>
@@ -366,7 +376,8 @@ export default function SafetyModeScreen() {
             </Accordion>
           </Card.Content>
         </Card>
-      </ScrollView>
+      </View>
+    </ScrollView>
 
       <ContactDialog
         key={contactDialog?.id ?? (contactDialog === null ? 'new-contact' : 'closed-contact')}
@@ -499,6 +510,9 @@ function ContactDialog({
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     padding: 16,
     paddingBottom: 32,
@@ -506,6 +520,15 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     gap: 16,
+  },
+  bannerTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  bannerSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
   },
   card: {
     borderRadius: 8,

@@ -8,6 +8,7 @@ import { Button } from '../../src/components/common/Button';
 import { Card } from '../../src/components/common/Card';
 import { ConfirmationDialog } from '../../src/components/common/ConfirmationDialog';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
@@ -273,7 +274,7 @@ export default function PackingScreen() {
   if (!selectedTrip) {
     return (
       <ScreenContainer safeArea={false} contentContainerStyle={styles.center}>
-        <EmptyState title="No trips yet" description="Create a trip before generating a packing checklist." icon="bag-suitcase-outline" />
+        <EmptyState title="No trips yet" description="Create a trip before generating a packing checklist." icon="bag-suitcase-outline" imageUrl={MOUNTAIN_IMAGES.adventure} />
       </ScreenContainer>
     );
   }
@@ -374,7 +375,7 @@ export default function PackingScreen() {
         {packingQuery.isError && items.length === 0 ? (
           <ErrorState message="Could not load packing list." onRetry={() => packingQuery.refetch()} />
         ) : filteredItems.length === 0 ? (
-          <EmptyState title="No packing items" description="Generate a list or add custom items." icon="bag-personal-outline" actionLabel="Generate list" onAction={() => generateMutation.mutate()} />
+          <EmptyState title="No packing items" description="Generate a list or add custom items." icon="bag-personal-outline" actionLabel="Generate list" onAction={() => generateMutation.mutate()} imageUrl={MOUNTAIN_IMAGES.valley} />
         ) : (
           <View style={styles.itemList}>
             {filteredItems.map((item) => (

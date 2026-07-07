@@ -63,3 +63,23 @@ export const mountainDestinations = [
     rating: 4.5,
   },
 ];
+
+export function getDestinationImage(nameOrId: string): string {
+  const normalized = (nameOrId || '').toLowerCase();
+  if (normalized.includes('manali')) return MOUNTAIN_IMAGES.manali;
+  if (normalized.includes('ladakh')) return MOUNTAIN_IMAGES.ladakh;
+  if (normalized.includes('munnar')) return MOUNTAIN_IMAGES.munnar;
+  if (normalized.includes('swiss') || normalized.includes('alps')) return MOUNTAIN_IMAGES.swissAlps;
+  if (normalized.includes('coorg')) return MOUNTAIN_IMAGES.greenHills;
+  if (normalized.includes('pondicherry') || normalized.includes('beach') || normalized.includes('goa')) return MOUNTAIN_IMAGES.lake;
+  if (normalized.includes('udaipur') || normalized.includes('jaipur')) return MOUNTAIN_IMAGES.sunrise;
+  if (normalized.includes('uttarakhand') || normalized.includes('valley')) return MOUNTAIN_IMAGES.valley;
+  
+  const keys: (keyof typeof MOUNTAIN_IMAGES)[] = ['lake', 'road', 'valley', 'snow', 'adventure', 'sunrise', 'greenHills'];
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % keys.length;
+  return MOUNTAIN_IMAGES[keys[index]];
+}

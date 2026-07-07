@@ -42,14 +42,22 @@ export function ImageSlider({
   const scheme = useColorScheme();
   const isDark = theme.dark || scheme === 'dark';
   const [index, setIndex] = useState(0);
+  const [sliderWidth, setSliderWidth] = useState(SCREEN_W);
   const scrollRef = useRef<ScrollView>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const onLayout = useCallback((e: any) => {
+    const w = e.nativeEvent.layout.width;
+    if (w > 0 && w !== sliderWidth) {
+      setSliderWidth(w);
+    }
+  }, [sliderWidth]);
 
   const goTo = useCallback((nextIndex: number) => {
     const clamped = Math.max(0, Math.min(nextIndex, slides.length - 1));
     setIndex(clamped);
-    scrollRef.current?.scrollTo({ x: clamped * SCREEN_W, animated: true });
-  }, [slides.length]);
+    scrollRef.current?.scrollTo({ x: clamped * sliderWidth, animated: true });
+  }, [slides.length, sliderWidth]);
 
   const next = useCallback(() => {
     goTo(index >= slides.length - 1 ? 0 : index + 1);
@@ -70,15 +78,15 @@ export function ImageSlider({
 
   const onScroll = useCallback((e: any) => {
     const x = e.nativeEvent.contentOffset.x;
-    const newIndex = Math.round(x / SCREEN_W);
+    const newIndex = Math.round(x / sliderWidth);
     if (newIndex !== index) setIndex(newIndex);
-  }, [index]);
+  }, [index, sliderWidth]);
 
   if (slides.length === 0) return null;
 
   return (
     <AnimatedView type="fadeUp" delay={100} duration={700}>
-      <View style={[styles.container, { height, borderRadius }]}>
+      <View style={[styles.container, { height, borderRadius }]} onLayout={onLayout}>
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -87,14 +95,14 @@ export function ImageSlider({
           onMomentumScrollEnd={onScroll}
           scrollEventThrottle={200}
           decelerationRate="fast"
-          snapToInterval={SCREEN_W}
+          snapToInterval={sliderWidth}
           snapToAlignment="start"
         >
           {slides.map((slide) => (
             <ImageBackground
               key={slide.id}
               source={{ uri: slide.image }}
-              style={[styles.slide, { width: SCREEN_W, height }]}
+              style={[styles.slide, { width: sliderWidth, height }]}
               imageStyle={{ borderRadius }}
               resizeMode="cover"
             >

@@ -9,6 +9,8 @@ import { Button } from '../../src/components/common/Button';
 import { ChoiceChips } from '../../src/components/common/ChoiceChips';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { TextInput } from '../../src/components/common/TextInput';
+import { HeroBanner } from '../../src/components/common/HeroBanner';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { supabase } from '../../src/lib/supabase';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { useAuthStore } from '../../src/store/authStore';
@@ -366,43 +368,49 @@ export default function PlanTripScreen() {
 
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding>
-      <ScrollView contentContainerStyle={[styles.container, isWide && styles.wideContainer]} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <HeroBanner
+          imageUrl={MOUNTAIN_IMAGES.road}
+          height={isWide ? 200 : 160}
+          overlayOpacity={0.45}
+        >
           <View style={styles.headerTitleRow}>
-            <MaterialCommunityIcons name="map-plus" size={26} color={theme.colors.primary} />
-            <Text style={[styles.title, { color: theme.colors.onBackground }]}>Plan a Trip</Text>
+            <MaterialCommunityIcons name="map-plus" size={24} color="#FFFFFF" />
+            <Text style={[styles.title, { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }]}>Plan a Trip</Text>
           </View>
-          <Text style={[styles.stepCounter, { color: theme.colors.onSurfaceVariant }]}>
+          <Text style={[styles.stepCounter, { color: 'rgba(255,255,255,0.90)', textShadowColor: 'rgba(0,0,0,0.30)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }]}>
             Step {step + 1} of {planTripSteps.length}: {planTripSteps[step]}
           </Text>
-          <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progress} />
-        </View>
+          <ProgressBar progress={progress} color={theme.colors.secondary} style={styles.progress} />
+        </HeroBanner>
 
-        <View style={styles.demoActions}>
-          <Button mode="outlined" icon="auto-fix" onPress={applyDemoInput}>Use Hyderabad-Goa demo</Button>
-          <Button mode="text" icon="backup-restore" onPress={clearForm}>Reset</Button>
-        </View>
+        <View style={[styles.container, isWide && styles.wideContainer]}>
+          <View style={styles.demoActions}>
+            <Button mode="outlined" icon="auto-fix" onPress={applyDemoInput}>Use Hyderabad-Goa demo</Button>
+            <Button mode="text" icon="backup-restore" onPress={clearForm}>Reset</Button>
+          </View>
 
-        <View style={[styles.formPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
-          {renderStep()}
-          {!!errorMessage && (
-            <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.colors.error }]}>
-              {errorMessage}
-            </Text>
-          )}
-        </View>
+          <View style={[styles.formPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
+            {renderStep()}
+            {!!errorMessage && (
+              <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.colors.error }]}>
+                {errorMessage}
+              </Text>
+            )}
+          </View>
 
-        <View style={styles.footer}>
-          <Button mode="outlined" onPress={goBack} disabled={step === 0 || submitting}>
-            Back
-          </Button>
-          {step < editableStepCount - 1 ? (
-            <Button onPress={goNext} disabled={submitting}>Continue</Button>
-          ) : (
-            <Button onPress={handleSubmit(saveDraftTrip)} loading={submitting} disabled={!!createdTripId}>
-              Create draft
+          <View style={styles.footer}>
+            <Button mode="outlined" onPress={goBack} disabled={step === 0 || submitting}>
+              Back
             </Button>
-          )}
+            {step < editableStepCount - 1 ? (
+              <Button onPress={goNext} disabled={submitting}>Continue</Button>
+            ) : (
+              <Button onPress={handleSubmit(saveDraftTrip)} loading={submitting} disabled={!!createdTripId}>
+                Create draft
+              </Button>
+            )}
+          </View>
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -420,6 +428,9 @@ function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     padding: 16,
     paddingBottom: 32,

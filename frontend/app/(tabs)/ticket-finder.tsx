@@ -6,6 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '../../src/components/common/Button';
 import { Card } from '../../src/components/common/Card';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
@@ -198,7 +199,7 @@ export default function TicketFinderScreen() {
         {tripsQuery.isError && <ErrorState message="Trips could not be loaded. You can still search mock tickets." onRetry={() => tripsQuery.refetch()} />}
 
         {visibleResults.length === 0 ? (
-          <EmptyState title="No ticket results" description="Run a search or loosen filters. Provider failures will not crash this screen." icon="ticket-confirmation-outline" actionLabel="Search tickets" onAction={() => searchMutation.mutate()} />
+          <EmptyState title="No ticket results" description="Run a search or loosen filters. Provider failures will not crash this screen." icon="ticket-confirmation-outline" actionLabel="Search tickets" onAction={() => searchMutation.mutate()} imageUrl={MOUNTAIN_IMAGES.road} />
         ) : (
           <View style={styles.results}>
             {visibleResults.map((ticket) => (

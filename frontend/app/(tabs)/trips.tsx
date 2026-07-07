@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '../../src/components/common/Button';
 import { ConfirmationDialog } from '../../src/components/common/ConfirmationDialog';
 import { EmptyState } from '../../src/components/common/EmptyState';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
@@ -173,6 +174,7 @@ export default function TripsScreen() {
             icon="wallet-travel"
             actionLabel="Plan a Trip"
             onAction={() => router.push('/(tabs)/plan-trip')}
+            imageUrl={MOUNTAIN_IMAGES.valley}
           />
         ) : (
           <View style={[styles.tripGrid, isWide && styles.tripGridWide]}>

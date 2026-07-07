@@ -10,6 +10,8 @@ import { ErrorState } from '../../src/components/common/ErrorState';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { TextInput } from '../../src/components/common/TextInput';
+import { HeroBanner } from '../../src/components/common/HeroBanner';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import {
   Accordion,
   AccordionContent,
@@ -88,17 +90,21 @@ export default function SmartJourneyScreen() {
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         refreshControl={<RefreshControl refreshing={tripsQuery.isRefetching} onRefresh={() => tripsQuery.refetch()} />}
       >
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: theme.colors.onBackground }]}>Smart Journey</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-              Demo estimates compare total journey cost, not only base fare.
-            </Text>
-          </View>
-        </View>
+        <HeroBanner
+          imageUrl={MOUNTAIN_IMAGES.adventure}
+          height={180}
+          overlayOpacity={0.45}
+        >
+          <Text style={[styles.title, { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }]}>Smart Journey</Text>
+          <Text style={[styles.subtitle, { color: 'rgba(255,255,255,0.90)', textShadowColor: 'rgba(0,0,0,0.30)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }]}>
+            Demo estimates compare total journey cost, not only base fare.
+          </Text>
+        </HeroBanner>
+
+        <View style={styles.container}>
 
         <Card style={styles.panel}>
           <View style={styles.searchGrid}>
@@ -166,6 +172,7 @@ export default function SmartJourneyScreen() {
             ))}
           </View>
         )}
+        </View>
       </ScrollView>
       <Snackbar visible={!!message} onDismiss={() => setMessage('')} duration={4000}>{message}</Snackbar>
     </ScreenContainer>
@@ -314,17 +321,18 @@ function labelCase(value: string) {
 }
 
 function modeIcon(mode: JourneyMode) {
-  return {
+  return ({
     bus: 'bus',
     train: 'train',
     flight: 'airplane',
     cab: 'car',
     mixed: 'routes',
-  }[mode];
+  } as Record<JourneyMode, string>)[mode];
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 32, maxWidth: 1180, width: '100%', alignSelf: 'center' },
+  scrollContainer: { flexGrow: 1 },
+  container: { padding: 16, paddingBottom: 32, maxWidth: 1180, width: '100%', alignSelf: 'center', gap: 16 },
   header: { marginTop: 8, marginBottom: 8 },
   title: { fontSize: 28, fontWeight: '900' },
   subtitle: { fontSize: 14, lineHeight: 20, marginTop: 4 },

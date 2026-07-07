@@ -40,7 +40,7 @@ export function AnimatedView({
 }: AnimatedViewProps) {
   const initial = getInitialValues(type);
   const opacity = useRef(new Animated.Value(active ? initial.opacity : 1)).current;
-  const translateY = useRef(new Animated.Value(active ? initial.translateY : 0)).current;
+  const translateY = useRef(new Animated.Value(active ? initial.translateY ?? 0 : 0)).current;
   const translateX = useRef(new Animated.Value(active ? initial.translateX ?? 0 : 0)).current;
   const scale = useRef(new Animated.Value(active ? initial.scale ?? 1 : 1)).current;
 

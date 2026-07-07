@@ -18,6 +18,8 @@ import { discoverBudgetDestinations, parseRupeesToMinor } from '../../src/featur
 import { budgetDiscoveryTags, type BudgetDestinationSuggestion, type BudgetDiscoveryInput, type BudgetDiscoveryTag, type DiscoveryTransport } from '../../src/features/budgetDiscovery/types';
 import { useAuthStore } from '../../src/store/authStore';
 import { formatINR } from '../../src/utils/currency';
+import { HeroBanner } from '../../src/components/common/HeroBanner';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 
 const tagLabels: Record<BudgetDiscoveryTag, string> = {
   beach: 'Beach',
@@ -118,16 +120,24 @@ export default function BudgetDiscoveryScreen() {
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={runDiscovery} />}
       >
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
-            <Text variant="headlineSmall">Budget Discovery</Text>
-            <Text style={{ color: theme.colors.onSurfaceVariant }}>
-              Curated India-focused estimates. Costs are not live prices; verify transport, stay, fees, weather, and availability before booking.
-            </Text>
-            <View style={styles.grid}>
+        <HeroBanner
+          imageUrl={MOUNTAIN_IMAGES.greenHills}
+          height={180}
+          overlayOpacity={0.45}
+        >
+          <Text style={[styles.bannerTitle, { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }]}>Budget Discovery</Text>
+          <Text style={[styles.bannerSubtitle, { color: 'rgba(255,255,255,0.90)', textShadowColor: 'rgba(0,0,0,0.30)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }]}>
+            Curated India-focused estimates. Costs are not live prices; verify transport, stay, fees, weather, and availability before booking.
+          </Text>
+        </HeroBanner>
+
+        <View style={styles.container}>
+          <Card style={styles.card}>
+            <Card.Content style={styles.gap}>
+              <View style={styles.grid}>
               <TextInput label="Starting city" value={startingCity} onChangeText={setStartingCity} style={styles.input} />
               <TextInput label="Maximum budget (INR)" value={maxBudget} onChangeText={setMaxBudget} keyboardType="decimal-pad" style={styles.input} />
               <TextInput label="Travelers" value={travelerCount} onChangeText={setTravelerCount} keyboardType="number-pad" style={styles.input} />
@@ -191,6 +201,7 @@ export default function BudgetDiscoveryScreen() {
             creating={draftMutation.isPending}
           />
         ))}
+        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -275,6 +286,9 @@ function Metric({ label, value, strong }: { label: string; value: string; strong
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     padding: 16,
     paddingBottom: 32,
@@ -282,6 +296,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 1180,
     alignSelf: 'center',
+  },
+  bannerTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  bannerSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
   },
   card: {
     borderRadius: 8,
