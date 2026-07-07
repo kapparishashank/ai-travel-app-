@@ -6,6 +6,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
@@ -15,6 +16,10 @@ import { AnimateOnHover } from '../../src/components/common/AnimateOnHover';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { GlowingSearchBar } from '../../src/components/common/GlowingSearchBar';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
+import { AnimatedView } from '../../src/components/common/AnimatedView';
+import { ImageSlider } from '../../src/components/common/ImageSlider';
+import { GlassCard } from '../../src/components/common/GlassCard';
+import { MOUNTAIN_IMAGES, mountainDestinations } from '../../src/constants/images';
 import { useAuthStore } from '../../src/store/authStore';
 import {
   AlertCard,
@@ -58,30 +63,45 @@ export default function HomeScreen() {
     }
   };
 
+  const sliderSlides = [
+    { id: '1', image: MOUNTAIN_IMAGES.hero, title: 'Explore the Himalayas', subtitle: 'Breathtaking views await' },
+    { id: '2', image: MOUNTAIN_IMAGES.ladakh, title: 'Discover Ladakh', subtitle: 'High-altitude adventure' },
+    { id: '3', image: MOUNTAIN_IMAGES.munnar, title: 'Munnar Tea Gardens', subtitle: 'Peaceful hill station escape' },
+    { id: '4', image: MOUNTAIN_IMAGES.sunrise, title: 'Sunrise Over Peaks', subtitle: 'Start your journey at dawn' },
+  ];
+
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
         contentContainerStyle={[styles.container, isWide && styles.wideContainer]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       >
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={[styles.greeting, { color: theme.colors.onBackground }]}>
-              Hi {firstName}, where next?
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-              Keep plans, prices, packing, and safety in one calm place.
-            </Text>
-          </View>
-          <Button
-            icon="plus"
-            onPress={() => router.push('/(tabs)/plan-trip')}
-            accessibilityLabel="Plan a Trip"
-            style={styles.headerAction}
+        {/* Hero Banner */}
+        <AnimatedView type="fadeUp" duration={800}>
+          <ImageBackground
+            source={{ uri: MOUNTAIN_IMAGES.hero }}
+            style={styles.heroBg}
+            imageStyle={{ borderRadius: 20 }}
+            resizeMode="cover"
           >
-            Plan a Trip
-          </Button>
-        </View>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15,23,42,0.55)', borderRadius: 20 }]} />
+            <View style={styles.heroContent}>
+              <Text style={styles.heroGreeting}>Hi {firstName},</Text>
+              <Text style={styles.heroTitle}>Plan Smarter Trips with AI</Text>
+              <Text style={styles.heroSubtitle}>
+                Discover destinations, compare travel options, manage expenses, stay safe, and pack smarter with your AI travel companion.
+              </Text>
+              <View style={[styles.heroActions, isWide && styles.heroActionsRow]}>
+                <Button icon="map-plus" onPress={() => router.push('/(tabs)/plan-trip')} color="#FFFFFF" style={styles.heroBtn}>
+                  Start Planning
+                </Button>
+                <Button mode="outlined" icon="compass-outline" onPress={() => router.push('/(tabs)/explore')} color="#FFFFFF" style={styles.heroBtnOutlined}>
+                  Explore Destinations
+                </Button>
+              </View>
+            </View>
+          </ImageBackground>
+        </AnimatedView>
 
         <GlowingSearchBar
           placeholder="Search destinations, trips, or routes"
@@ -90,6 +110,9 @@ export default function HomeScreen() {
           onSearch={submitSearch}
           style={styles.search}
         />
+
+        {/* Image Slider */}
+        <ImageSlider slides={sliderSlides} height={isWide ? 340 : 260} />
 
         {loading ? (
           <>
@@ -100,125 +123,168 @@ export default function HomeScreen() {
         ) : (
           <View style={[styles.contentGrid, isWide && styles.contentGridWide]}>
             <View style={styles.mainColumn}>
-              <View style={[styles.shortcutGrid, isWide && styles.shortcutGridWide]}>
-                <ShortcutCard
-                  title="Smart Journey"
-                  description="Compare route options with time, comfort, and hidden costs."
-                  icon="map-search-outline"
-                  onPress={() => router.push('/(tabs)/smart-journey')}
-                />
-                <ShortcutCard
-                  title="Budget Discovery"
-                  description="Find destinations that match your budget and travel pace."
-                  icon="wallet-outline"
-                  onPress={() => router.push('/(tabs)/budget-discovery')}
-                />
-              </View>
+              <AnimatedView type="fadeUp" delay={100}>
+                <View style={[styles.shortcutGrid, isWide && styles.shortcutGridWide]}>
+                  <ShortcutCard
+                    title="Smart Journey"
+                    description="Compare route options with time, comfort, and hidden costs."
+                    icon="map-search-outline"
+                    onPress={() => router.push('/(tabs)/smart-journey')}
+                  />
+                  <ShortcutCard
+                    title="Budget Discovery"
+                    description="Find destinations that match your budget and travel pace."
+                    icon="wallet-outline"
+                    onPress={() => router.push('/(tabs)/budget-discovery')}
+                  />
+                </View>
+              </AnimatedView>
 
-              <SectionHeader title="Upcoming trip" />
-              {upcomingTrip ? (
-                <TripCard trip={upcomingTrip} onPress={() => router.push(`/(tabs)/trip/${upcomingTrip.id}`)} />
-              ) : (
-                <EmptyState
-                  title="No trips yet"
-                  description="Create your first trip to unlock itinerary, packing, safety, and expense tools."
-                  icon="airplane-plus"
-                  actionLabel="Plan a Trip"
-                  onAction={() => router.push('/(tabs)/plan-trip')}
-                />
-              )}
+              <AnimatedView type="fadeUp" delay={150}>
+                <SectionHeader title="Upcoming trip" />
+                {upcomingTrip ? (
+                  <TripCard trip={upcomingTrip} onPress={() => router.push(`/(tabs)/trip/${upcomingTrip.id}`)} />
+                ) : (
+                  <EmptyState
+                    title="No trips yet"
+                    description="Create your first trip to unlock itinerary, packing, safety, and expense tools."
+                    icon="airplane-plus"
+                    actionLabel="Plan a Trip"
+                    onAction={() => router.push('/(tabs)/plan-trip')}
+                  />
+                )}
+              </AnimatedView>
 
               {isTripNear && upcomingTrip && (
-                <ShortcutCard
-                  title="Packing reminder"
-                  description={`${upcomingTrip.destination} is coming up soon. Review documents, weather gear, and shared items.`}
-                  icon="bag-suitcase-outline"
-                  onPress={() => router.push('/(tabs)/packing')}
-                />
+                <AnimatedView type="slideLeft" delay={100}>
+                  <ShortcutCard
+                    title="Packing reminder"
+                    description={`${upcomingTrip.destination} is coming up soon. Review documents, weather gear, and shared items.`}
+                    icon="bag-suitcase-outline"
+                    onPress={() => router.push('/(tabs)/packing')}
+                  />
+                </AnimatedView>
               )}
 
               {(activeTrip || upcomingTrip?.status === 'active') && (
-                <ShortcutCard
-                  title="Safety Mode"
-                  description="Start check-ins and keep trusted contacts ready while traveling."
-                  icon="shield-check-outline"
-                  onPress={() => router.push('/(tabs)/safety-mode')}
-                />
+                <AnimatedView type="slideRight" delay={100}>
+                  <ShortcutCard
+                    title="Safety Mode"
+                    description="Start check-ins and keep trusted contacts ready while traveling."
+                    icon="shield-check-outline"
+                    onPress={() => router.push('/(tabs)/safety-mode')}
+                  />
+                </AnimatedView>
               )}
 
-              <SectionHeader
-                title="Active price alerts"
-                action={
-                  <AnimateOnHover>
-                    <Text
-                      accessibilityRole="button"
-                      onPress={() => router.push('/(tabs)/price-alerts')}
-                      style={[styles.textAction, { color: theme.colors.primary }]}
-                    >
-                      View all
-                    </Text>
-                  </AnimateOnHover>
-                }
-              />
-              {alerts.length ? (
+              <AnimatedView type="fadeUp" delay={150}>
+                <SectionHeader
+                  title="Active price alerts"
+                  action={
+                    <AnimateOnHover>
+                      <Text
+                        accessibilityRole="button"
+                        onPress={() => router.push('/(tabs)/price-alerts')}
+                        style={[styles.textAction, { color: theme.colors.primary }]}
+                      >
+                        View all
+                      </Text>
+                    </AnimateOnHover>
+                  }
+                />
+                {alerts.length ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                    {alerts.map((alert) => (
+                      <AlertCard
+                        key={alert.id}
+                        alert={alert}
+                        onPress={() => router.push('/(tabs)/price-alerts')}
+                      />
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <EmptyState
+                    title="No active alerts"
+                    description="Create a route alert and TravelAI will watch price movement for you."
+                    icon="bell-plus-outline"
+                    actionLabel="Create alert"
+                    onAction={() => router.push('/(tabs)/price-alerts')}
+                  />
+                )}
+              </AnimatedView>
+
+              {/* Mountain Destinations */}
+              <AnimatedView type="fadeUp" delay={200}>
+                <SectionHeader title="Mountain Destinations" />
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                  {alerts.map((alert) => (
-                    <AlertCard
-                      key={alert.id}
-                      alert={alert}
-                      onPress={() => router.push('/(tabs)/price-alerts')}
+                  {mountainDestinations.map((dest, i) => (
+                    <GlassCard
+                      key={dest.id}
+                      imageUrl={dest.image}
+                      style={[styles.mountainCard, { width: isWide ? 280 : 240 }]}
+                      onPress={() => router.push(`/(tabs)/explore`)}
+                      accessibilityLabel={`Explore ${dest.title}`}
+                    >
+                      <Text style={styles.mountainCardTitle}>{dest.title}</Text>
+                      <Text style={styles.mountainCardDesc}>{dest.description}</Text>
+                      <View style={styles.mountainCardMeta}>
+                        <MaterialCommunityIcons name="currency-inr" size={14} color="#FFFFFF" />
+                        <Text style={styles.mountainCardMetaText}>{dest.budget}</Text>
+                      </View>
+                      <View style={styles.mountainCardMeta}>
+                        <MaterialCommunityIcons name="calendar-range" size={14} color="rgba(255,255,255,0.80)" />
+                        <Text style={[styles.mountainCardMetaText, { color: 'rgba(255,255,255,0.80)' }]}>{dest.bestTime}</Text>
+                      </View>
+                    </GlassCard>
+                  ))}
+                </ScrollView>
+              </AnimatedView>
+
+              <AnimatedView type="fadeUp" delay={150}>
+                <SectionHeader title="Recommended destinations" />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+                  {destinations.map((destination) => (
+                    <DestinationCard
+                      key={destination.id}
+                      destination={destination}
+                      onPress={() => router.push(`/(tabs)/destination/${destination.id}`)}
                     />
                   ))}
                 </ScrollView>
-              ) : (
-                <EmptyState
-                  title="No active alerts"
-                  description="Create a route alert and TravelAI will watch price movement for you."
-                  icon="bell-plus-outline"
-                  actionLabel="Create alert"
-                  onAction={() => router.push('/(tabs)/price-alerts')}
-                />
-              )}
-
-              <SectionHeader title="Recommended destinations" />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                {destinations.map((destination) => (
-                  <DestinationCard
-                    key={destination.id}
-                    destination={destination}
-                    onPress={() => router.push(`/(tabs)/destination/${destination.id}`)}
-                  />
-                ))}
-              </ScrollView>
+              </AnimatedView>
             </View>
 
             <View style={[styles.sideColumn, isWide && styles.sideColumnWide]}>
-              <View style={[styles.tipPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
-                <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={theme.colors.secondary} />
-                <Text style={[styles.tipTitle, { color: theme.colors.onSurface }]}>First-time traveler tip</Text>
-                <Text style={[styles.tipBody, { color: theme.colors.onSurfaceVariant }]}>
-                  Start with dates and budget. You can skip preferences and refine the plan later.
-                </Text>
-              </View>
+              <AnimatedView type="slideRight" delay={200}>
+                <View style={[styles.tipPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
+                  <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={theme.colors.secondary} />
+                  <Text style={[styles.tipTitle, { color: theme.colors.onSurface }]}>First-time traveler tip</Text>
+                  <Text style={[styles.tipBody, { color: theme.colors.onSurfaceVariant }]}>
+                    Start with dates and budget. You can skip preferences and refine the plan later.
+                  </Text>
+                </View>
+              </AnimatedView>
 
-              <SectionHeader title="Recent searches" />
-              {displayedSearches.length ? (
-                displayedSearches.map((item) => (
-                  <RecentSearchCard
-                    key={item.id}
-                    search={item}
-                    onPress={() => router.push(`/(tabs)/search/${item.id}`)}
+              <AnimatedView type="slideRight" delay={250}>
+                <SectionHeader title="Recent searches" />
+                {displayedSearches.length ? (
+                  displayedSearches.map((item) => (
+                    <RecentSearchCard
+                      key={item.id}
+                      search={item}
+                      onPress={() => router.push(`/(tabs)/search/${item.id}`)}
+                    />
+                  ))
+                ) : (
+                  <EmptyState
+                    title="No recent searches"
+                    description="Search a destination or route to resume it later."
+                    icon="history"
+                    actionLabel="Explore"
+                    onAction={() => router.push('/(tabs)/explore')}
                   />
-                ))
-              ) : (
-                <EmptyState
-                  title="No recent searches"
-                  description="Search a destination or route to resume it later."
-                  icon="history"
-                  actionLabel="Explore"
-                  onAction={() => router.push('/(tabs)/explore')}
-                />
-              )}
+                )}
+              </AnimatedView>
             </View>
           </View>
         )}
@@ -238,31 +304,61 @@ const styles = StyleSheet.create({
     maxWidth: 1180,
     paddingHorizontal: 24,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16,
-    marginTop: 12,
+  heroBg: {
+    height: 380,
+    borderRadius: 20,
+    overflow: 'hidden',
     marginBottom: 16,
+    justifyContent: 'flex-end',
   },
-  headerText: {
-    flex: 1,
+  heroContent: {
+    padding: 24,
+    position: 'relative',
+    zIndex: 2,
   },
-  greeting: {
-    fontSize: 28,
+  heroGreeting: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 6,
+  },
+  heroTitle: {
+    fontSize: 32,
     fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 38,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
-  subtitle: {
+  heroSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 8,
+    maxWidth: 560,
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  headerAction: {
-    minWidth: 128,
+  heroActions: {
+    marginTop: 18,
+    gap: 10,
+  },
+  heroActionsRow: {
+    flexDirection: 'row',
+  },
+  heroBtn: {
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderColor: 'rgba(255,255,255,0.40)',
+    borderWidth: 1,
+  },
+  heroBtnOutlined: {
+    borderColor: 'rgba(255,255,255,0.40)',
+    borderWidth: 1,
   },
   search: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   contentGrid: {
     gap: 18,
@@ -297,7 +393,7 @@ const styles = StyleSheet.create({
   },
   tipPanel: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 16,
     padding: 16,
     marginTop: 16,
   },
@@ -310,5 +406,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: 4,
+  },
+  mountainCard: {
+    padding: 16,
+    width: 240,
+    minHeight: 200,
+    justifyContent: 'flex-end',
+  },
+  mountainCardTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.40)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  mountainCardDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 4,
+    lineHeight: 17,
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  mountainCardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  mountainCardMetaText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.30)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });
