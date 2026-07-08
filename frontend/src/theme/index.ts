@@ -4,7 +4,7 @@ import type { MD3Theme } from 'react-native-paper';
 // TravelAI Custom Theme
 // Primary: Deep Indigo/Blue — professional travel feel
 // Secondary: Amber — warm accent for CTAs
-// Surface: Elevated dark card look
+// Surface: Minimal mountain-line travel canvas
 
 export const TravelAIColors = {
   // Brand palette
@@ -38,11 +38,11 @@ export const TravelAIColors = {
   liveLabel: '#10B981',       // Green — live confirmed data
 
   // Surfaces
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  surfaceVariant: '#F1F5F9',
-  outline: '#CBD5E1',
-  outlineVariant: '#E2E8F0',
+  background: '#F7F1E7',
+  surface: '#FFFDF8',
+  surfaceVariant: '#EEE4D5',
+  outline: '#CDBFAE',
+  outlineVariant: '#E3D7C8',
 
   // Dark mode surfaces
   darkBackground: '#0F172A',

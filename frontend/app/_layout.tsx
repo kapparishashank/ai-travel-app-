@@ -3,10 +3,10 @@ import { useSegments, useRouter, Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useColorScheme, View, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { queryClient } from '../src/lib/queryClient';
 import { useAuthStore } from '../src/store/authStore';
-import { TravelAILightTheme, TravelAIDarkTheme } from '../src/theme';
+import { TravelAILightTheme } from '../src/theme';
 import { Loading } from '../src/components/common/Loading';
 import { Button } from '../src/components/common/Button';
 import { getAuthRedirectTarget, isProfileComplete } from '../src/features/auth/guards';
@@ -15,7 +15,7 @@ import { OfflineIndicator } from '../src/features/offline/OfflineIndicator';
 // Global Error Boundary
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F8FAFC' }}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F7F1E7' }}>
       <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#EF4444', marginBottom: 8 }}>
         Application Error
       </Text>
@@ -31,9 +31,7 @@ function RootLayoutNav() {
   const { authUser, user, loading, initialized, emailVerified, initialize } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  
-  const theme = colorScheme === 'dark' ? TravelAIDarkTheme : TravelAILightTheme;
+  const theme = TravelAILightTheme;
 
   // Initialize Auth
   useEffect(() => {

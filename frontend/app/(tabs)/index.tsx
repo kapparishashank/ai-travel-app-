@@ -6,8 +6,9 @@ import {
   Text,
   useWindowDimensions,
   View,
-  ImageBackground,
+  Platform,
 } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { AnimatedView } from '../../src/components/common/AnimatedView';
 import { ImageSlider } from '../../src/components/common/ImageSlider';
 import { GlassCard } from '../../src/components/common/GlassCard';
+import { MountainPattern } from '../../src/components/common/MountainPattern';
 import { MOUNTAIN_IMAGES, mountainDestinations } from '../../src/constants/images';
 import { useAuthStore } from '../../src/store/authStore';
 import {
@@ -78,29 +80,26 @@ export default function HomeScreen() {
       >
         {/* Hero Banner */}
         <AnimatedView type="fadeUp" duration={800}>
-          <ImageBackground
-            source={{ uri: MOUNTAIN_IMAGES.hero }}
-            style={styles.heroBg}
-            imageStyle={{ borderRadius: 20 }}
-            resizeMode="cover"
-          >
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(15,23,42,0.55)', borderRadius: 20 }]} />
+          <View style={[styles.heroBg, liquidGlassWebStyle, { borderColor: theme.colors.outlineVariant }]}>
+            <MountainPattern animated opacity={0.34} position="bottomRight" size="lg" />
+            <MountainPattern opacity={0.18} position="bottomLeft" size="md" />
+            <View pointerEvents="none" style={styles.heroShine} />
             <View style={styles.heroContent}>
-              <Text style={styles.heroGreeting}>Hi {firstName},</Text>
-              <Text style={styles.heroTitle}>Plan Smarter Trips with AI</Text>
-              <Text style={styles.heroSubtitle}>
+              <Text style={[styles.heroGreeting, { color: theme.colors.onSurfaceVariant }]}>Hi {firstName},</Text>
+              <Text style={[styles.heroTitle, { color: theme.colors.onSurface }]}>Plan Smarter Trips with AI</Text>
+              <Text style={[styles.heroSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                 Discover destinations, compare travel options, manage expenses, stay safe, and pack smarter with your AI travel companion.
               </Text>
               <View style={[styles.heroActions, isWide && styles.heroActionsRow]}>
-                <Button icon="map-plus" onPress={() => router.push('/(tabs)/plan-trip')} color="#FFFFFF" style={styles.heroBtn}>
+                <Button icon="map-plus" onPress={() => router.push('/(tabs)/plan-trip')} style={styles.heroBtn}>
                   Start Planning
                 </Button>
-                <Button mode="outlined" icon="compass-outline" onPress={() => router.push('/(tabs)/explore')} color="#FFFFFF" style={styles.heroBtnOutlined}>
+                <Button mode="outlined" icon="compass-outline" onPress={() => router.push('/(tabs)/explore')} style={styles.heroBtnOutlined}>
                   Explore Destinations
                 </Button>
               </View>
             </View>
-          </ImageBackground>
+          </View>
         </AnimatedView>
 
         <GlowingSearchBar
@@ -231,6 +230,7 @@ export default function HomeScreen() {
                     <GlassCard
                       key={dest.id}
                       imageUrl={dest.image}
+                      overlayOpacity={0.12}
                       style={[styles.mountainCard, { width: isWide ? 280 : 240 }]}
                       onPress={() => router.push(`/(tabs)/explore`)}
                       accessibilityLabel={`Explore ${dest.title}`}
@@ -266,12 +266,16 @@ export default function HomeScreen() {
 
             <View style={[styles.sideColumn, isWide && styles.sideColumnWide]}>
               <AnimatedView type="slideRight" delay={200}>
-                <View style={[styles.tipPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
+                <View style={[styles.tipPanel, liquidGlassWebStyle, { borderColor: theme.colors.outlineVariant }]}>
+                  <MountainPattern opacity={0.13} position="bottomRight" size="sm" />
+                  <View pointerEvents="none" style={styles.tipShine} />
+                  <View style={styles.tipContent}>
                   <MaterialCommunityIcons name="lightbulb-on-outline" size={24} color={theme.colors.secondary} />
                   <Text style={[styles.tipTitle, { color: theme.colors.onSurface }]}>First-time traveler tip</Text>
                   <Text style={[styles.tipBody, { color: theme.colors.onSurfaceVariant }]}>
                     Start with dates and budget. You can skip preferences and refine the plan later.
                   </Text>
+                  </View>
                 </View>
               </AnimatedView>
 
@@ -304,6 +308,14 @@ export default function HomeScreen() {
   );
 }
 
+const liquidGlassWebStyle = Platform.select({
+  web: {
+    backdropFilter: 'blur(22px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(180%)',
+  } as ViewStyle,
+  default: {},
+});
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -317,10 +329,17 @@ const styles = StyleSheet.create({
   },
   heroBg: {
     height: 380,
-    borderRadius: 20,
+    borderRadius: 28,
     overflow: 'hidden',
     marginBottom: 16,
     justifyContent: 'flex-end',
+    backgroundColor: 'rgba(255,255,255,0.46)',
+    borderWidth: 1,
+    shadowColor: '#3B2F22',
+    shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.12,
+    shadowRadius: 34,
+    elevation: 8,
   },
   heroContent: {
     padding: 24,
@@ -336,21 +355,13 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#FFFFFF',
     lineHeight: 38,
-    textShadowColor: 'rgba(0,0,0,0.35)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
   },
   heroSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: 'rgba(255,255,255,0.85)',
     marginTop: 8,
     maxWidth: 560,
-    textShadowColor: 'rgba(0,0,0,0.30)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   heroActions: {
     marginTop: 18,
@@ -360,13 +371,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   heroBtn: {
-    backgroundColor: 'rgba(255,255,255,0.20)',
-    borderColor: 'rgba(255,255,255,0.40)',
-    borderWidth: 1,
+    shadowColor: '#3B2F22',
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
   heroBtnOutlined: {
-    borderColor: 'rgba(255,255,255,0.40)',
+    backgroundColor: 'rgba(255,255,255,0.34)',
+    borderColor: 'rgba(255,255,255,0.58)',
     borderWidth: 1,
+  },
+  heroShine: {
+    position: 'absolute',
+    top: -120,
+    left: -120,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    opacity: 0.36,
   },
   search: {
     marginBottom: 12,
@@ -404,9 +427,30 @@ const styles = StyleSheet.create({
   },
   tipPanel: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 28,
     padding: 16,
     marginTop: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    shadowColor: '#3B2F22',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.1,
+    shadowRadius: 28,
+    elevation: 5,
+  },
+  tipContent: {
+    position: 'relative',
+    zIndex: 2,
+  },
+  tipShine: {
+    position: 'absolute',
+    top: -80,
+    left: -80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    opacity: 0.38,
   },
   tipTitle: {
     fontSize: 16,

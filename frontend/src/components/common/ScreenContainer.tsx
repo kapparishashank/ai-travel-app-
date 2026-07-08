@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
+import { MountainPattern } from './MountainPattern';
 
 interface ScreenContainerProps {
   children: React.ReactNode;
@@ -66,12 +67,24 @@ export function ScreenContainer({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        {content}
+        <View style={styles.patternLayer}>
+          <MountainPattern animated opacity={theme.dark ? 0.1 : 0.22} position="bottomRight" size="lg" />
+          <MountainPattern opacity={theme.dark ? 0.06 : 0.14} position="topRight" size="md" />
+          <View style={styles.contentLayer}>{content}</View>
+        </View>
       </KeyboardAvoidingView>
     );
   }
 
-  return <View style={containerStyle}>{content}</View>;
+  return (
+    <View style={containerStyle}>
+      <View style={styles.patternLayer}>
+        <MountainPattern animated opacity={theme.dark ? 0.1 : 0.22} position="bottomRight" size="lg" />
+        <MountainPattern opacity={theme.dark ? 0.06 : 0.14} position="topRight" size="md" />
+        <View style={styles.contentLayer}>{content}</View>
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -86,5 +99,14 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  patternLayer: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  contentLayer: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 1,
   },
 });

@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Text, ImageBackground } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground, Platform } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { Button } from './Button';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AnimatedView } from './AnimatedView';
+import { MountainPattern } from './MountainPattern';
 
 interface EmptyStateProps {
   title: string;
@@ -59,12 +61,24 @@ export function EmptyState({
 
   return (
     <AnimatedView type="fadeUp" delay={150} duration={600}>
-      <View style={[styles.container, compact && styles.compact, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}>
+      <View style={[styles.container, liquidGlassWebStyle, compact && styles.compact, { borderColor: theme.colors.outlineVariant }]}>
+        <MountainPattern opacity={0.16} position="bottomRight" size="md" />
+        <View pointerEvents="none" style={styles.liquidShine} />
+        <View style={styles.contentLayer}>
         {inner}
+        </View>
       </View>
     </AnimatedView>
   );
 }
+
+const liquidGlassWebStyle = Platform.select({
+  web: {
+    backdropFilter: 'blur(22px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(180%)',
+  } as ViewStyle,
+  default: {},
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -72,8 +86,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 28,
     marginVertical: 8,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    shadowColor: '#3B2F22',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.1,
+    shadowRadius: 28,
+    elevation: 5,
   },
   imageContainer: {
     overflow: 'hidden',
@@ -81,6 +102,21 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     minHeight: 220,
     justifyContent: 'center',
+  },
+  contentLayer: {
+    position: 'relative',
+    zIndex: 2,
+    alignItems: 'center',
+  },
+  liquidShine: {
+    position: 'absolute',
+    top: -92,
+    left: -92,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    opacity: 0.38,
   },
   imageInner: {
     padding: 24,

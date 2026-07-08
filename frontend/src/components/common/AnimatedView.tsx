@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, ViewStyle, StyleProp } from 'react-native';
 
 type AnimationType = 'fadeUp' | 'fadeDown' | 'slideLeft' | 'slideRight' | 'scale' | 'fade';
@@ -39,10 +39,10 @@ export function AnimatedView({
   active = true,
 }: AnimatedViewProps) {
   const initial = getInitialValues(type);
-  const opacity = useRef(new Animated.Value(active ? initial.opacity : 1)).current;
-  const translateY = useRef(new Animated.Value(active ? initial.translateY ?? 0 : 0)).current;
-  const translateX = useRef(new Animated.Value(active ? initial.translateX ?? 0 : 0)).current;
-  const scale = useRef(new Animated.Value(active ? initial.scale ?? 1 : 1)).current;
+  const [opacity] = useState(() => new Animated.Value(active ? initial.opacity : 1));
+  const [translateY] = useState(() => new Animated.Value(active ? initial.translateY ?? 0 : 0));
+  const [translateX] = useState(() => new Animated.Value(active ? initial.translateX ?? 0 : 0));
+  const [scale] = useState(() => new Animated.Value(active ? initial.scale ?? 1 : 1));
 
   useEffect(() => {
     if (!active) return;

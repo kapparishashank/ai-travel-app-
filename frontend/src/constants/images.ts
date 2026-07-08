@@ -1,17 +1,17 @@
 // Premium mountain destination images from Unsplash (royalty-free, optimized)
 export const MOUNTAIN_IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=80',
-  manali: 'https://images.unsplash.com/photo-1518002171953-a080ee817e1f?w=800&q=80',
-  ladakh: 'https://images.unsplash.com/photo-1562602876-0c50d6244924?w=800&q=80',
-  munnar: 'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?w=800&q=80',
-  swissAlps: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
-  sunrise: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80',
-  lake: 'https://images.unsplash.com/photo-1439853949127-fa647821eba0?w=800&q=80',
-  road: 'https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&q=80',
-  valley: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800&q=80',
-  snow: 'https://images.unsplash.com/photo-1519681393798-3828fb4090bb?w=800&q=80',
-  greenHills: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80',
-  adventure: 'https://images.unsplash.com/photo-1520962889616-a5f98b4506cd?w=800&q=80',
+  hero: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=90',
+  manali: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=90',
+  ladakh: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=90',
+  munnar: 'https://images.unsplash.com/photo-1609766857041-ed402ea8069a?auto=format&fit=crop&w=1200&q=90',
+  swissAlps: 'https://images.unsplash.com/photo-1519681393798-3828fb4090bb?auto=format&fit=crop&w=1200&q=90',
+  sunrise: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=90',
+  lake: 'https://images.unsplash.com/photo-1439853949127-fa647821eba0?auto=format&fit=crop&w=1200&q=90',
+  road: 'https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?auto=format&fit=crop&w=1200&q=90',
+  valley: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1200&q=90',
+  snow: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=90',
+  greenHills: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=90',
+  adventure: 'https://images.unsplash.com/photo-1520962889616-a5f98b4506cd?auto=format&fit=crop&w=1200&q=90',
 } as const;
 
 export type MountainImageKey = keyof typeof MOUNTAIN_IMAGES;

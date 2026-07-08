@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
+import { MountainPattern } from '../../src/components/common/MountainPattern';
 import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { HiddenCostCalculator } from '../../src/features/hiddenCosts/HiddenCostCalculator';
 import { hyderabadGoaHiddenCosts } from '../../src/features/hiddenCosts/demoData';
@@ -179,8 +181,10 @@ export default function ExpensesScreen() {
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
+        <Card style={[styles.card, liquidGlassWebStyle]}>
+          <Card.Content style={[styles.gap, styles.cardContent]}>
+            <MountainPattern opacity={0.1} position="bottomRight" size="sm" />
+            <View pointerEvents="none" style={styles.liquidShine} />
             <View style={styles.headerRow}>
               <View style={styles.flex}>
                 <Text variant="headlineSmall">Split Expenses</Text>
@@ -203,8 +207,10 @@ export default function ExpensesScreen() {
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
+        <Card style={[styles.card, liquidGlassWebStyle]}>
+          <Card.Content style={[styles.gap, styles.cardContent]}>
+            <MountainPattern opacity={0.1} position="bottomRight" size="sm" />
+            <View pointerEvents="none" style={styles.liquidShine} />
             <Text variant="titleMedium">Balances</Text>
             {balances.map((balance) => (
               <View key={balance.memberId} style={styles.balanceLine}>
@@ -218,8 +224,10 @@ export default function ExpensesScreen() {
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
+        <Card style={[styles.card, liquidGlassWebStyle]}>
+          <Card.Content style={[styles.gap, styles.cardContent]}>
+            <MountainPattern opacity={0.1} position="bottomRight" size="sm" />
+            <View pointerEvents="none" style={styles.liquidShine} />
             <Text variant="titleMedium">Expenses</Text>
             {data.expenses.length === 0 ? (
               <Text>No shared expenses yet.</Text>
@@ -254,8 +262,10 @@ export default function ExpensesScreen() {
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
-          <Card.Content style={styles.gap}>
+        <Card style={[styles.card, liquidGlassWebStyle]}>
+          <Card.Content style={[styles.gap, styles.cardContent]}>
+            <MountainPattern opacity={0.1} position="bottomRight" size="sm" />
+            <View pointerEvents="none" style={styles.liquidShine} />
             <Text variant="titleMedium">Suggested settlements</Text>
             {settlements.length === 0 ? (
               <Text>Everyone is settled up.</Text>
@@ -458,6 +468,17 @@ function ExpenseDialog({
   );
 }
 
+const liquidGlassWebStyle = Platform.select({
+  web: {
+    backdropFilter: 'blur(22px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(180%)',
+    transitionDuration: '350ms',
+    transitionProperty: 'transform, box-shadow',
+    transitionTimingFunction: 'ease',
+  } as ViewStyle,
+  default: {},
+});
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -468,10 +489,23 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    borderRadius: 8,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.55)',
+    shadowColor: '#3B2F22',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.12,
+    shadowRadius: 30,
+    elevation: 6,
   },
   gap: {
     gap: 12,
+  },
+  cardContent: {
+    position: 'relative',
+    overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
@@ -492,8 +526,9 @@ const styles = StyleSheet.create({
     minWidth: 160,
     flex: 1,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 18,
     padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.42)',
   },
   summaryLabel: {
     fontSize: 12,
@@ -532,5 +567,15 @@ const styles = StyleSheet.create({
   },
   error: {
     color: '#b42318',
+  },
+  liquidShine: {
+    position: 'absolute',
+    top: -92,
+    left: -92,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    opacity: 0.36,
   },
 });

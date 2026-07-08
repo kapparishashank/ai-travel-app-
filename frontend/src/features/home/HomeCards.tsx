@@ -112,12 +112,12 @@ export function DestinationCard({
   destination: HomeDestination;
   onPress: () => void;
 }) {
-  const theme = useTheme();
   const imageUrl = getDestinationImage(destination.name || destination.id);
 
   return (
     <GlassCard
       imageUrl={imageUrl}
+      overlayOpacity={0.12}
       onPress={onPress}
       style={styles.destinationCard}
       accessibilityLabel={`Explore ${destination.name}`}
