@@ -21,11 +21,10 @@ import { AnimatedView } from '../../src/components/common/AnimatedView';
 import { ImageSlider } from '../../src/components/common/ImageSlider';
 import { GlassCard } from '../../src/components/common/GlassCard';
 import { MountainPattern } from '../../src/components/common/MountainPattern';
-import { MOUNTAIN_IMAGES, mountainDestinations } from '../../src/constants/images';
+import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { useAuthStore } from '../../src/store/authStore';
 import {
   AlertCard,
-  DestinationCard,
   RecentSearchCard,
   SectionHeader,
   ShortcutCard,
@@ -42,7 +41,6 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const {
     alerts,
-    destinations,
     searches,
     upcomingTrip,
     activeTrip,
@@ -222,46 +220,6 @@ export default function HomeScreen() {
                 )}
               </AnimatedView>
 
-              {/* Mountain Destinations */}
-              <AnimatedView type="fadeUp" delay={200}>
-                <SectionHeader title="Mountain Destinations" />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                  {mountainDestinations.map((dest, i) => (
-                    <GlassCard
-                      key={dest.id}
-                      imageUrl={dest.image}
-                      overlayOpacity={0.12}
-                      style={[styles.mountainCard, { width: isWide ? 280 : 240 }]}
-                      onPress={() => router.push(`/(tabs)/explore`)}
-                      accessibilityLabel={`Explore ${dest.title}`}
-                    >
-                      <Text style={styles.mountainCardTitle}>{dest.title}</Text>
-                      <Text style={styles.mountainCardDesc}>{dest.description}</Text>
-                      <View style={styles.mountainCardMeta}>
-                        <MaterialCommunityIcons name="currency-inr" size={14} color="#FFFFFF" />
-                        <Text style={styles.mountainCardMetaText}>{dest.budget}</Text>
-                      </View>
-                      <View style={styles.mountainCardMeta}>
-                        <MaterialCommunityIcons name="calendar-range" size={14} color="rgba(255,255,255,0.80)" />
-                        <Text style={[styles.mountainCardMetaText, { color: 'rgba(255,255,255,0.80)' }]}>{dest.bestTime}</Text>
-                      </View>
-                    </GlassCard>
-                  ))}
-                </ScrollView>
-              </AnimatedView>
-
-              <AnimatedView type="fadeUp" delay={150}>
-                <SectionHeader title="Recommended destinations" />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
-                  {destinations.map((destination) => (
-                    <DestinationCard
-                      key={destination.id}
-                      destination={destination}
-                      onPress={() => router.push(`/(tabs)/destination/${destination.id}`)}
-                    />
-                  ))}
-                </ScrollView>
-              </AnimatedView>
             </View>
 
             <View style={[styles.sideColumn, isWide && styles.sideColumnWide]}>
@@ -461,43 +419,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: 4,
-  },
-  mountainCard: {
-    padding: 16,
-    width: 240,
-    minHeight: 200,
-    justifyContent: 'flex-end',
-  },
-  mountainCardTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.40)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  mountainCardDesc: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 4,
-    lineHeight: 17,
-    textShadowColor: 'rgba(0,0,0,0.30)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  mountainCardMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-  },
-  mountainCardMetaText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.30)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   safetyModeCard: {
     padding: 20,
