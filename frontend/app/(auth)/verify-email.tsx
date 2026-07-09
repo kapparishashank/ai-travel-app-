@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, ImageBackground } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Snackbar, useTheme } from 'react-native-paper';
 import { AuthScreenHeader } from '../../src/features/auth/AuthScreenHeader';
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { GlassCard } from '../../src/components/common/GlassCard';
+import { TextInput } from '../../src/components/common/TextInput';
 import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { supabase } from '../../src/lib/supabase';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ email?: string }>();
   const theme = useTheme();
-  const { authUser, signOut } = useAuthStore();
+  const { authUser, signOut, refreshProfile } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [code, setCode] = useState('');
+  const pendingEmail = (params.email || authUser?.email || '').trim().toLowerCase();
+
+  const updateCode = (value: string) => {
+    setCode(value.replace(/\D/g, '').slice(0, 6));
+  };
 
   const resend = async () => {
-    if (!authUser?.email) {
+    if (!pendingEmail) {
       setMessage('Log in again to resend verification.');
       return;
     }
@@ -27,10 +35,10 @@ export default function VerifyEmailScreen() {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: authUser.email,
+        email: pendingEmail,
       });
       if (error) throw error;
-      setMessage('Verification email sent.');
+      setMessage('6-digit verification code sent. Check your Gmail inbox.');
     } catch (error: any) {
       setMessage(error.message ?? 'Could not resend verification email.');
     } finally {
@@ -38,20 +46,30 @@ export default function VerifyEmailScreen() {
     }
   };
 
-  const refresh = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.auth.refreshSession();
-    setLoading(false);
- 
-    if (error) {
-      setMessage(error.message);
+  const verifyCode = async () => {
+    if (!pendingEmail) {
+      setMessage('Missing email address. Please sign up again.');
+      return;
+    }
+    if (code.length !== 6) {
+      setMessage('Enter the 6-digit code from your email.');
       return;
     }
 
-    if (data.user?.email_confirmed_at) {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: code,
+        type: 'signup',
+      });
+      if (error) throw error;
+      await refreshProfile();
       router.replace('/(onboarding)/profile-setup');
-    } else {
-      setMessage('Still waiting for verification. Open the email link, then try again.');
+    } catch (error: any) {
+      setMessage(error.message ?? 'Could not verify the code.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,20 +87,30 @@ export default function VerifyEmailScreen() {
         <GlassCard style={styles.cardContainer}>
           <AuthScreenHeader
             title="Verify your email"
-            subtitle="Open the confirmation link we sent to your inbox. This protects your account and keeps trip data tied to the right person."
+            subtitle="Enter the 6-digit code we sent to your Gmail inbox. This protects your account and keeps trip data tied to the right person."
             titleColor="#FFFFFF"
             subtitleColor="rgba(255,255,255,0.85)"
           />
 
           <Text style={[styles.email, { color: 'rgba(255,255,255,0.85)' }]}>
-            {authUser?.email ?? 'After signing up, return here once your email is verified.'}
+            {pendingEmail || 'After signing up, enter the code sent to your email.'}
           </Text>
 
-          <Button onPress={refresh} loading={loading} color={theme.colors.secondary}>
-            I verified my email
+          <TextInput
+            label="6-digit code"
+            value={code}
+            onChangeText={updateCode}
+            keyboardType="number-pad"
+            leftIcon="shield-key-outline"
+            placeholder="123456"
+            accessibilityLabel="6-digit verification code"
+          />
+
+          <Button onPress={verifyCode} loading={loading} color={theme.colors.secondary} disabled={code.length !== 6}>
+            Verify code
           </Button>
           <Button mode="outlined" onPress={resend} loading={loading} style={styles.btnOutlined} color="#FFFFFF">
-            Resend email
+            Resend 6-digit code
           </Button>
           <Button mode="text" onPress={signOut} style={styles.btnText} color="rgba(255,255,255,0.70)">
             Use a different account

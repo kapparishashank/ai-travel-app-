@@ -23,6 +23,7 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -46,12 +47,23 @@ export default function RegisterScreen() {
         name: 'signup_completed',
         properties: { source: 'email_password' },
       });
-      router.replace('/(auth)/verify-email');
+      router.replace({ pathname: '/(auth)/verify-email', params: { email: values.email } });
     } catch (error: any) {
       setMessage(error.message ?? 'Could not create your account.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const appendGmailDomain = (currentEmail: string) => {
+    const trimmed = currentEmail.trim();
+    if (!trimmed) {
+      setValue('email', '@gmail.com', { shouldDirty: true, shouldValidate: true });
+      return;
+    }
+    if (trimmed.toLowerCase().endsWith('@gmail.com')) return;
+    const localPart = trimmed.includes('@') ? trimmed.split('@')[0] : trimmed;
+    setValue('email', `${localPart}@gmail.com`, { shouldDirty: true, shouldValidate: true });
   };
 
   return (
@@ -92,15 +104,26 @@ export default function RegisterScreen() {
             control={control}
             name="email"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                label="Email"
-                value={value}
-                onChangeText={onChange}
-                error={errors.email?.message}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                leftIcon="email-outline"
-              />
+              <>
+                <TextInput
+                  label="Email"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.email?.message}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  leftIcon="email-outline"
+                />
+                <Button
+                  mode="outlined"
+                  icon="email-plus-outline"
+                  onPress={() => appendGmailDomain(value)}
+                  style={styles.gmailButton}
+                  accessibilityLabel="Add Gmail domain"
+                >
+                  @gmail.com
+                </Button>
+              </>
             )}
           />
 
@@ -179,6 +202,14 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: 14,
+  },
+  gmailButton: {
+    alignSelf: 'flex-end',
+    minHeight: 36,
+    marginTop: -2,
+    marginBottom: 8,
+    borderColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   footer: {
     flexDirection: 'row',
