@@ -15,14 +15,30 @@ export default function VerifyEmailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string }>();
   const theme = useTheme();
-  const { authUser, signOut, refreshProfile } = useAuthStore();
+  const { authUser, refreshProfile } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [code, setCode] = useState('');
-  const pendingEmail = (params.email || authUser?.email || '').trim().toLowerCase();
+  const initialEmail = (params.email || authUser?.email || '').trim().toLowerCase();
+  const [email, setEmail] = useState(initialEmail);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const pendingEmail = email.trim().toLowerCase();
 
   const updateCode = (value: string) => {
     setCode(value.replace(/\D/g, '').slice(0, 6));
+  };
+
+  const saveEditedEmail = () => {
+    const nextEmail = pendingEmail;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+      setMessage('Enter a valid email address.');
+      return;
+    }
+
+    setEmail(nextEmail);
+    setCode('');
+    setIsEditingEmail(false);
+    setMessage('Email updated. Resend the 6-digit code to this address.');
   };
 
   const resend = async () => {
@@ -92,9 +108,31 @@ export default function VerifyEmailScreen() {
             subtitleColor="rgba(255,255,255,0.85)"
           />
 
-          <Text style={[styles.email, { color: 'rgba(255,255,255,0.85)' }]}>
-            {pendingEmail || 'After signing up, enter the code sent to your email.'}
-          </Text>
+          {isEditingEmail ? (
+            <View style={styles.emailEditor}>
+              <TextInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                leftIcon="email-outline"
+                accessibilityLabel="Verification email"
+              />
+              <View style={styles.emailActions}>
+                <Button mode="outlined" onPress={() => setIsEditingEmail(false)} color="#FFFFFF" style={styles.emailActionButton}>
+                  Cancel
+                </Button>
+                <Button onPress={saveEditedEmail} color={theme.colors.secondary} style={styles.emailActionButton}>
+                  Use this email
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <Text style={[styles.email, { color: 'rgba(255,255,255,0.85)' }]}>
+              {pendingEmail || 'After signing up, enter the code sent to your email.'}
+            </Text>
+          )}
 
           <TextInput
             label="6-digit code"
@@ -112,7 +150,7 @@ export default function VerifyEmailScreen() {
           <Button mode="outlined" onPress={resend} loading={loading} style={styles.btnOutlined} color="#FFFFFF">
             Resend 6-digit code
           </Button>
-          <Button mode="text" onPress={signOut} style={styles.btnText} color="rgba(255,255,255,0.70)">
+          <Button mode="text" onPress={() => setIsEditingEmail(true)} style={styles.btnText} color="rgba(255,255,255,0.70)">
             Use a different account
           </Button>
         </GlassCard>
@@ -147,6 +185,18 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 15,
     marginBottom: 20,
+  },
+  emailEditor: {
+    marginBottom: 12,
+  },
+  emailActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
+  emailActionButton: {
+    minWidth: 132,
   },
   btnOutlined: {
     marginTop: 8,
