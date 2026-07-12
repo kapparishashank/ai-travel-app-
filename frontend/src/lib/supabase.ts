@@ -22,6 +22,8 @@ const useLocalMockSupabase =
   env.EXPO_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder') ||
   env.EXPO_PUBLIC_SUPABASE_ANON_KEY.includes('your-supabase');
 
+export const isLocalMockSupabase = useLocalMockSupabase;
+
 export const supabase = useLocalMockSupabase
   ? (createMockSupabaseClient() as any)
   : createClient(

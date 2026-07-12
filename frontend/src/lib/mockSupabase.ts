@@ -578,6 +578,22 @@ export function createMockSupabaseClient() {
       async resend() {
         return { data: {}, error: null };
       },
+      async verifyOtp({ email, token }: any) {
+        const auth = readAuth();
+        const key = String(email).toLowerCase();
+        const record = auth[key];
+        if (!record) return { data: { user: null, session: null }, error: { message: 'No local demo user found for this email.' } };
+        if (String(token) !== '123456') return { data: { user: null, session: null }, error: { message: 'Invalid demo verification code. Use 123456 in local demo mode.' } };
+
+        record.user.email_confirmed_at = record.user.email_confirmed_at ?? now();
+        auth[key] = record;
+        writeAuth(auth);
+
+        const session = createMockSession(record.user);
+        writeSession(session);
+        notify('SIGNED_IN', session);
+        return { data: { user: record.user, session }, error: null };
+      },
       async resetPasswordForEmail() {
         return { data: {}, error: null };
       },

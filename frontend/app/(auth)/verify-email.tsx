@@ -8,7 +8,7 @@ import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { GlassCard } from '../../src/components/common/GlassCard';
 import { TextInput } from '../../src/components/common/TextInput';
 import { MOUNTAIN_IMAGES } from '../../src/constants/images';
-import { supabase } from '../../src/lib/supabase';
+import { isLocalMockSupabase, supabase } from '../../src/lib/supabase';
 import { useAuthStore } from '../../src/store/authStore';
 
 export default function VerifyEmailScreen() {
@@ -44,6 +44,11 @@ export default function VerifyEmailScreen() {
   const resend = async () => {
     if (!pendingEmail) {
       setMessage('Log in again to resend verification.');
+      return;
+    }
+
+    if (isLocalMockSupabase) {
+      setMessage('Local demo mode cannot send Gmail. Use demo code 123456, or add real Supabase keys to frontend/.env.local.');
       return;
     }
 
@@ -144,6 +149,12 @@ export default function VerifyEmailScreen() {
             accessibilityLabel="6-digit verification code"
           />
 
+          {isLocalMockSupabase && (
+            <Text style={styles.demoNotice}>
+              Local demo mode does not send Gmail. Use code 123456, or configure real Supabase email settings.
+            </Text>
+          )}
+
           <Button onPress={verifyCode} loading={loading} color={theme.colors.secondary} disabled={code.length !== 6}>
             Verify code
           </Button>
@@ -204,5 +215,11 @@ const styles = StyleSheet.create({
   },
   btnText: {
     marginTop: 8,
+  },
+  demoNotice: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 10,
   },
 });
