@@ -19,6 +19,8 @@ export default function RegisterScreen() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     control,
@@ -136,8 +138,11 @@ export default function RegisterScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.password?.message}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 leftIcon="lock-outline"
+                rightIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                onRightIconPress={() => setShowPassword((current) => !current)}
+                accessibilityLabel="Password"
               />
             )}
           />
@@ -151,8 +156,11 @@ export default function RegisterScreen() {
                 value={value}
                 onChangeText={onChange}
                 error={errors.confirmPassword?.message}
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
                 leftIcon="lock-check-outline"
+                rightIcon={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                onRightIconPress={() => setShowConfirmPassword((current) => !current)}
+                accessibilityLabel="Confirm password"
               />
             )}
           />
