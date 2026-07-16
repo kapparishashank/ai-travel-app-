@@ -65,3 +65,22 @@ export async function createTripDraftFromSuggestion(userId: string, input: Budge
   if (error) throw error;
   return data?.id as string;
 }
+
+export async function generateBudgetDestinations(input: {
+  budgetInr: number;
+  numDays: number;
+  numTravelers: number;
+  interests?: string[];
+  startingCity?: string;
+}) {
+  const { data, error } = await supabase.functions.invoke('budget-discovery', {
+    body: input,
+  });
+  if (error) throw error;
+  return data.data.destinations as Array<{
+    name: string;
+    description: string;
+    estimatedCostInr: number;
+    reasonsToVisit: string[];
+  }>;
+}

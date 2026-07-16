@@ -13,8 +13,8 @@ import {
 import { Button } from '../../src/components/common/Button';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
-import { createTripDraftFromSuggestion, saveBudgetDestination } from '../../src/features/budgetDiscovery/api';
-import { discoverBudgetDestinations, parseRupeesToMinor } from '../../src/features/budgetDiscovery/calculations';
+import { createTripDraftFromSuggestion, saveBudgetDestination, generateBudgetDestinations } from '../../src/features/budgetDiscovery/api';
+import { parseRupeesToMinor } from '../../src/features/budgetDiscovery/calculations';
 import { budgetDiscoveryTags, type BudgetDestinationSuggestion, type BudgetDiscoveryInput, type BudgetDiscoveryTag, type DiscoveryTransport } from '../../src/features/budgetDiscovery/types';
 import { useAuthStore } from '../../src/store/authStore';
 import { formatINR } from '../../src/utils/currency';
@@ -71,10 +71,31 @@ export default function BudgetDiscoveryScreen() {
     }
   }, [startingCity, maxBudget, travelerCount, tripLengthDays, startDate, endDate, interests, transport, maxDistance]);
 
-  const suggestions = useMemo(() => {
-    if (!submitted || !input) return [];
-    return discoverBudgetDestinations(input);
-  }, [input, submitted]);
+  const [aiSuggestions, setAiSuggestions] = useState<Array<{
+    name: string;
+    description: string;
+    estimatedCostInr: number;
+    reasonsToVisit: string[];
+  }>>([]);
+
+  const discoveryMutation = useMutation({
+    mutationFn: async (inputs: NonNullable<typeof input>) => {
+      return generateBudgetDestinations({
+        budgetInr: inputs.maxBudgetMinor / 100,
+        numDays: inputs.tripLengthDays,
+        numTravelers: inputs.travelerCount,
+        interests: inputs.interests,
+        startingCity: inputs.startingCity,
+      });
+    },
+    onSuccess: (data) => {
+      setAiSuggestions(data);
+    },
+    onError: (err: any) => {
+      setSubmitted(false);
+      setError(err.message || 'Could not discover destinations.');
+    }
+  });
 
   const saveMutation = useMutation({
     mutationFn: (suggestion: BudgetDestinationSuggestion) => {
@@ -100,28 +121,23 @@ export default function BudgetDiscoveryScreen() {
 
   const runDiscovery = () => {
     setError('');
-    setLoading(true);
-    setTimeout(() => {
-      try {
-        if (!input) throw new Error('Check the budget and number fields.');
-        if (input.travelerCount <= 0) throw new Error('Number of travelers must be positive.');
-        if (input.tripLengthDays <= 0) throw new Error('Trip length must be positive.');
-        if (input.maxDistanceKm <= 0) throw new Error('Maximum travel distance must be positive.');
-        setSubmitted(true);
-      } catch (err) {
-        setSubmitted(false);
-        setError(err instanceof Error ? err.message : 'Could not run discovery.');
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
+    try {
+      if (!input) throw new Error('Check the budget and number fields.');
+      if (input.travelerCount <= 0) throw new Error('Number of travelers must be positive.');
+      if (input.tripLengthDays <= 0) throw new Error('Trip length must be positive.');
+      setSubmitted(true);
+      discoveryMutation.mutate(input);
+    } catch (err) {
+      setSubmitted(false);
+      setError(err instanceof Error ? err.message : 'Could not run discovery.');
+    }
   };
 
   return (
     <ScreenContainer safeArea={false} keyboardAvoiding={false}>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={runDiscovery} />}
+        refreshControl={<RefreshControl refreshing={discoveryMutation.isPending} onRefresh={runDiscovery} />}
       >
         <HeroBanner
           imageUrl={MOUNTAIN_IMAGES.greenHills}
@@ -169,37 +185,46 @@ export default function BudgetDiscoveryScreen() {
               ))}
             </View>
             {!!error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
-            <Button icon="wallet-outline" loading={loading} onPress={runDiscovery}>Find destinations</Button>
+            <Button icon="wallet-outline" loading={discoveryMutation.isPending} onPress={runDiscovery}>Find destinations</Button>
           </Card.Content>
         </Card>
 
-        {loading && (
+        {discoveryMutation.isPending && (
           <Card style={styles.card}>
             <Card.Content style={styles.gap}>
-              <Text>Loading estimated destinations...</Text>
+              <Text>Asking AI for the best destinations...</Text>
               <ProgressBar indeterminate />
             </Card.Content>
           </Card>
         )}
 
-        {!loading && submitted && suggestions.length === 0 && (
+        {!discoveryMutation.isPending && submitted && aiSuggestions.length === 0 && !error && (
           <Card style={styles.card}>
             <Card.Content style={styles.gap}>
               <Text variant="titleMedium">No matches found</Text>
-              <Text>Try increasing distance, budget, or removing one filter. Lower-cost alternatives appear when there is enough data.</Text>
+              <Text>Try increasing your budget or changing filters.</Text>
             </Card.Content>
           </Card>
         )}
 
-        {!loading && suggestions.map((suggestion) => (
-          <SuggestionCard
-            key={suggestion.destination.id}
-            suggestion={suggestion}
-            onSave={() => saveMutation.mutate(suggestion)}
-            onCreateDraft={() => draftMutation.mutate(suggestion)}
-            saving={saveMutation.isPending}
-            creating={draftMutation.isPending}
-          />
+        {!discoveryMutation.isPending && aiSuggestions.map((suggestion, idx) => (
+          <Card key={idx} style={styles.card}>
+            <Card.Content style={styles.gap}>
+              <View style={styles.headerRow}>
+                <View style={styles.flex}>
+                  <Text variant="titleLarge">{suggestion.name}</Text>
+                  <Text style={{ color: theme.colors.onSurfaceVariant }}>{suggestion.description}</Text>
+                </View>
+              </View>
+              <View style={styles.costGrid}>
+                <Metric label="Estimated Total" value={formatINR(suggestion.estimatedCostInr * 100)} strong />
+              </View>
+              <Text variant="titleSmall">Why visit?</Text>
+              {suggestion.reasonsToVisit.map((reason, i) => (
+                <Text key={i} style={{ color: theme.colors.onSurfaceVariant }}>• {reason}</Text>
+              ))}
+            </Card.Content>
+          </Card>
         ))}
         </View>
       </ScrollView>
