@@ -35,7 +35,8 @@ Deno.serve(async (req: Request) => {
       return errorResponse('invalid_request', 'destination, numDays, numTravelers, and transportMode are required');
     }
 
-    const breakdown = calculateHiddenCosts({
+    const breakdown = await calculateHiddenCosts({
+      destination,
       numDays,
       numTravelers,
       transportMode,
@@ -69,6 +70,7 @@ Deno.serve(async (req: Request) => {
 });
 
 interface CostInputs {
+  destination: string;
   numDays: number;
   numTravelers: number;
   transportMode: string;
@@ -78,73 +80,71 @@ interface CostInputs {
   includeActivities: boolean;
 }
 
-function calculateHiddenCosts(input: CostInputs) {
-  const { numDays, numTravelers, transportMode, comfortLevel, includeFood, includeLocalTransport, includeActivities } = input;
+async function calculateHiddenCosts(input: CostInputs) {
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
 
-  // Per-person daily multiplier based on comfort level (in paise)
-  const comfortMultiplier = comfortLevel === 'budget' ? 0.6 : comfortLevel === 'premium' ? 2.0 : 1.0;
+  const AI_MODEL = Deno.env.get('GEMINI_MODEL') ?? 'gemini-1.5-flash';
+  const prompt = `You are an expert travel cost estimator. Estimate the hidden and additional costs for a trip to ${input.destination}.
+Details:
+- Duration: ${input.numDays} days
+- Travelers: ${input.numTravelers}
+- Transport Mode: ${input.transportMode}
+- Comfort Level: ${input.comfortLevel}
+- Include Food: ${input.includeFood}
+- Include Local Transport: ${input.includeLocalTransport}
+- Include Activities: ${input.includeActivities}
 
-  // Baggage fees (one-way, per person)
-  const baggageFees = transportMode === 'flight'
-    ? Math.round(80000 * numTravelers * comfortMultiplier)
-    : 0;
+Provide realistic cost estimates in paise (INR * 100). If a cost is not applicable based on the inputs, set it to 0. Return strict JSON.`;
 
-  // Airport / station transfer (both ends)
-  const transferCost = transportMode === 'flight'
-    ? Math.round(60000 * numTravelers)
-    : Math.round(20000 * numTravelers);
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.2,
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              baggageFeesInr: { type: 'INTEGER' },
+              transferCostInr: { type: 'INTEGER' },
+              localTransportInr: { type: 'INTEGER' },
+              foodTotalInr: { type: 'INTEGER' },
+              foodDailyPerPersonInr: { type: 'INTEGER' },
+              activityFeesInr: { type: 'INTEGER' },
+              entryFeesInr: { type: 'INTEGER' },
+              platformConvenienceFeeInr: { type: 'INTEGER' },
+              accommodationTaxInr: { type: 'INTEGER' },
+              miscInr: { type: 'INTEGER' },
+              emergencyBufferInr: { type: 'INTEGER' },
+              totalHiddenCostInr: { type: 'INTEGER' },
+            },
+            required: [
+              'baggageFeesInr',
+              'transferCostInr',
+              'localTransportInr',
+              'foodTotalInr',
+              'foodDailyPerPersonInr',
+              'activityFeesInr',
+              'entryFeesInr',
+              'platformConvenienceFeeInr',
+              'accommodationTaxInr',
+              'miscInr',
+              'emergencyBufferInr',
+              'totalHiddenCostInr',
+            ],
+          },
+        },
+      }),
+    },
+  );
 
-  // Local transport per day per person (₹200–₹600 range)
-  const localTransportDaily = Math.round(30000 * comfortMultiplier);
-  const localTransportTotal = includeLocalTransport
-    ? localTransportDaily * numDays * numTravelers
-    : 0;
-
-  // Food per day per person (₹300–₹900 range)
-  const foodDaily = Math.round(45000 * comfortMultiplier);
-  const foodTotal = includeFood
-    ? foodDaily * numDays * numTravelers
-    : 0;
-
-  // Activity / entry fees per day per person (₹100–₹500)
-  const activityDaily = Math.round(20000 * comfortMultiplier);
-  const activityTotal = includeActivities
-    ? activityDaily * numDays * numTravelers
-    : 0;
-
-  // Entry fees (monuments, parks etc.) — flat estimate
-  const entryFees = includeActivities
-    ? Math.round(15000 * numDays * numTravelers * comfortMultiplier)
-    : 0;
-
-  // Platform convenience fees (booking platforms)
-  const platformFees = Math.round(4500 * numTravelers);
-
-  // GST / taxes on accommodation (assume 18% on ₹1500/night/person)
-  const accommodationTax = Math.round(0.18 * 150000 * numDays * numTravelers);
-
-  // Miscellaneous (souvenirs, tips, etc.)
-  const miscCost = Math.round(50000 * numDays * numTravelers * 0.5);
-
-  const subtotal = baggageFees + transferCost + localTransportTotal + foodTotal +
-    activityTotal + entryFees + platformFees + accommodationTax + miscCost;
-
-  // Emergency buffer 10%
-  const emergencyBuffer = Math.round(subtotal * 0.1);
-  const totalHiddenCost = subtotal + emergencyBuffer;
-
-  return {
-    baggageFeesInr: baggageFees,
-    transferCostInr: transferCost,
-    localTransportInr: localTransportTotal,
-    foodTotalInr: foodTotal,
-    foodDailyPerPersonInr: foodDaily,
-    activityFeesInr: activityTotal,
-    entryFeesInr: entryFees,
-    platformConvenienceFeeInr: platformFees,
-    accommodationTaxInr: accommodationTax,
-    miscInr: miscCost,
-    emergencyBufferInr: emergencyBuffer,
-    totalHiddenCostInr: totalHiddenCost,
-  };
+  if (!response.ok) throw new Error(`AI provider unavailable (${response.status})`);
+  const result = await response.json();
+  const text = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+  return JSON.parse(text);
 }

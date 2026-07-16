@@ -222,7 +222,38 @@ async function generatePackingList(trip: TripRow, request: z.infer<typeof reques
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.25, maxOutputTokens: 4096 },
+          generationConfig: { 
+            responseMimeType: 'application/json', 
+            temperature: 0.25, 
+            maxOutputTokens: 4096,
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                title: { type: 'STRING' },
+                items: {
+                  type: 'ARRAY',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      name: { type: 'STRING' },
+                      category: { 
+                        type: 'STRING', 
+                        enum: ['documents', 'clothing', 'footwear', 'toiletries', 'medicines', 'electronics', 'safety', 'activity_equipment', 'childrens_items', 'food_and_water', 'optional', 'not_recommended']
+                      },
+                      quantity: { type: 'INTEGER' },
+                      reason: { type: 'STRING' },
+                      priority: { type: 'STRING', enum: ['high', 'medium', 'low'] },
+                      assignedUser: { type: 'STRING', nullable: true }
+                    },
+                    required: ['name', 'category', 'quantity', 'reason', 'priority']
+                  }
+                },
+                safetyNote: { type: 'STRING' },
+                medicineDisclaimer: { type: 'STRING' }
+              },
+              required: ['title', 'items', 'safetyNote', 'medicineDisclaimer']
+            }
+          },
         }),
       },
     );
