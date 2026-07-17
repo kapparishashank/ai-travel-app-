@@ -22,6 +22,7 @@ import { ImageSlider } from '../../src/components/common/ImageSlider';
 import { GlassCard } from '../../src/components/common/GlassCard';
 import { MountainPattern } from '../../src/components/common/MountainPattern';
 import { MOUNTAIN_IMAGES } from '../../src/constants/images';
+import { demoDestinations } from '../../src/features/home/demoData';
 import { useAuthStore } from '../../src/store/authStore';
 import {
   AlertCard,
@@ -57,7 +58,14 @@ export default function HomeScreen() {
   const submitSearch = () => {
     const query = search.trim();
     if (query) {
-      router.push({ pathname: '/(tabs)/explore', params: { q: query } });
+      const normalizedQuery = query.toLowerCase();
+      const match = demoDestinations.find((destination) => {
+        const fields = [destination.id, destination.name, destination.region].map((value) => value.toLowerCase());
+        return fields.some((value) => value === normalizedQuery || value.includes(normalizedQuery) || normalizedQuery.includes(value));
+      });
+      const slug = normalizedQuery.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const destinationId = match?.id ?? (slug || 'destination');
+      router.push({ pathname: '/(tabs)/destination/[id]', params: { id: destinationId, name: query } });
     } else {
       router.push('/(tabs)/explore');
     }
