@@ -13,7 +13,7 @@ import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { SegmentedTabs } from '../../components/common/SegmentedTabs';
 import { TextInput } from '../../components/common/TextInput';
-import { formatINR } from '../../utils/currency';
+import { formatCurrency } from '../../utils/currency';
 import { calculateHiddenCostTotals, createCostItem, formatMinorAsDecimal, parseDecimalAmountToMinor } from './calculations';
 import { hiddenCostCategories, type CostConfidence, type CostStatus, type HiddenCostCategory, type HiddenCostItem } from './types';
 
@@ -152,7 +152,7 @@ export function HiddenCostCalculator({
           <View style={[styles.warning, { backgroundColor: theme.colors.errorContainer }]}>
             <MaterialCommunityIcons name="alert-outline" size={18} color={theme.colors.error} />
             <Text style={[styles.warningText, { color: theme.colors.onErrorContainer }]}>
-              This plan is over budget by {formatINR(Math.abs(totals.remainingBudgetMinor))}.
+              This plan is over budget by {formatCurrency(Math.abs(totals.remainingBudgetMinor) / 100, currency)}.
             </Text>
           </View>
         )}
@@ -165,7 +165,7 @@ export function HiddenCostCalculator({
             leftIcon="shield-plus-outline"
           />
           <Text style={[styles.smallText, { color: theme.colors.onSurfaceVariant }]}>
-            Current buffer: {formatINR(totals.emergencyBufferMinor)}
+            Current buffer: {formatCurrency(totals.emergencyBufferMinor / 100, currency)}
           </Text>
         </View>
         <Accordion type="single" collapsible style={styles.accordion}>
@@ -190,7 +190,7 @@ export function HiddenCostCalculator({
                   {categoryLabels[item.category]} - {item.status} - {item.confidence} confidence
                 </Text>
               </View>
-              <Text style={[styles.amount, { color: theme.colors.onSurface }]}>{formatINR(item.amountMinor)}</Text>
+              <Text style={[styles.amount, { color: theme.colors.onSurface }]}>{formatCurrency(item.amountMinor / 100, currency)}</Text>
             </View>
             <Accordion type="single" collapsible style={styles.accordion}>
               <AccordionItem value={`cost-${item.id}`}>
@@ -322,12 +322,13 @@ function CostDialog({
 
 function TotalMetric({ label, value, icon }: { label: string; value: number; icon: MaterialIconName }) {
   const theme = useTheme();
+  const currency = 'INR'; // explicit INR for Indian travel provider pricing / dataset
   return (
     <View style={styles.metric}>
       <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
       <View style={styles.metricText}>
         <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
-        <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{formatINR(value)}</Text>
+        <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{formatCurrency(value / 100, currency)}</Text>
       </View>
     </View>
   );

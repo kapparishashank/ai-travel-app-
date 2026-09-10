@@ -5,7 +5,8 @@ import { useTheme } from 'react-native-paper';
 import { Card } from '../../components/common/Card';
 import { GlassCard } from '../../components/common/GlassCard';
 import { getDestinationImage } from '../../constants/images';
-import { formatINR } from '../../utils/currency';
+import { formatCurrency } from '../../utils/currency';
+import { useAuthStore } from '../../store/authStore';
 import type { HomeAlert, HomeDestination, HomeSearch, HomeTrip } from './types';
 
 type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
@@ -62,6 +63,8 @@ export function ShortcutCard({
 
 export function TripCard({ trip, onPress }: { trip: HomeTrip; onPress: () => void }) {
   const theme = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const currency = (user?.currency_code as any) || 'INR';
   return (
     <Card onPress={onPress} style={styles.tripCard} accessibilityLabel={`Open ${trip.title}`}>
       <View style={styles.rowBetween}>
@@ -78,7 +81,7 @@ export function TripCard({ trip, onPress }: { trip: HomeTrip; onPress: () => voi
           <Text style={[styles.statusText, { color: theme.colors.primary }]}>{trip.status}</Text>
         </View>
         <Text style={[styles.metaText, { color: theme.colors.onSurfaceVariant }]}>
-          {formatINR(trip.budgetMinor)}
+          {formatCurrency(trip.budgetMinor / 100, currency)}
         </Text>
       </View>
     </Card>
@@ -87,6 +90,8 @@ export function TripCard({ trip, onPress }: { trip: HomeTrip; onPress: () => voi
 
 export function AlertCard({ alert, onPress }: { alert: HomeAlert; onPress: () => void }) {
   const theme = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const currency = (user?.currency_code as any) || 'INR';
   return (
     <Card onPress={onPress} style={styles.alertCard} accessibilityLabel={`Open price alert ${alert.route}`}>
       <View style={styles.rowBetween}>
@@ -99,7 +104,7 @@ export function AlertCard({ alert, onPress }: { alert: HomeAlert; onPress: () =>
         <DemoLabel visible={alert.isDemo} />
       </View>
       <Text style={[styles.metaText, { color: theme.colors.onSurfaceVariant }]}>
-        Watching {formatINR(alert.currentMinor)} toward {formatINR(alert.targetMinor)}
+        Watching {formatCurrency(alert.currentMinor / 100, currency)} toward {formatCurrency(alert.targetMinor / 100, currency)}
       </Text>
     </Card>
   );
@@ -112,6 +117,9 @@ export function DestinationCard({
   destination: HomeDestination;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const currency = (user?.currency_code as any) || 'INR';
   const imageUrl = getDestinationImage(destination.name || destination.id);
 
   return (
@@ -129,7 +137,7 @@ export function DestinationCard({
       </Text>
       <View style={styles.rowBetween}>
         <Text style={styles.destinationCardPrice}>
-          From {formatINR(destination.estimateMinor)}
+          From {formatCurrency(destination.estimateMinor / 100, currency)}
         </Text>
         <DemoLabel visible={destination.isDemo} />
       </View>
