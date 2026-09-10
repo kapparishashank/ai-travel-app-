@@ -13,13 +13,9 @@ const parsed = envSchema.safeParse({
 });
 
 if (!parsed.success) {
-  console.warn('⚠️ Environment validation failed. Using fallback placeholder values.', parsed.error.format());
+  throw new Error('Environment validation failed. Required variables: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_BASE_URL');
 }
 
-export const env = parsed.success
-  ? parsed.data
-  : {
-      EXPO_PUBLIC_SUPABASE_URL: 'https://placeholder-url.supabase.co',
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-anon-key',
-      EXPO_PUBLIC_API_BASE_URL: 'http://localhost:54321',
-    };
+export const env = parsed.success ? parsed.data : (() => {
+  throw new Error('Environment validation failed. Required variables: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_API_BASE_URL');
+})();

@@ -65,30 +65,3 @@ export function getBudgetTier(totalRupees: number, numDays: number, numPeople: n
   return 'premium';
 }
 
-export function calculateMinSettlements(
-  balances: { userId: string; name: string; net: number }[]
-): { fromId: string; fromName: string; toId: string; toName: string; amountPaise: number }[] {
-  const settlements: { fromId: string; fromName: string; toId: string; toName: string; amountPaise: number }[] = [];
-  const creditors = balances.filter(b => b.net > 0).map(b => ({ ...b }));
-  const debtors = balances.filter(b => b.net < 0).map(b => ({ ...b, net: Math.abs(b.net) }));
-  let i = 0, j = 0;
-  while (i < debtors.length && j < creditors.length) {
-    const debt = debtors[i];
-    const credit = creditors[j];
-    const amount = Math.min(debt.net, credit.net);
-    if (amount > 0) {
-      settlements.push({
-        fromId: debt.userId,
-        fromName: debt.name,
-        toId: credit.userId,
-        toName: credit.name,
-        amountPaise: amount,
-      });
-    }
-    debt.net -= amount;
-    credit.net -= amount;
-    if (debt.net === 0) i++;
-    if (credit.net === 0) j++;
-  }
-  return settlements;
-}

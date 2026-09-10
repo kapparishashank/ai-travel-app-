@@ -55,7 +55,7 @@ function stringifyNotes(payload: ExpenseNotesPayload) {
   return JSON.stringify(payload);
 }
 
-function memberName(row: any) {
+function memberName(row: { display_name?: string | null; email?: string | null }) {
   return row.display_name || row.email || 'Traveler';
 }
 
@@ -75,7 +75,7 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
   if (settlementsResult.error) throw settlementsResult.error;
 
   const expenseRows = expensesResult.data ?? [];
-  const expenseIds = expenseRows.map((expense: any) => expense.id);
+  const expenseIds = expenseRows.map((expense: { id: string }) => expense.id);
   const [participantsResult, splitsResult] = expenseIds.length
     ? await Promise.all([
         supabase.from('expense_participants').select('*').in('expense_id', expenseIds),
@@ -87,26 +87,26 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
   if (splitsResult.error) throw splitsResult.error;
 
   const participantsByExpense = new Map<string, string[]>();
-  (participantsResult.data ?? []).forEach((row: any) => {
+  (participantsResult.data ?? []).forEach((row: { expense_id: string; trip_member_id: string }) => {
     participantsByExpense.set(row.expense_id, [...(participantsByExpense.get(row.expense_id) ?? []), row.trip_member_id]);
   });
 
   const splitsByExpense = new Map<string, { memberId: string; amountMinor: number }[]>();
-  (splitsResult.data ?? []).forEach((row: any) => {
+  (splitsResult.data ?? []).forEach((row: { expense_id: string; trip_member_id: string; amount_minor: number }) => {
     splitsByExpense.set(row.expense_id, [
       ...(splitsByExpense.get(row.expense_id) ?? []),
       { memberId: row.trip_member_id, amountMinor: row.amount_minor },
     ]);
   });
 
-  const members = (membersResult.data ?? []).map((row: any) => ({
+  const members = (membersResult.data ?? []).map((row: { id: string; user_id?: string | null; display_name?: string | null; email?: string | null; status?: string }) => ({
     id: row.id,
     userId: row.user_id,
     name: memberName(row),
     email: row.email,
   }));
 
-  const expenses = expenseRows.map((row: any) => {
+  const expenses = expenseRows.map((row: { id: string; trip_id: string; title: string; paid_by_member_id?: string | null; paid_by_user_id?: string | null; amount_minor: number; currency_code?: string | null; notes?: string | null; updated_at?: string; spent_at?: string; category?: string }) => {
     const notes = parseNotes(row.notes);
     return {
       id: row.id,
@@ -131,7 +131,7 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
   return {
     members,
     expenses,
-    completedSettlements: (settlementsResult.data ?? []).map((row: any) => ({
+    completedSettlements: (settlementsResult.data ?? []).map((row: { from_member_id: string; to_member_id: string; amount_minor: number; currency_code?: string | null; upi_payment_link?: string | null }) => ({
       fromMemberId: row.from_member_id,
       toMemberId: row.to_member_id,
       amountMinor: row.amount_minor,
@@ -263,7 +263,7 @@ export async function syncQueuedExpenseOperations(tripId: string, userId: string
     try {
       if (operation.type === 'delete') {
         const { data } = await supabase.from('expenses').select('updated_at').eq('id', operation.expenseId).maybeSingle();
-        if (data && !canApplyOfflineEdit(operation.baseUpdatedAt, (data as any).updated_at)) {
+        if (data && !canApplyOfflineEdit(operation.baseUpdatedAt, (data as { updated_at: string | null | undefined }).updated_at)) {
           conflicts += 1;
           remaining.push(operation);
           continue;
