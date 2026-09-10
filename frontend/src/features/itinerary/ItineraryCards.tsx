@@ -92,8 +92,8 @@ export function WarningCards({ warnings }: { warnings: string[] }) {
   if (warnings.length === 0) return null;
   return (
     <View style={styles.warningList}>
-      {warnings.map((warning) => (
-        <View key={warning} style={[styles.warningCard, { backgroundColor: theme.colors.errorContainer }]}>
+      {warnings.map((warning, index) => (
+        <View key={`${warning}-${index}`} style={[styles.warningCard, { backgroundColor: theme.colors.errorContainer }]}>
           <MaterialCommunityIcons name="alert-outline" size={18} color={theme.colors.error} />
           <Text style={[styles.warningText, { color: theme.colors.onErrorContainer }]}>{warning}</Text>
         </View>
@@ -197,8 +197,8 @@ export function AlternativeSection({ alternatives }: { alternatives: string[] })
   return (
     <Card style={styles.summaryCard}>
       <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Alternative activity ideas</Text>
-      {alternatives.map((alternative) => (
-        <Text key={alternative} style={[styles.smallText, { color: theme.colors.onSurfaceVariant }]}>
+      {alternatives.map((alternative, idx) => (
+        <Text key={`${alternative}-${idx}`} style={[styles.smallText, { color: theme.colors.onSurfaceVariant }]}>
           - {alternative}
         </Text>
       ))}

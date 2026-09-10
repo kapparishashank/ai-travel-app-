@@ -150,7 +150,19 @@ export async function saveSplitExpense(tripId: string, input: ExpenseSplitInput,
     uiCategory: input.category,
     auditHistory: [...(existing?.auditHistory ?? []), audit],
   });
-  const memberUserId = input.paidByMemberId ? null : null;
+
+  // Resolve the actual user_id from the trip member identified by paidByMemberId.
+  // The trip_members table may have user_id (registered user), traveler_profile_id,
+  // or email — at least one must be present per the DB constraint.
+  // If the member has a user_id, use it for paid_by_user_id; otherwise null.
+  const { data: memberRow } = await supabase
+    .from('trip_members')
+    .select('user_id')
+    .eq('trip_id', tripId)
+    .eq('id', input.paidByMemberId)
+    .single();
+
+  const memberUserId = memberRow?.user_id ?? null;
 
   const expensePayload = {
     trip_id: tripId,
