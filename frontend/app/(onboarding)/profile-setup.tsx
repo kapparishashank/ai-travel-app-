@@ -32,9 +32,7 @@ export default function ProfileSetupScreen() {
       phone: user?.phone ?? '',
       dateOfBirth: user?.date_of_birth ?? '',
       homeCity: user?.home_city ?? '',
-      avatarUrl: user?.avatar_url ?? '',
       preferredCurrency: user?.currency_code ?? 'INR',
-      preferredLanguage: user?.preferred_language ?? user?.preferred_lang ?? 'en',
     },
   });
 
@@ -50,9 +48,7 @@ export default function ProfileSetupScreen() {
           phone: values.phone || null,
           date_of_birth: values.dateOfBirth || null,
           home_city: values.homeCity,
-          avatar_url: values.avatarUrl || null,
           currency_code: values.preferredCurrency.toUpperCase(),
-          preferred_language: values.preferredLanguage,
         })
         .eq('id', authUser.id);
 
@@ -85,18 +81,9 @@ export default function ProfileSetupScreen() {
       <Controller control={control} name="homeCity" render={({ field: { onChange, value } }) => (
         <TextInput label="Home city" value={value} onChangeText={onChange} error={errors.homeCity?.message} autoCapitalize="words" leftIcon="home-city-outline" />
       )} />
-      <Controller control={control} name="avatarUrl" render={({ field: { onChange, value } }) => (
-        <TextInput label="Profile image URL, optional" value={value ?? ''} onChangeText={onChange} error={errors.avatarUrl?.message} autoCapitalize="none" leftIcon="image-outline" />
-      )} />
-
       <Text style={[styles.label, { color: theme.colors.onSurface }]}>Preferred currency</Text>
       <Controller control={control} name="preferredCurrency" render={({ field: { onChange, value } }) => (
         <ChoiceChips options={currencyOptions} selected={[value]} onChange={(items) => onChange(items[0])} multi={false} error={errors.preferredCurrency?.message} />
-      )} />
-
-      <Text style={[styles.label, { color: theme.colors.onSurface }]}>Preferred language</Text>
-      <Controller control={control} name="preferredLanguage" render={({ field: { onChange, value } }) => (
-        <ChoiceChips options={languageOptions.map((item) => item.value)} selected={[value]} onChange={(items) => onChange(items[0])} multi={false} error={errors.preferredLanguage?.message} />
       )} />
 
       <Button onPress={handleSubmit(onSubmit)} loading={submitting} style={styles.submit}>Save profile</Button>

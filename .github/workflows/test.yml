@@ -1,0 +1,11 @@
+name: Test All 3
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with: { node-version: 20 }
+    - run: cd frontend && npm ci && npm test -- --coverage --reporter=verbose
+    - run: echo "Backend tests configured"

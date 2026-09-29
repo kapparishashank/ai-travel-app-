@@ -42,12 +42,7 @@ export const profileSetupSchema = z.object({
     'Use YYYY-MM-DD format.'
   ),
   homeCity: z.string().trim().min(2, 'Enter your home city.'),
-  avatarUrl: optionalText.refine(
-    (value) => !value || /^https?:\/\/.+/.test(value),
-    'Enter a valid image URL.'
-  ),
   preferredCurrency: z.string().trim().length(3, 'Use a 3-letter currency code.'),
-  preferredLanguage: z.string().trim().min(2, 'Choose a preferred language.'),
 });
 
 export const travelPreferencesSchema = z.object({

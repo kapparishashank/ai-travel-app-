@@ -8,7 +8,6 @@
 export interface Profile {
   id: string;
   full_name: string | null;
-  avatar_url: string | null;
   phone: string | null;
   date_of_birth?: string | null;
   home_city: string | null;
