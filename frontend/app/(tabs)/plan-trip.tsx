@@ -35,9 +35,10 @@ import {
   type PlanTripFormData,
 } from '../../src/features/tripPlanner/validation';
 import { formatINR, rupeesToPaise } from '../../src/utils/currency';
+import { formatDateLong, todayISO } from '../../src/utils/date';
 
 const editableStepCount = 7;
-
+import { DatePickerField } from '../../src/components/common/DatePickerField';
 function createTripId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
 
@@ -106,7 +107,7 @@ export default function PlanTripScreen() {
   const reviewRows = useMemo(
     () => [
       ['Route', `${values.startingCity || 'Starting city'} to ${values.destination || 'Destination'}`],
-      ['Dates', `${values.startDate || 'Start'} to ${values.endDate || 'End'}${values.flexibleDates ? ' · flexible' : ''}`],
+      ['Dates', `${values.startDate ? formatDateLong(values.startDate) : 'Start'} – ${values.endDate ? formatDateLong(values.endDate) : 'End'}${values.flexibleDates ? ' · flexible' : ''}`],
       ['Travelers', `${values.adults} adults, ${values.children} children · ${values.tripType}`],
       ['Budget', `${values.currency} ${Number(values.totalBudget || 0).toLocaleString('en-IN')}`],
       ['Interests', values.interests.length ? values.interests.join(', ') : 'None selected'],
@@ -261,10 +262,24 @@ export default function PlanTripScreen() {
           <>
             <StepTitle title="Travel dates" subtitle="Use exact dates or mark them flexible if you want options nearby." />
             <Controller control={control} name="startDate" render={({ field: { onChange, value } }) => (
-              <TextInput label="Start date" value={value} onChangeText={onChange} error={errors.startDate?.message} placeholder="YYYY-MM-DD" leftIcon="calendar-start" />
+              <DatePickerField
+                label="Start date"
+                value={value}
+                onChange={onChange}
+                minDate={todayISO()}
+                error={errors.startDate?.message}
+                icon="calendar-start"
+              />
             )} />
             <Controller control={control} name="endDate" render={({ field: { onChange, value } }) => (
-              <TextInput label="End date" value={value} onChangeText={onChange} error={errors.endDate?.message} placeholder="YYYY-MM-DD" leftIcon="calendar-end" />
+              <DatePickerField
+                label="End date"
+                value={value}
+                onChange={onChange}
+                minDate={values.startDate || todayISO()}
+                error={errors.endDate?.message}
+                icon="calendar-end"
+              />
             )} />
             <Controller control={control} name="flexibleDates" render={({ field: { onChange, value } }) => (
               <View style={styles.switchRow}>
