@@ -106,19 +106,23 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
     email: row.email,
   }));
 
-  const expenses = expenseRows.map((row: { id: string; trip_id: string; title: string; paid_by_member_id?: string | null; paid_by_user_id?: string | null; amount_minor: number; currency_code?: string | null; notes?: string | null; updated_at?: string; spent_at?: string; category?: string }) => {
-    const notes = parseNotes(row.notes);
+  const nowIso = new Date().toISOString();
+  const expenses = expenseRows.map((row: { id: string; trip_id: string; title: string; paid_by_member_id?: string | null; paid_by_user_id?: string | null; amount_minor: number; currency_code?: string | null; notes?: string | null; updated_at?: string | null; spent_at?: string | null; category?: string | null }) => {
+    const notes = parseNotes(row.notes ?? null);
     return {
       id: row.id,
       tripId: row.trip_id,
       title: row.title,
-      category: notes.uiCategory ?? uiCategoryByDb[row.category] ?? 'miscellaneous',
+      category: notes.uiCategory ?? (row.category != null ? uiCategoryByDb[row.category] : undefined) ?? 'miscellaneous',
       amountMinor: row.amount_minor,
-      currency: row.currency_code,
-      paidByMemberId: row.paid_by_member_id,
+      // SplitExpenseRecord.currency is string — fall back to 'INR' if DB returns null
+      currency: row.currency_code ?? 'INR',
+      // SplitExpenseRecord.paidByMemberId is string — fall back to '' if DB returns null
+      paidByMemberId: row.paid_by_member_id ?? '',
       notes: notes.text ?? null,
-      spentAt: row.spent_at,
-      updatedAt: row.updated_at,
+      // SplitExpenseRecord requires non-optional strings for these timestamps
+      spentAt: row.spent_at ?? nowIso,
+      updatedAt: row.updated_at ?? nowIso,
       splitType: notes.splitType ?? 'equal',
       participants: participantsByExpense.get(row.id) ?? [],
       splits: splitsByExpense.get(row.id) ?? [],

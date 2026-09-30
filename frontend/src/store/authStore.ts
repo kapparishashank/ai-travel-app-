@@ -90,11 +90,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   deleteAccount: async () => {
-    const { error } = await supabase.functions.invoke('delete-account', {
-      method: 'POST',
+    // Note: supabase.functions.invoke() does not accept a top-level 'method' option —
+    // the SDK always uses POST. Pass an empty body to trigger the function.
+    const { data, error } = await supabase.functions.invoke('delete-account', {
+      body: {},
     });
 
+    // Surface transport-level errors
     if (error) throw error;
+
+    // Surface application-level errors returned inside the response payload
+    if ((data as any)?.error) {
+      throw new Error((data as any)?.message ?? 'Account deletion failed. Please try again or contact support.');
+    }
+
+    // Only sign out if deletion actually succeeded
     await get().signOut();
   },
 }));

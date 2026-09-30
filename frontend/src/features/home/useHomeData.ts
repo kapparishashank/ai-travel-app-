@@ -16,6 +16,14 @@ type HomeDataState = {
   isDemo: boolean;
 };
 
+const validTripStatuses = ['planning', 'active', 'completed', 'cancelled', 'draft', 'archived'] as const;
+type ValidTripStatus = (typeof validTripStatuses)[number];
+
+function toTripStatus(raw: string | null | undefined): ValidTripStatus {
+  const value = raw as ValidTripStatus;
+  return validTripStatuses.includes(value) ? value : 'planning';
+}
+
 function mapTrip(row: { id: string; title?: string | null; destination_name?: string | null; destination?: string | null; start_date?: string | null; end_date?: string | null; status?: string | null; total_budget_minor?: number | null; budget_inr?: number | null }): HomeTrip {
   return {
     id: row.id,
@@ -23,7 +31,7 @@ function mapTrip(row: { id: string; title?: string | null; destination_name?: st
     destination: row.destination_name ?? row.destination ?? 'Unknown destination',
     startDate: row.start_date ?? '',
     endDate: row.end_date ?? '',
-    status: row.status ?? 'planning',
+    status: toTripStatus(row.status),
     budgetMinor: row.total_budget_minor ?? row.budget_inr ?? 0,
   };
 }

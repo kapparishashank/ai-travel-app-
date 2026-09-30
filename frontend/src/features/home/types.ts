@@ -4,7 +4,7 @@ export type HomeTrip = {
   destination: string;
   startDate: string;
   endDate: string;
-  status: 'planning' | 'active' | 'completed' | 'cancelled' | 'draft';
+  status: 'planning' | 'active' | 'completed' | 'cancelled' | 'draft' | 'archived';
   budgetMinor: number;
   isDemo?: boolean;
 };
