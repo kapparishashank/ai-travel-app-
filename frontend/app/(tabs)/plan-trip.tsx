@@ -16,9 +16,9 @@ import { trackAnalyticsEvent } from '../../src/features/analytics/analytics';
 import { useAuthStore } from '../../src/store/authStore';
 import {
   accessibilityOptions,
+  createHyderabadToGoaDemoInput,
   emptyPlanTripDraft,
   foodOptions,
-  hyderabadToGoaDemoInput,
   interestOptions,
   planTripSteps,
   transportOptions,
@@ -120,8 +120,9 @@ export default function PlanTripScreen() {
   );
 
   const applyDemoInput = async () => {
-    reset(hyderabadToGoaDemoInput);
-    await replaceDraft(hyderabadToGoaDemoInput);
+    const demoInput = createHyderabadToGoaDemoInput();
+    reset(demoInput);
+    await replaceDraft(demoInput);
     setStep(0);
     setErrorMessage('');
   };
