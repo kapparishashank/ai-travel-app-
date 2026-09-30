@@ -192,9 +192,21 @@ export default function ExpensesScreen() {
                   {isDemo ? 'Demo data: four-student Hyderabad-to-Goa trip' : selectedTrip?.title}
                 </Text>
               </View>
-              <Button icon="plus" disabled={isDemo || data.members.length === 0} onPress={() => setDialogExpense(null)}>
-                Add expense
-              </Button>
+              <View style={styles.addExpenseRow}>
+                <Button icon="plus" disabled={isDemo || data.members.length === 0} onPress={() => setDialogExpense(null)}>
+                  Add expense
+                </Button>
+                {isDemo && (
+                  <Text style={[styles.disabledHint, { color: theme.colors.onSurfaceVariant }]}>
+                    Create a trip first to track real expenses.
+                  </Text>
+                )}
+                {!isDemo && data.members.length === 0 && (
+                  <Text style={[styles.disabledHint, { color: theme.colors.onSurfaceVariant }]}>
+                    Trip members are loading — try refreshing.
+                  </Text>
+                )}
+              </View>
             </View>
             <View style={styles.balanceRow}>
               <SummaryTile label="You owe" value={formatINR(Math.max(0, -(myBalance?.netMinor ?? 0)))} tone="danger" />

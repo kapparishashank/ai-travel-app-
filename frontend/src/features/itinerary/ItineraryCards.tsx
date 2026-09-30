@@ -25,6 +25,12 @@ export function ItinerarySummary({
 }) {
   const theme = useTheme();
   const confidenceValue = confidence === 'high' ? 0.9 : confidence === 'medium' ? 0.62 : 0.32;
+  const confidenceLabel =
+    confidence === 'high'
+      ? 'Fairly confident estimate'
+      : confidence === 'medium'
+        ? 'Moderate estimate — some details may vary'
+        : 'Low confidence — treat as rough guidance only';
 
   return (
     <Card style={styles.summaryCard}>
@@ -34,8 +40,13 @@ export function ItinerarySummary({
         <SummaryMetric label="Activities" value={String(activityCount)} icon="format-list-checks" />
         <SummaryMetric label="Estimated total" value={formatINR(totalCost)} icon="wallet-outline" />
       </View>
-      <Text style={[styles.confidenceLabel, { color: theme.colors.onSurfaceVariant }]}>Confidence: {confidence}</Text>
+      <Text style={[styles.confidenceLabel, { color: theme.colors.onSurfaceVariant }]}>
+        Estimate reliability: {confidenceLabel}
+      </Text>
       <ProgressBar progress={confidenceValue} color={theme.colors.primary} style={styles.progress} />
+      <Text style={[styles.smallText, { color: theme.colors.onSurfaceVariant }]}>
+        AI confidence reflects how reliably each item could be estimated from available data — not a guarantee of accuracy.
+      </Text>
       <Text style={[styles.smallText, { color: theme.colors.onSurfaceVariant }]}>
         Estimates are not live prices. Verify tickets, opening hours, weather, and safety before booking.
       </Text>

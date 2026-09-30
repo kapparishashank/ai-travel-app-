@@ -108,6 +108,23 @@ export async function updateTripStatus(tripId: string, status: TripStatus) {
 }
 
 export async function deleteTrip(tripId: string) {
+  // Defense-in-depth: verify ownership before issuing the DELETE.
+  // RLS on the 'trips' table is the primary security boundary.
+  const { data: authData } = await supabase.auth.getUser();
+  const userId = authData?.user?.id;
+
+  if (userId) {
+    const { data: tripRow } = await supabase
+      .from('trips')
+      .select('created_by')
+      .eq('id', tripId)
+      .maybeSingle();
+
+    if (tripRow && tripRow.created_by !== userId) {
+      throw new Error('You can only delete trips you created.');
+    }
+  }
+
   const { error } = await supabase.from('trips').delete().eq('id', tripId);
   if (error) throw error;
 }
