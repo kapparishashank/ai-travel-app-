@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '../../components/common/Card';
 import { IconButton } from '../../components/common/AnimatedIconButton';
 import { formatINR } from '../../utils/currency';
+import { formatDateLong } from '../../utils/date';
 import type { TripSummary } from './types';
 
 type TripCardProps = {
@@ -47,7 +48,7 @@ export function ManagedTripCard({
             {trip.origin_name} to {trip.destination_name}
           </Text>
           <Text style={[styles.meta, { color: theme.colors.onSurfaceVariant }]}>
-            {trip.start_date} to {trip.end_date} · {trip.travelerCount} traveler{trip.travelerCount === 1 ? '' : 's'}
+            {formatDateLong(trip.start_date)} – {formatDateLong(trip.end_date)} · {trip.travelerCount} traveler{trip.travelerCount === 1 ? '' : 's'}
           </Text>
           <View style={styles.footer}>
             <Text style={[styles.status, { color: theme.colors.primary }]}>{trip.status}</Text>

@@ -3,10 +3,10 @@ import { useSegments, useRouter, Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, Text } from 'react-native';
+import { View, Text, useColorScheme } from 'react-native';
 import { queryClient } from '../src/lib/queryClient';
 import { useAuthStore } from '../src/store/authStore';
-import { TravelAILightTheme } from '../src/theme';
+import { TravelAILightTheme, TravelAIDarkTheme } from '../src/theme';
 import { Loading } from '../src/components/common/Loading';
 import { Button } from '../src/components/common/Button';
 import { getAuthRedirectTarget, isProfileComplete } from '../src/features/auth/guards';
@@ -31,7 +31,8 @@ function RootLayoutNav() {
   const { authUser, user, loading, initialized, emailVerified, initialize } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
-  const theme = TravelAILightTheme;
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? TravelAIDarkTheme : TravelAILightTheme;
 
   // Initialize Auth
   useEffect(() => {

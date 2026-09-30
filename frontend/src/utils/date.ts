@@ -10,6 +10,17 @@ export function formatDate(isoDate: string): string {
 }
 
 /**
+ * Formats an ISO date string (YYYY-MM-DD) to a long readable label.
+ * e.g. "2025-10-01" → "1 Oct 2025"
+ */
+export function formatDateLong(isoDate: string): string {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}/.test(isoDate)) return isoDate;
+  const d = new Date(isoDate + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+
+/**
  * Formats an ISO datetime string to a readable time.
  * e.g. "2025-10-01T06:00:00+05:30" → "6:00 AM"
  */
