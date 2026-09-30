@@ -150,9 +150,12 @@ export default function VerifyEmailScreen() {
           />
 
           {isLocalMockSupabase && (
-            <Text style={styles.demoNotice}>
-              Local demo mode does not send Gmail. Use code 123456, or configure real Supabase email settings.
-            </Text>
+            <View style={styles.demoBanner}>
+              <Text style={styles.demoBannerTitle}>🔑 Demo mode — use OTP: 123456</Text>
+              <Text style={styles.demoBannerBody}>
+                Real email is not sent in demo mode. Enter the code above to proceed.
+              </Text>
+            </View>
           )}
 
           <Button onPress={verifyCode} loading={loading} color={theme.colors.secondary} disabled={code.length !== 6}>
@@ -221,5 +224,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     marginBottom: 10,
+  },
+  demoBanner: {
+    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.55)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 4,
+  },
+  demoBannerTitle: {
+    color: '#FCD34D',
+    fontSize: 14,
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  demoBannerBody: {
+    color: 'rgba(255,255,255,0.80)',
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

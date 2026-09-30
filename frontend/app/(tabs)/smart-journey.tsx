@@ -32,13 +32,19 @@ const priorityOptions: JourneyPriority[] = ['balanced', 'price', 'time', 'comfor
 const sortOptions: JourneySort[] = ['recommended', 'price', 'duration', 'comfort', 'departure'];
 const modeOptions: (JourneyMode | 'all')[] = ['all', 'bus', 'train', 'flight', 'cab', 'mixed'];
 
+function getDefaultTravelDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function SmartJourneyScreen() {
   const theme = useTheme();
   const authUser = useAuthStore((state) => state.authUser);
   const [search, setSearch] = useState<JourneySearchInput>({
     origin: 'Hyderabad',
     destination: 'Goa',
-    travelDate: '2026-08-14',
+    travelDate: getDefaultTravelDate(),
     travelers: 4,
   });
   const [priority, setPriority] = useState<JourneyPriority>('balanced');

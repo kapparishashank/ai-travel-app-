@@ -24,13 +24,19 @@ const modeOptions: (TicketMode | 'all')[] = ['all', 'flight', 'train', 'bus'];
 const refundOptions: RefundabilityFilter[] = ['all', 'refundable', 'non_refundable'];
 const timeWindows: TicketFilters['departureWindow'][] = ['any', 'morning', 'afternoon', 'evening', 'night'];
 
+function getDefaultDepartDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function TicketFinderScreen() {
   const theme = useTheme();
   const authUser = useAuthStore((state) => state.authUser);
   const [search, setSearch] = useState<TicketSearchInput>({
     origin: 'Hyderabad',
     destination: 'Goa',
-    departDate: '2026-08-14',
+    departDate: getDefaultDepartDate(),
     passengers: 4,
     modes: ['flight', 'train', 'bus'],
     seatClass: '',

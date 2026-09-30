@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -33,6 +33,7 @@ import {
   TripCard,
 } from '../../src/features/home/HomeCards';
 import { useHomeData } from '../../src/features/home/useHomeData';
+import { isLocalMockSupabase } from '../../src/lib/supabase';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -118,6 +119,17 @@ export default function HomeScreen() {
 
         {/* Image Slider */}
         <ImageSlider slides={sliderSlides} height={isWide ? 340 : 260} />
+
+        {/* Demo mode indicator — only visible when running without real Supabase credentials */}
+        {isLocalMockSupabase && (
+          <View style={styles.demoBanner}>
+            <MaterialCommunityIcons name="flask-outline" size={15} color="#92400E" />
+            <Text style={styles.demoBannerText}>
+              Demo mode — AI responses are simulated locally. Add real Supabase credentials to{' '}
+              <Text style={styles.demoBannerBold}>frontend/.env</Text> to enable live AI.
+            </Text>
+          </View>
+        )}
 
         {loading ? (
           <>
