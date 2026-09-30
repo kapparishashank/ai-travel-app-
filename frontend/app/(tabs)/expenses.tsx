@@ -573,6 +573,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  addExpenseRow: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  disabledHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: 'italic',
+  },
   dialogContent: {
     padding: 16,
     gap: 12,
