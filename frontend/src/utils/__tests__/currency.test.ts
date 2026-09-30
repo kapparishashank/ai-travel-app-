@@ -26,7 +26,10 @@ describe('formatCurrency', () => {
   });
 
   it('handles negative values', () => {
-    expect(formatCurrency(-100, 'INR')).toContain('(') || expect(formatCurrency(-100, 'INR')).toContain('-');
+    const result = formatCurrency(-100, 'INR');
+    const hasParens = result.includes('(');
+    const hasMinus = result.includes('-');
+    expect(hasParens || hasMinus).toBe(true);
   });
 
   it('defaults to INR when invalid code given', () => {
