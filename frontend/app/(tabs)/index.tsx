@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -474,5 +474,27 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.25)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  demoBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 4,
+  },
+  demoBannerText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#92400E',
+  },
+  demoBannerBold: {
+    fontWeight: '800',
+    color: '#78350F',
   },
 });
