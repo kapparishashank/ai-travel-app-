@@ -36,9 +36,9 @@ import {
 } from '../../src/features/tripPlanner/validation';
 import { formatINR, rupeesToPaise } from '../../src/utils/currency';
 import { formatDateLong, todayISO } from '../../src/utils/date';
+import { DatePickerField } from '../../src/components/common/DatePickerField';
 
 const editableStepCount = 7;
-import { DatePickerField } from '../../src/components/common/DatePickerField';
 function createTripId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
 
