@@ -26,7 +26,7 @@ export interface Profile {
 // ─────────────────────────────────────────────
 
 export type TravelerType = 'solo' | 'couple' | 'family' | 'friends' | 'work';
-export type TripStatus = 'planning' | 'active' | 'completed' | 'cancelled';
+export type TripStatus = 'draft' | 'planning' | 'active' | 'completed' | 'cancelled' | 'archived';
 export type ComfortLevel = 'budget' | 'standard' | 'premium';
 
 export interface Trip {
@@ -67,9 +67,12 @@ export interface CreateTripInput {
 // ITINERARY
 // ─────────────────────────────────────────────
 
+// Valid database enum values for itinerary_items.category.
+// 'sightseeing' and 'rest' were removed — they are not valid DB enum values.
+// Use 'activity' instead of 'sightseeing'; use 'other' instead of 'rest'.
 export type ActivityCategory =
-  | 'sightseeing' | 'food' | 'transport' | 'accommodation'
-  | 'activity' | 'rest' | 'shopping' | 'emergency' | 'other';
+  | 'transport' | 'stay' | 'food' | 'activity'
+  | 'shopping' | 'safety' | 'other';
 
 export interface ItineraryActivity {
   id: string;

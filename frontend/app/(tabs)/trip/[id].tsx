@@ -115,7 +115,16 @@ export default function TripDetailsScreen() {
     () => [...new Set(activities.flatMap((activity) => activity.metadata?.alternatives ?? []))].slice(0, 8),
     [activities],
   );
-  const confidence = activities.length ? 'medium' : 'low';
+  // Read the AI-reported confidence level saved to trip metadata after generation.
+  // Fall back to a heuristic ('medium' if activities exist, 'low' otherwise) for
+  // trips generated before this field was persisted.
+  const rawConfidence = tripQuery.data?.trip?.metadata?.ai_confidence_level;
+  const confidence: 'low' | 'medium' | 'high' =
+    rawConfidence === 'low' || rawConfidence === 'medium' || rawConfidence === 'high'
+      ? rawConfidence
+      : activities.length > 0
+        ? 'medium'
+        : 'low';
 
   const invalidateTrip = () => {
     queryClient.invalidateQueries({ queryKey: ['tripDetails', id] });

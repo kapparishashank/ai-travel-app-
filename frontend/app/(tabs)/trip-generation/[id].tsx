@@ -42,8 +42,8 @@ export default function TripGenerationScreen() {
       }, 900);
 
       try {
+        // supabase.functions.invoke() always uses POST — no 'method' option needed.
         const { data, error } = await supabase.functions.invoke('ai-planner', {
-          method: 'POST',
           body: { tripId: id },
         });
 

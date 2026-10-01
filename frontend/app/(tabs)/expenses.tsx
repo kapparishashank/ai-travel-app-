@@ -193,20 +193,41 @@ export default function ExpensesScreen() {
                 </Text>
               </View>
               <View style={styles.addExpenseRow}>
-                <Button icon="plus" disabled={isDemo || data.members.length === 0} onPress={() => setDialogExpense(null)}>
+                <Button
+                  icon="plus"
+                  disabled={isDemo || data.members.length === 0}
+                  onPress={() => setDialogExpense(null)}
+                >
                   Add expense
                 </Button>
-                {isDemo && (
-                  <Text style={[styles.disabledHint, { color: theme.colors.onSurfaceVariant }]}>
-                    Create a trip first to track real expenses.
-                  </Text>
-                )}
-                {!isDemo && data.members.length === 0 && (
-                  <Text style={[styles.disabledHint, { color: theme.colors.onSurfaceVariant }]}>
-                    Trip members are loading — try refreshing.
-                  </Text>
-                )}
               </View>
+            </View>
+            {isDemo && (
+              <View style={[styles.disabledBanner, { backgroundColor: theme.colors.secondaryContainer, borderColor: theme.colors.outline }]}>
+                <MaterialCommunityIcons name="information-outline" size={18} color={theme.colors.onSecondaryContainer} />
+                <View style={styles.flex}>
+                  <Text style={[styles.disabledBannerTitle, { color: theme.colors.onSecondaryContainer }]}>
+                    Demo mode — Add Expense is disabled
+                  </Text>
+                  <Text style={[styles.disabledBannerBody, { color: theme.colors.onSecondaryContainer }]}>
+                    This is demo data for a sample Goa trip. To track real expenses, plan a trip first, then come back here.
+                  </Text>
+                </View>
+              </View>
+            )}
+            {!isDemo && data.members.length === 0 && (
+              <View style={[styles.disabledBanner, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.outline }]}>
+                <MaterialCommunityIcons name="account-group-outline" size={18} color={theme.colors.onTertiaryContainer} />
+                <View style={styles.flex}>
+                  <Text style={[styles.disabledBannerTitle, { color: theme.colors.onTertiaryContainer }]}>
+                    No trip members found
+                  </Text>
+                  <Text style={[styles.disabledBannerBody, { color: theme.colors.onTertiaryContainer }]}>
+                    Add members to your trip first so expenses can be split and tracked. Pull to refresh if members were recently added.
+                  </Text>
+                </View>
+              </View>
+            )}
             </View>
             <View style={styles.balanceRow}>
               <SummaryTile label="You owe" value={formatINR(Math.max(0, -(myBalance?.netMinor ?? 0)))} tone="danger" />

@@ -523,6 +523,24 @@ async function saveItinerary(adminClient: any, trip: TripRow, itinerary: Itinera
     const { error: itemsError } = await adminClient.from('itinerary_items').insert(items);
     if (itemsError) throw itemsError;
   }
+
+  // Persist confidenceLevel into trip metadata so the frontend can display it
+  // without requiring a dedicated DB column.
+  await adminClient
+    .from('trips')
+    .update({
+      metadata: {
+        ...(await adminClient
+          .from('trips')
+          .select('metadata')
+          .eq('id', trip.id)
+          .single()
+          .then(({ data }: { data: { metadata?: Record<string, unknown> } | null }) => data?.metadata ?? {})),
+        ai_confidence_level: itinerary.confidenceLevel,
+        ai_itinerary_generated_at: new Date().toISOString(),
+      },
+    })
+    .eq('id', trip.id);
 }
 
 function toTripDateTime(date: string, time: string, timezone: string) {

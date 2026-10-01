@@ -86,16 +86,28 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
   if (participantsResult.error) throw participantsResult.error;
   if (splitsResult.error) throw splitsResult.error;
 
+
   const participantsByExpense = new Map<string, string[]>();
-  (participantsResult.data ?? []).forEach((row: { expense_id: string; trip_member_id: string }) => {
-    participantsByExpense.set(row.expense_id, [...(participantsByExpense.get(row.expense_id) ?? []), row.trip_member_id]);
+  (participantsResult.data ?? []).forEach((row: { expense_id?: string | null; trip_member_id?: string | null }) => {
+    // Guard: skip rows with missing FK values to avoid undefined indexing
+    if (!row.expense_id || !row.trip_member_id) return;
+    participantsByExpense.set(
+      row.expense_id,
+      [...(participantsByExpense.get(row.expense_id) ?? []), row.trip_member_id],
+    );
   });
 
   const splitsByExpense = new Map<string, { memberId: string; amountMinor: number }[]>();
-  (splitsResult.data ?? []).forEach((row: { expense_id: string; trip_member_id: string; amount_minor: number }) => {
+  (splitsResult.data ?? []).forEach((row: { expense_id?: string | null; trip_member_id?: string | null; amount_minor?: number | null }) => {
+    // Guard: skip rows with missing FK values
+    if (!row.expense_id || !row.trip_member_id) return;
     splitsByExpense.set(row.expense_id, [
       ...(splitsByExpense.get(row.expense_id) ?? []),
-      { memberId: row.trip_member_id, amountMinor: row.amount_minor },
+      {
+        memberId: row.trip_member_id,
+        // amount_minor can be null in older rows; clamp to 0 to avoid NaN in calculations
+        amountMinor: Math.max(0, row.amount_minor ?? 0),
+      },
     ]);
   });
 
@@ -107,17 +119,20 @@ export async function fetchSplitExpenseData(tripId: string): Promise<{
   }));
 
   const nowIso = new Date().toISOString();
-  const expenses = expenseRows.map((row: { id: string; trip_id: string; title: string; paid_by_member_id?: string | null; paid_by_user_id?: string | null; amount_minor: number; currency_code?: string | null; notes?: string | null; updated_at?: string | null; spent_at?: string | null; category?: string | null }) => {
+  const expenses = expenseRows.map((row: { id: string; trip_id: string; title: string; paid_by_member_id?: string | null; paid_by_user_id?: string | null; amount_minor?: number | null; currency_code?: string | null; notes?: string | null; updated_at?: string | null; spent_at?: string | null; category?: string | null }) => {
     const notes = parseNotes(row.notes ?? null);
     return {
       id: row.id,
       tripId: row.trip_id,
       title: row.title,
       category: notes.uiCategory ?? (row.category != null ? uiCategoryByDb[row.category] : undefined) ?? 'miscellaneous',
-      amountMinor: row.amount_minor,
+      // amount_minor can be null in unusual DB states — clamp to 0 to avoid NaN
+      amountMinor: Math.max(0, row.amount_minor ?? 0),
       // SplitExpenseRecord.currency is string — fall back to 'INR' if DB returns null
       currency: row.currency_code ?? 'INR',
-      // SplitExpenseRecord.paidByMemberId is string — fall back to '' if DB returns null
+      // paidByMemberId falls back to '' when the DB column is null.
+      // calculateMemberBalances guards this with `balances.get(id)` returning undefined,
+      // so balances are unaffected — the payer simply doesn't accrue credit.
       paidByMemberId: row.paid_by_member_id ?? '',
       notes: notes.text ?? null,
       // SplitExpenseRecord requires non-optional strings for these timestamps
