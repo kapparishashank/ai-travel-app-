@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, StyleSheet, Text, StyleProp, TextStyle } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { formatINR } from '../../utils/currency';
+import { formatMinorAmount } from '../../utils/currency';
 
 interface CurrencyDisplayProps {
+  /** Amount in minor units (paise, cents, etc.) */
   paise: number;
+  /** ISO 4217 currency code. Defaults to 'INR'. */
+  currency?: string;
   label?: string;
   showDecimal?: boolean;
   compact?: boolean;
@@ -13,6 +16,7 @@ interface CurrencyDisplayProps {
 
 export function CurrencyDisplay({
   paise,
+  currency = 'INR',
   label,
   showDecimal = false,
   compact = false,
@@ -32,7 +36,7 @@ export function CurrencyDisplay({
   return (
     <View style={styles.container}>
       <Text style={[styles.amount, { color: theme.colors.onBackground }, style]}>
-        {formatINR(paise, { showDecimal, compact })}
+        {formatMinorAmount(paise, currency, { showDecimal, compact })}
       </Text>
       {!!label && (
         <View style={[styles.badge, { backgroundColor: getLabelColor(label) }]}>
