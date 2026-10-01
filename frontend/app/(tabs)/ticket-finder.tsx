@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Dialog, Portal, Snackbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -34,6 +34,8 @@ function getDefaultDepartDate(): string {
 
 export default function TicketFinderScreen() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isWide = width >= 800;
   const authUser = useAuthStore((state) => state.authUser);
   const [search, setSearch] = useState<TicketSearchInput>({
     origin: 'Hyderabad',
@@ -119,7 +121,7 @@ export default function TicketFinderScreen() {
         refreshControl={<RefreshControl refreshing={tripsQuery.isRefetching} onRefresh={() => tripsQuery.refetch()} />}
       >
         <HeroBanner
-          imageUrl={MOUNTAIN_IMAGES.beach ?? MOUNTAIN_IMAGES.valley}
+          imageUrl={MOUNTAIN_IMAGES.beach}
           height={isWide ? 180 : 150}
           overlayOpacity={0.52}
         >
@@ -375,6 +377,9 @@ function modeIcon(mode: TicketMode) {
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 32, maxWidth: 1180, width: '100%', alignSelf: 'center' },
+  heroContent: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 20, textShadowColor: 'rgba(0,0,0,0.25)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   header: { marginTop: 8, marginBottom: 8 },
   title: { fontSize: 28, fontWeight: '900' },
   subtitle: { fontSize: 14, lineHeight: 20, marginTop: 4 },

@@ -4,7 +4,7 @@ import { Menu, ProgressBar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '../../components/common/Card';
 import { IconButton } from '../../components/common/AnimatedIconButton';
-import { formatINR } from '../../utils/currency';
+import { formatMinorAmount } from '../../utils/currency';
 import { formatDateLong } from '../../utils/date';
 import type { TripSummary } from './types';
 
@@ -53,7 +53,7 @@ export function ManagedTripCard({
           <View style={styles.footer}>
             <Text style={[styles.status, { color: theme.colors.primary }]}>{trip.status}</Text>
             <Text style={[styles.budget, { color: theme.colors.onSurfaceVariant }]}>
-              {formatINR(trip.total_budget_minor)}
+              {formatMinorAmount(trip.total_budget_minor, trip.currency_code ?? 'INR')}
             </Text>
           </View>
           <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progress} />

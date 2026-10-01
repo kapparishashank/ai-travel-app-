@@ -46,6 +46,40 @@ export function formatINR(paise: number, options?: { showDecimal?: boolean; comp
   }).format(rupees);
 }
 
+/**
+ * Formats a minor-unit amount for any currency.
+ * JPY has no minor units (divide by 1); all other currencies divide by 100.
+ * Falls back to INR if the currency code is unrecognised.
+ *
+ * @example formatMinorAmount(150000, 'INR')  → "₹1,500"
+ * @example formatMinorAmount(1500, 'USD')    → "$15.00"
+ * @example formatMinorAmount(1200, 'JPY')    → "¥1,200"
+ */
+export function formatMinorAmount(
+  minorAmount: number,
+  currency: CurrencyCode | string = 'INR',
+  options?: { showDecimal?: boolean; compact?: boolean },
+): string {
+  const code = isSupportedCurrency(currency) ? currency : 'INR';
+  // JPY has no subunit; all other supported currencies use 100 minor units per major
+  const divisor = code === 'JPY' ? 1 : 100;
+  const amount = minorAmount / divisor;
+
+  // Use compact INR-style suffixes for rupee amounts when requested
+  if (code === 'INR' && options?.compact) {
+    if (amount >= 10_00_000) return `₹${(amount / 10_00_000).toFixed(1)}L`;
+    if (amount >= 1_000) return `₹${(amount / 1_000).toFixed(1)}K`;
+  }
+
+  const showDecimal = options?.showDecimal ?? (code !== 'JPY');
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: code,
+    minimumFractionDigits: showDecimal ? 2 : 0,
+    maximumFractionDigits: showDecimal ? 2 : 0,
+  }).format(amount);
+}
+
 export function formatINRWithLabel(paise: number, label: string): string {
   return `${formatINR(paise)} ${label}`;
 }
