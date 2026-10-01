@@ -446,7 +446,7 @@ function parseProviderJson(raw: string) {
 }
 
 async function saveItinerary(adminClient: any, trip: TripRow, itinerary: ItineraryResponse) {
-  const dayNumbers = itinerary.dayWiseItinerary.map((day) => day.dayNumber);
+  const dayNumbers = itinerary.dayWiseItinerary.map((day: z.infer<typeof daySchema>) => day.dayNumber);
   const { data: existingDays } = await adminClient
     .from('trip_days')
     .select('id,day_number')

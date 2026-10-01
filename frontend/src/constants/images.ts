@@ -12,6 +12,8 @@ export const MOUNTAIN_IMAGES = {
   snow: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=90',
   greenHills: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=90',
   adventure: 'https://images.unsplash.com/photo-1520962889616-a5f98b4506cd?auto=format&fit=crop&w=1200&q=90',
+  // Beach/coastal scenes for ticket finder hero
+  beach: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=90',
 } as const;
 
 export type MountainImageKey = keyof typeof MOUNTAIN_IMAGES;
