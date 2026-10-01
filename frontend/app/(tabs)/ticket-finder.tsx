@@ -5,9 +5,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '../../src/components/common/Button';
 import { Card } from '../../src/components/common/Card';
+import { DatePickerField } from '../../src/components/common/DatePickerField';
 import { EmptyState } from '../../src/components/common/EmptyState';
 import { MOUNTAIN_IMAGES } from '../../src/constants/images';
 import { ErrorState } from '../../src/components/common/ErrorState';
+import { HeroBanner } from '../../src/components/common/HeroBanner';
 import { ScreenContainer } from '../../src/components/common/ScreenContainer';
 import { SegmentedTabs } from '../../src/components/common/SegmentedTabs';
 import { TextInput } from '../../src/components/common/TextInput';
@@ -116,21 +118,31 @@ export default function TicketFinderScreen() {
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={tripsQuery.isRefetching} onRefresh={() => tripsQuery.refetch()} />}
       >
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: theme.colors.onBackground }]}>Smart Ticket Finder</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-              Mock provider architecture for flights, trains, and buses. No live inventory or payment-card data.
-            </Text>
+        <HeroBanner
+          imageUrl={MOUNTAIN_IMAGES.beach ?? MOUNTAIN_IMAGES.valley}
+          height={isWide ? 180 : 150}
+          overlayOpacity={0.52}
+        >
+          <View style={styles.heroContent}>
+            <MaterialCommunityIcons name="train-car" size={24} color="#FFFFFF" />
+            <Text style={styles.heroTitle}>Smart Ticket Finder</Text>
           </View>
-        </View>
+          <Text style={styles.heroSubtitle}>
+            Compare flights, trains, and buses — mock data, no payment required.
+          </Text>
+        </HeroBanner>
 
         <Card style={styles.panel}>
           <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Search</Text>
           <View style={styles.formGrid}>
             <TextInput label="Origin" value={search.origin} onChangeText={(origin) => setSearch((current) => ({ ...current, origin }))} />
             <TextInput label="Destination" value={search.destination} onChangeText={(destination) => setSearch((current) => ({ ...current, destination }))} />
-            <TextInput label="Departure date" value={search.departDate} onChangeText={(departDate) => setSearch((current) => ({ ...current, departDate }))} />
+            <DatePickerField
+              label="Departure date"
+              value={search.departDate}
+              onChange={(departDate) => setSearch((current) => ({ ...current, departDate }))}
+              icon="calendar-search"
+            />
             <TextInput
               label="Passengers"
               value={String(search.passengers)}
