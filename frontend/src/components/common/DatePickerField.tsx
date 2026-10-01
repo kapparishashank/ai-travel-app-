@@ -41,6 +41,7 @@ export function DatePickerField({
   const today = todayISO();
   const effectiveMin = minDate ?? today;
   const inputRef = useRef<HTMLInputElement>(null);
+  const [nativeText, setNativeText] = React.useState(value);
 
   const hasValue = Boolean(value);
   const displayValue = hasValue ? formatDateLong(value) : '';
@@ -103,7 +104,7 @@ export function DatePickerField({
 
   // Native fallback — still a text input but with clear guidance
   // Replace with @react-native-community/datetimepicker if needed
-  const [nativeText, setNativeText] = React.useState(value);
+
 
   const handleNativeChange = (text: string) => {
     setNativeText(text);
