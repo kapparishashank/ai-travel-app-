@@ -322,7 +322,7 @@ export default function PlanTripScreen() {
               <ChoiceChips options={['INR', 'USD', 'EUR', 'GBP', 'SGD', 'AED']} selected={[value]} onChange={(items) => onChange(items[0])} multi={false} error={errors.currency?.message} />
             )} />
             <Text style={[styles.hint, { color: theme.colors.onSurfaceVariant }]}>
-              Current estimate: {formatINR(rupeesToPaise(Number(values.totalBudget || 0)))}
+              Current estimate: {values.currency} {Number(values.totalBudget || 0).toLocaleString('en-IN')}
             </Text>
           </>
         );
