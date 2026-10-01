@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ViewStyle } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Dialog, Portal, Text, TextInput, useTheme } from 'react-native-paper';
@@ -228,7 +229,6 @@ export default function ExpensesScreen() {
                 </View>
               </View>
             )}
-            </View>
             <View style={styles.balanceRow}>
               <SummaryTile label="You owe" value={formatINR(Math.max(0, -(myBalance?.netMinor ?? 0)))} tone="danger" />
               <SummaryTile label="You are owed" value={formatINR(Math.max(0, myBalance?.netMinor ?? 0))} tone="success" />
@@ -602,6 +602,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontStyle: 'italic',
+  },
+  disabledBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  disabledBannerTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    marginBottom: 3,
+  },
+  disabledBannerBody: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   dialogContent: {
     padding: 16,
